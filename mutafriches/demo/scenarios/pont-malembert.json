@@ -1,0 +1,5231 @@
+{
+  "avertissement": "Données fictives. Réponses figées par outils/figer-reponses.ts, ne pas éditer à la main.",
+  "versionAlgorithme": "v1.16",
+  "figeLe": "2026-10-01",
+  "id": "pont-malembert",
+  "titre": "Site du Pont-Malembert",
+  "description": "Site de 2 parcelles : le premier appel échoue (erreur récupérable), puis plusieurs sources restent indisponibles.",
+  "nomSuggere": "Site du Pont-Malembert",
+  "parcelles": [
+    "49353000AV1349",
+    "49353000AV1350"
+  ],
+  "echecsAvantSucces": 1,
+  "enrichissement": {
+    "codeInsee": "49353",
+    "commune": "Trélazé",
+    "siteEnCentreVille": false,
+    "distanceAutoroute": 4200,
+    "distanceTransportCommun": 450,
+    "proximiteCommercesServices": true,
+    "distanceIte": "moins-1km-mauvais-etat",
+    "distanceReseauChaleur": 380,
+    "tauxLogementsVacants": 6.9,
+    "presenceRisquesTechnologiques": false,
+    "risqueRetraitGonflementArgile": "faible-ou-moyen",
+    "risqueInondation": "non",
+    "siteReferencePollue": false,
+    "zonageReglementaire": "zone-urbaine-u-activite",
+    "zonageEnvironnemental": "hors-zone",
+    "zonagePatrimonial": "non-concerne",
+    "zonageAbcLogement": "b2",
+    "siteEnQpv": false,
+    "saturationReseauEnr": false,
+    "zoneAccelerationEnr": "non",
+    "ilotChaleurUrbain": "non-couvert",
+    "identifiantParcelle": "49353000AV1349",
+    "surfaceSite": 5060,
+    "identifiantsParcelles": [
+      "49353000AV1349",
+      "49353000AV1350"
+    ],
+    "nombreParcelles": 2,
+    "parcellePredominante": "49353000AV1349",
+    "communePredominante": "Trélazé",
+    "sourcesEchouees": [
+      "BDNB-SurfaceBatie",
+      "Enedis-Raccordement",
+      "GeoRisques-Cavites"
+    ],
+    "champsManquants": [
+      "surfaceBati",
+      "distanceRaccordementElectrique",
+      "risqueCavitesSouterraines"
+    ],
+    "sourcesUtilisees": [
+      "Cadastre",
+      "API Service Public",
+      "bpe",
+      "Lovac",
+      "Transport Data Gouv",
+      "IGN WFS",
+      "IGN Itinéraire",
+      "GeoRisques-RGA",
+      "GeoRisques-TRI",
+      "GeoRisques-ICPE",
+      "ApiCartoNature",
+      "ApiCartoGPU",
+      "ZAER-ENR",
+      "ZonageABC-Logement",
+      "ITE-Fret",
+      "France-Chaleur-Urbaine",
+      "QPV-ANCT",
+      "Enedis-Zones-Contrainte-EnR"
+    ]
+  },
+  "evaluations": [
+    {
+      "id": "sans-saisie",
+      "titre": "Sans connaissance terrain",
+      "reponses": {
+        "typeProprietaire": "ne-sait-pas",
+        "etatBatiInfrastructure": "ne-sait-pas",
+        "presencePollution": "ne-sait-pas",
+        "valeurArchitecturaleHistorique": "ne-sait-pas",
+        "qualitePaysage": "ne-sait-pas",
+        "qualiteVoieDesserte": "ne-sait-pas",
+        "trameVerteEtBleue": "ne-sait-pas",
+        "presenceEspecesProtegees": "ne-sait-pas",
+        "presenceZoneHumide": "ne-sait-pas"
+      },
+      "donneesComplementaires": {
+        "typeProprietaire": "ne-sait-pas",
+        "etatBatiInfrastructure": "ne-sait-pas",
+        "presencePollution": "ne-sait-pas",
+        "valeurArchitecturaleHistorique": "ne-sait-pas",
+        "qualitePaysage": "ne-sait-pas",
+        "qualiteVoieDesserte": "ne-sait-pas",
+        "trameVerteEtBleue": "ne-sait-pas",
+        "presenceEspecesProtegees": "ne-sait-pas",
+        "presenceZoneHumide": "ne-sait-pas",
+        "raccordementEau": "ne-sait-pas"
+      },
+      "resultat": {
+        "fiabilite": {
+          "note": 5.5,
+          "text": "Moyennement fiable",
+          "description": "Analyse partielle, certaines données manquantes.",
+          "criteresRenseignes": 18,
+          "criteresTotal": 31,
+          "poidsRenseignes": 18,
+          "poidsTotal": 33,
+          "detailCriteres": [
+            {
+              "critere": "surfaceSite",
+              "poids": 2,
+              "renseigne": true
+            },
+            {
+              "critere": "surfaceBati",
+              "poids": 2,
+              "renseigne": false
+            },
+            {
+              "critere": "siteEnCentreVille",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceAutoroute",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceTransportCommun",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "proximiteCommercesServices",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceRaccordementElectrique",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "distanceReseauChaleur",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "tauxLogementsVacants",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "risqueRetraitGonflementArgile",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "risqueCavitesSouterraines",
+              "poids": 0.5,
+              "renseigne": false
+            },
+            {
+              "critere": "risqueInondation",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "presenceRisquesTechnologiques",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zonageEnvironnemental",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zonageReglementaire",
+              "poids": 2,
+              "renseigne": true
+            },
+            {
+              "critere": "zonagePatrimonial",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zoneAccelerationEnr",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zonageAbcLogement",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "siteEnQpv",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "saturationReseauEnr",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceIte",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "typeProprietaire",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "raccordementEau",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "etatBatiInfrastructure",
+              "poids": 2,
+              "renseigne": false
+            },
+            {
+              "critere": "presencePollution",
+              "poids": 2,
+              "renseigne": false
+            },
+            {
+              "critere": "valeurArchitecturaleHistorique",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "qualitePaysage",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "qualiteVoieDesserte",
+              "poids": 0.5,
+              "renseigne": false
+            },
+            {
+              "critere": "trameVerteEtBleue",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "presenceEspecesProtegees",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "presenceZoneHumide",
+              "poids": 1,
+              "renseigne": false
+            }
+          ]
+        },
+        "resultats": [
+          {
+            "usage": "tertiaire",
+            "rang": 1,
+            "indiceMutabilite": 66.7,
+            "potentiel": "Très bon",
+            "explication": "Usage tertiaire avec un potentiel très bon (66.7%)",
+            "exclu": false,
+            "avantages": 12,
+            "contraintes": 6,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 12,
+              "totalContraintes": 6
+            },
+            "tags": [
+              "zonage compatible",
+              "TC prox.",
+              "services proches",
+              "zon. env. non contraint",
+              "zon. pat. non-protégée"
+            ]
+          },
+          {
+            "usage": "equipements",
+            "rang": 2,
+            "indiceMutabilite": 65,
+            "potentiel": "Très bon",
+            "explication": "Usage equipements avec un potentiel très bon (65%)",
+            "exclu": false,
+            "avantages": 13,
+            "contraintes": 7,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 13,
+              "totalContraintes": 7
+            },
+            "tags": [
+              "petite parcelle",
+              "services proches",
+              "réseau de chaleur",
+              "TC prox.",
+              "zon. env. non contraint"
+            ]
+          },
+          {
+            "usage": "residentiel",
+            "rang": 3,
+            "indiceMutabilite": 61.5,
+            "potentiel": "Très bon",
+            "explication": "Usage residentiel avec un potentiel très bon (61.5%)",
+            "exclu": false,
+            "avantages": 14.75,
+            "contraintes": 9.25,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": -2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": -2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 14.75,
+              "totalContraintes": 9.25
+            },
+            "tags": [
+              "petite parcelle",
+              "services proches",
+              "peu de vacance",
+              "réseau de chaleur",
+              "TC prox."
+            ]
+          },
+          {
+            "usage": "industrie",
+            "rang": 4,
+            "indiceMutabilite": 60.9,
+            "potentiel": "Très bon",
+            "explication": "Usage industrie avec un potentiel très bon (60.9%)",
+            "exclu": false,
+            "avantages": 14,
+            "contraintes": 9,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": -2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": -1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 14,
+              "totalContraintes": 9
+            },
+            "tags": [
+              "zonage compatible",
+              "excentré",
+              "TC prox.",
+              "zon. env. non contraint",
+              "zon. pat. non-protégée"
+            ]
+          },
+          {
+            "usage": "renaturation",
+            "rang": 5,
+            "indiceMutabilite": 55.6,
+            "potentiel": "Bon",
+            "explication": "Usage renaturation avec un potentiel bon (55.6%)",
+            "exclu": false,
+            "avantages": 10,
+            "contraintes": 8,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 10,
+              "totalContraintes": 8
+            },
+            "tags": [
+              "excentré",
+              "zon. pat. non-protégée"
+            ]
+          },
+          {
+            "usage": "culture",
+            "rang": 6,
+            "indiceMutabilite": 55.3,
+            "potentiel": "Bon",
+            "explication": "Usage culture avec un potentiel bon (55.3%)",
+            "exclu": false,
+            "avantages": 10.5,
+            "contraintes": 8.5,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 10.5,
+              "totalContraintes": 8.5
+            },
+            "tags": [
+              "réseau de chaleur",
+              "TC prox.",
+              "zon. env. non contraint"
+            ]
+          },
+          {
+            "usage": "photovoltaique",
+            "rang": 7,
+            "indiceMutabilite": 46.3,
+            "potentiel": "Moyen",
+            "explication": "Usage photovoltaique avec un potentiel moyen (46.3%)",
+            "exclu": false,
+            "avantages": 9.25,
+            "contraintes": 10.75,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": -2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 9.25,
+              "totalContraintes": 10.75
+            },
+            "tags": [
+              "excentré",
+              "zon. env. non contraint",
+              "zon. pat. non-protégée"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "complete",
+      "titre": "Connaissance terrain complète",
+      "reponses": {
+        "typeProprietaire": "prive",
+        "etatBatiInfrastructure": "degradation-tres-importante",
+        "presencePollution": "oui-amiante",
+        "valeurArchitecturaleHistorique": "sans-interet",
+        "qualitePaysage": "ordinaire",
+        "qualiteVoieDesserte": "degradee",
+        "trameVerteEtBleue": "hors-trame",
+        "presenceEspecesProtegees": "non",
+        "presenceZoneHumide": "non"
+      },
+      "donneesComplementaires": {
+        "typeProprietaire": "prive",
+        "etatBatiInfrastructure": "degradation-tres-importante",
+        "presencePollution": "oui-amiante",
+        "valeurArchitecturaleHistorique": "sans-interet",
+        "qualitePaysage": "ordinaire",
+        "qualiteVoieDesserte": "degradee",
+        "trameVerteEtBleue": "hors-trame",
+        "presenceEspecesProtegees": "non",
+        "presenceZoneHumide": "non",
+        "raccordementEau": "ne-sait-pas"
+      },
+      "resultat": {
+        "fiabilite": {
+          "note": 8.5,
+          "text": "Fiable",
+          "description": "Données analysées avec un niveau de confiance élevé.",
+          "criteresRenseignes": 27,
+          "criteresTotal": 31,
+          "poidsRenseignes": 28.5,
+          "poidsTotal": 33,
+          "detailCriteres": [
+            {
+              "critere": "surfaceSite",
+              "poids": 2,
+              "renseigne": true
+            },
+            {
+              "critere": "surfaceBati",
+              "poids": 2,
+              "renseigne": false
+            },
+            {
+              "critere": "siteEnCentreVille",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceAutoroute",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceTransportCommun",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "proximiteCommercesServices",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceRaccordementElectrique",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "distanceReseauChaleur",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "tauxLogementsVacants",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "risqueRetraitGonflementArgile",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "risqueCavitesSouterraines",
+              "poids": 0.5,
+              "renseigne": false
+            },
+            {
+              "critere": "risqueInondation",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "presenceRisquesTechnologiques",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zonageEnvironnemental",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zonageReglementaire",
+              "poids": 2,
+              "renseigne": true
+            },
+            {
+              "critere": "zonagePatrimonial",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zoneAccelerationEnr",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "zonageAbcLogement",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "siteEnQpv",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "saturationReseauEnr",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "distanceIte",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "typeProprietaire",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "raccordementEau",
+              "poids": 1,
+              "renseigne": false
+            },
+            {
+              "critere": "etatBatiInfrastructure",
+              "poids": 2,
+              "renseigne": true
+            },
+            {
+              "critere": "presencePollution",
+              "poids": 2,
+              "renseigne": true
+            },
+            {
+              "critere": "valeurArchitecturaleHistorique",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "qualitePaysage",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "qualiteVoieDesserte",
+              "poids": 0.5,
+              "renseigne": true
+            },
+            {
+              "critere": "trameVerteEtBleue",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "presenceEspecesProtegees",
+              "poids": 1,
+              "renseigne": true
+            },
+            {
+              "critere": "presenceZoneHumide",
+              "poids": 1,
+              "renseigne": true
+            }
+          ]
+        },
+        "resultats": [
+          {
+            "usage": "renaturation",
+            "rang": 1,
+            "indiceMutabilite": 57.1,
+            "potentiel": "Bon",
+            "explication": "Usage renaturation avec un potentiel bon (57.1%)",
+            "exclu": false,
+            "avantages": 18,
+            "contraintes": 13.5,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "degradation-tres-importante",
+                  "scoreBrut": 2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": -2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "oui-amiante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 18,
+              "totalContraintes": 13.5
+            },
+            "tags": [
+              "bâti ruine",
+              "val. patr. faible",
+              "paysage dégradé",
+              "excentré",
+              "zon. pat. non-protégée"
+            ]
+          },
+          {
+            "usage": "tertiaire",
+            "rang": 2,
+            "indiceMutabilite": 55.3,
+            "potentiel": "Bon",
+            "explication": "Usage tertiaire avec un potentiel bon (55.3%)",
+            "exclu": false,
+            "avantages": 15.75,
+            "contraintes": 12.75,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "degradation-tres-importante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "oui-amiante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 15.75,
+              "totalContraintes": 12.75
+            },
+            "tags": [
+              "zonage compatible",
+              "TC prox.",
+              "services proches",
+              "zon. env. non contraint",
+              "zon. pat. non-protégée"
+            ]
+          },
+          {
+            "usage": "industrie",
+            "rang": 3,
+            "indiceMutabilite": 55.2,
+            "potentiel": "Bon",
+            "explication": "Usage industrie avec un potentiel bon (55.2%)",
+            "exclu": false,
+            "avantages": 18.5,
+            "contraintes": 15,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": -2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "degradation-tres-importante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "oui-amiante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": -1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": -1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 18.5,
+              "totalContraintes": 15
+            },
+            "tags": [
+              "zonage compatible",
+              "excentré",
+              "val. patr. faible",
+              "paysage dégradé",
+              "TC prox."
+            ]
+          },
+          {
+            "usage": "photovoltaique",
+            "rang": 4,
+            "indiceMutabilite": 53.8,
+            "potentiel": "Bon",
+            "explication": "Usage photovoltaique avec un potentiel bon (53.8%)",
+            "exclu": false,
+            "avantages": 17.5,
+            "contraintes": 15,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "degradation-tres-importante",
+                  "scoreBrut": 2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": -2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "oui-amiante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 17.5,
+              "totalContraintes": 15
+            },
+            "tags": [
+              "bâti ruine",
+              "val. patr. faible",
+              "paysage dégradé",
+              "excentré",
+              "zon. env. non contraint"
+            ]
+          },
+          {
+            "usage": "residentiel",
+            "rang": 5,
+            "indiceMutabilite": 53.6,
+            "potentiel": "Bon",
+            "explication": "Usage residentiel avec un potentiel bon (53.6%)",
+            "exclu": false,
+            "avantages": 18.5,
+            "contraintes": 16,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 1,
+                  "poids": 0.5,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": -2,
+                  "poids": 2,
+                  "scorePondere": 4
+                },
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "degradation-tres-importante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "oui-amiante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": -2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 18.5,
+              "totalContraintes": 16
+            },
+            "tags": [
+              "petite parcelle",
+              "services proches",
+              "peu de vacance",
+              "réseau de chaleur",
+              "TC prox."
+            ]
+          },
+          {
+            "usage": "equipements",
+            "rang": 6,
+            "indiceMutabilite": 53.3,
+            "potentiel": "Bon",
+            "explication": "Usage equipements avec un potentiel bon (53.3%)",
+            "exclu": false,
+            "avantages": 16.25,
+            "contraintes": 14.25,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "degradation-tres-importante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "oui-amiante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 16.25,
+              "totalContraintes": 14.25
+            },
+            "tags": [
+              "petite parcelle",
+              "services proches",
+              "réseau de chaleur",
+              "TC prox.",
+              "zon. env. non contraint"
+            ]
+          },
+          {
+            "usage": "culture",
+            "rang": 7,
+            "indiceMutabilite": 46.6,
+            "potentiel": "Moyen",
+            "explication": "Usage culture avec un potentiel moyen (46.6%)",
+            "exclu": false,
+            "avantages": 13.75,
+            "contraintes": 15.75,
+            "detailsCalcul": {
+              "detailsAvantages": [
+                {
+                  "critere": "distanceReseauChaleur",
+                  "valeur": 380,
+                  "scoreBrut": 2,
+                  "poids": 1,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "distanceTransportCommun",
+                  "valeur": 450,
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "zonageEnvironnemental",
+                  "valeur": "hors-zone",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "trameVerteEtBleue",
+                  "valeur": "hors-trame",
+                  "scoreBrut": 1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsContraintes": [
+                {
+                  "critere": "etatBatiInfrastructure",
+                  "valeur": "degradation-tres-importante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "presencePollution",
+                  "valeur": "oui-amiante",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "zonageReglementaire",
+                  "valeur": "zone-urbaine-u-activite",
+                  "scoreBrut": -1,
+                  "poids": 2,
+                  "scorePondere": 2
+                },
+                {
+                  "critere": "surfaceSite",
+                  "valeur": 5060,
+                  "scoreBrut": 0.5,
+                  "poids": 2,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "valeurArchitecturaleHistorique",
+                  "valeur": "sans-interet",
+                  "scoreBrut": -1,
+                  "poids": 1,
+                  "scorePondere": 1
+                },
+                {
+                  "critere": "typeProprietaire",
+                  "valeur": "prive",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualitePaysage",
+                  "valeur": "ordinaire",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnCentreVille",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "proximiteCommercesServices",
+                  "valeur": true,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "tauxLogementsVacants",
+                  "valeur": 6.9,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceRisquesTechnologiques",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zonagePatrimonial",
+                  "valeur": "non-concerne",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "risqueInondation",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "zoneAccelerationEnr",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceEspecesProtegees",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "presenceZoneHumide",
+                  "valeur": "non",
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "siteEnQpv",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "saturationReseauEnr",
+                  "valeur": false,
+                  "scoreBrut": 0.5,
+                  "poids": 1,
+                  "scorePondere": 0.5
+                },
+                {
+                  "critere": "qualiteVoieDesserte",
+                  "valeur": "degradee",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceAutoroute",
+                  "valeur": 4.2,
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "risqueRetraitGonflementArgile",
+                  "valeur": "faible-ou-moyen",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "zonageAbcLogement",
+                  "valeur": "b2",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                },
+                {
+                  "critere": "distanceIte",
+                  "valeur": "moins-1km-mauvais-etat",
+                  "scoreBrut": 0.5,
+                  "poids": 0.5,
+                  "scorePondere": 0.25
+                }
+              ],
+              "detailsCriteresVides": [
+                {
+                  "critere": "surfaceBati",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 2,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "raccordementEau",
+                  "valeur": "ne-sait-pas",
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "distanceRaccordementElectrique",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 1,
+                  "scorePondere": 0
+                },
+                {
+                  "critere": "risqueCavitesSouterraines",
+                  "valeur": null,
+                  "scoreBrut": 0,
+                  "poids": 0.5,
+                  "scorePondere": 0
+                }
+              ],
+              "totalAvantages": 13.75,
+              "totalContraintes": 15.75
+            },
+            "tags": [
+              "réseau de chaleur",
+              "TC prox.",
+              "zon. env. non contraint",
+              "hors trame verte"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
