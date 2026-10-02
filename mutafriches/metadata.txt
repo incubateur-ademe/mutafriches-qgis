@@ -1,0 +1,16 @@
+[general]
+name=Mutafriches (maquette)
+qgisMinimumVersion=3.44
+qgisMaximumVersion=3.99
+description=Maquette : qualifier un site et consulter sa mutabilité, sur données fictives.
+about=Maquette locale non publiée de l'extension Mutafriches. Sélection des parcelles d'un site dans une couche QGIS, trois étapes de qualification, mutabilité sur sept usages et fiabilité. Données et résultats simulés à partir de réponses figées : aucun appel à l'API Mutafriches. Testée uniquement sous QGIS 3.44.14 (macOS).
+version=0.1.0
+author=Équipe Mutafriches (beta.gouv.fr / ADEME)
+homepage=https://mutafriches.beta.gouv.fr
+repository=https://github.com/incubateur-ademe/mutafriches-qgis
+tracker=https://github.com/incubateur-ademe/mutafriches-qgis/issues
+category=Plugins
+icon=icons/mutafriches.svg
+experimental=True
+deprecated=False
+tags=friches,mutabilité,foncier,cadastre
