@@ -350,7 +350,7 @@ else:
         vers_wgs84 = QgsCoordinateTransform(L93, QgsCoordinateReferenceSystem("EPSG:4326"), QgsProject.instance())
         for source in paire:
             copie = QgsFeature(couche.fields())
-            copie.setAttributes([source["idu"], "Limoges"])
+            copie.setAttributes([source["idu"], "Trélazé"])
             geometrie = QgsGeometry(source.geometry())
             geometrie.transform(vers_wgs84)
             copie.setGeometry(geometrie)

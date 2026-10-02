@@ -171,6 +171,11 @@ class ChampSaisie(QWidget):
         liste.addItem(CHOIX_VIDE, "")
         for valeur, libelle in options:
             liste.addItem(libelle, valeur)
+        # Les options longues du web élargiraient sinon tout le panneau : la liste suit sa
+        # largeur, le menu déroulant affiche les libellés en entier
+        liste.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        liste.setMinimumContentsLength(12)
+        liste.view().setMinimumWidth(liste.view().sizeHintForColumn(0) + 24)
         liste.currentIndexChanged.connect(self._modifie)
         return liste
 

@@ -5,7 +5,7 @@ from pathlib import Path
 from qgis.core import QgsCoordinateReferenceSystem, QgsFillSymbol, QgsProject, QgsVectorLayer
 
 FICHIER_PARCELLES = Path(__file__).resolve().parent.parent / "demo" / "terrain" / "parcelles.geojson"
-NOM_COUCHE = "Parcelles d'exemple (Limoges, IGN)"
+NOM_COUCHE = "Parcelles d'exemple (Trélazé, IGN)"
 
 
 def ajouter_parcelles_exemple() -> QgsVectorLayer:

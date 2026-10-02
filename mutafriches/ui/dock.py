@@ -1,14 +1,18 @@
 """Panneau latéral : bandeau, en-tête, page courante et pied fixe."""
 
+from pathlib import Path
+
 from qgis.gui import QgsDockWidget
 from qgis.PyQt.QtCore import QPoint, Qt
+from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from . import style
 from .pages import Page, PageEtape, PageSelection
 from .resultats import PageResultats
 from .parcours import Etape, Parcours
-from .widgets import texte
+
+LOGO = Path(__file__).resolve().parent.parent / "icons" / "logo-mutafriches.png"
 
 
 class DockMutafriches(QgsDockWidget):
@@ -35,7 +39,11 @@ class DockMutafriches(QgsDockWidget):
         entete.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         entete_layout = QVBoxLayout(entete)
         entete_layout.setContentsMargins(16, 12, 16, 4)
-        entete_layout.addWidget(texte("Mutafriches", "mfTitre"))
+        logo = QLabel()
+        logo.setPixmap(QPixmap(str(LOGO)))
+        logo.setAccessibleName("Mutafriches")
+        logo.setToolTip("Mutafriches")
+        entete_layout.addWidget(logo)
         layout.addWidget(entete)
 
         self.pages: dict[int, Page] = {
