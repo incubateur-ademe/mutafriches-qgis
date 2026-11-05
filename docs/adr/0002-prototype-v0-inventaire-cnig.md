@@ -34,11 +34,11 @@ territorial », à présenter en captures d'écran avant tout développement ré
 4. **Symbologie livrée** : remplissage par usage prioritaire, étiquette « nom, usage, indice »
    sur fond de la couleur de l'usage, légende dans le panneau Couches. Un fond OpenStreetMap
    est ajouté si le projet est vide.
-5. **Tableau de bord territorial en HTML**, construit avec DSFR et dsfr-chart et ouvert dans le
-   navigateur du poste. QtWebEngine est absent de QGIS macOS et QtWebKit n'exécute pas
-   dsfr-chart (syntaxe JavaScript moderne) : la page est écrite sur disque puis ouverte par
-   `QDesktopServices`. Les ressources (DSFR 1.15.4, dsfr-chart 2.1.1, police Marianne) sont
-   embarquées pour fonctionner hors ligne.
+5. **Tableau de bord territorial dans le panneau**, en widgets Qt natifs : anneaux et barres
+   dessinés avec QPainter, petits tableaux en grille. Une première version en HTML avec
+   dsfr-chart, ouverte dans le navigateur, a été écartée : sortir de QGIS casse le parcours, et
+   ni QtWebEngine (absent sur macOS) ni QtWebKit (syntaxe JavaScript trop ancienne) ni QtCharts
+   (non embarqué) ne permettent de l'afficher dans le panneau.
 6. **Accueil** : fenêtre modale « qui êtes-vous » (structure, mail, consentement), mémorisée
    dans `QgsSettings`. Prototype : rien n'est envoyé.
 
@@ -57,8 +57,6 @@ territorial », à présenter en captures d'écran avant tout développement ré
 - Le parcours site à site (sélection de parcelles, trois étapes de saisie) sort du panneau ;
   `resultats.py`, `recapitulatif.py` et le service simulé restent dans le code pour une future
   vue de détail d'un site.
-- Le ZIP passe à environ 1 Mo (ressources DSFR).
-- Les couleurs des graphiques dsfr-chart sont celles de ses palettes, pas celles de la carte :
-  à harmoniser si le tableau de bord devient un livrable.
+- Les couleurs des graphiques du panneau sont celles de la carte (une couleur par usage).
 - Passage au réel : remplacer `charger_table` par un appel à `GET /api/attributaire/sites`
   (ou un futur `POST` recevant le fichier CNIG), via `QgsNetworkAccessManager`.

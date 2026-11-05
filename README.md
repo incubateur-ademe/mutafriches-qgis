@@ -5,8 +5,8 @@ publiée**.
 
 Prototype V0 (ADR-0002) : l'utilisateur se présente, envoie son inventaire de sites au
 **standard CNIG Friches**, et reçoit une table attributaire de mutabilité, une table de
-qualification, une carte symbolisée par usage et un tableau de bord territorial (DSFR,
-dsfr-chart) ouvert dans le navigateur. Objectif : captures d'écran.
+qualification, une carte symbolisée par usage et un tableau de bord territorial dans le
+panneau. Objectif : captures d'écran.
 
 > **Données figées.** Les résultats sont ceux de la table attributaire publique de
 > Montereau-Fault-Yonne (77305), gelée dans le plugin : aucun appel à l'API n'est effectué.
@@ -35,19 +35,20 @@ précédente est remplacée).
 3. **Envoyer mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
    par usage et indice ; Qualification, masquée), avec un fond OpenStreetMap si le projet était
    vide.
-4. Panneau : alerte « sites nécessitant votre attention » (lignes écartées, sites non retrouvés),
-   chiffres clés, répartition des usages et de la fiabilité, sites à forte compatibilité. Boutons
-   **Ouvrir le tableau de bord territorial** (navigateur), **Table mutabilité**, **Table
-   qualification**, lien **Analyser un autre inventaire**.
+4. Panneau résultats, tableau de bord territorial : alerte « sites nécessitant votre attention »
+   (lignes écartées, sites non retrouvés, sites peu fiables), chiffres clés, anneau des usages,
+   barres par usage avec indice moyen, anneau de fiabilité, profils de sites, niveaux de
+   compatibilité, sites à forte compatibilité (cliquer un site le sélectionne et cadre la carte).
+   Boutons **Table mutabilité**, **Table qualification**, lien **Analyser un autre inventaire**.
+   Les tables s'ouvrent aussi depuis le panneau Couches : clic droit sur la couche, « Ouvrir la
+   table d'attributs », ou F6 sur la couche sélectionnée.
 
 Un fichier CNIG d'une autre commune est accepté mais ses sites ne sont pas retrouvés dans la
 table figée : le panneau le signale et affiche les résultats de Montereau.
 
 ## Captures
 
-`./scripts/e2e.sh` écrit les captures de la fenêtre QGIS dans `captures/` (local, ignoré par git), plus
-`tableau-de-bord.html` (28 sites) et `tableau-de-bord-avec-alertes.html` (4 sites, 6 lignes
-écartées), à ouvrir depuis le dépôt : ils référencent les ressources DSFR du plugin en relatif.
+`./scripts/e2e.sh` écrit les captures de la fenêtre QGIS dans `captures/` (local, ignoré par git).
 
 ### Captures en mode clair (macOS)
 
