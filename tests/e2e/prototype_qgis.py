@@ -53,6 +53,14 @@ def boutons(libelle: str, racine: QWidget | None = None) -> list[QPushButton]:
     return [b for b in (racine or dock()).findChildren(QPushButton) if b.isVisible() and b.text().strip().startswith(libelle)]
 
 
+def cliquer_accessible(nom: str) -> None:
+    QApplication.processEvents()
+    b = next((b for b in dock().findChildren(QPushButton) if b.isVisible() and b.accessibleName() == nom), None)
+    if b is None:
+        raise AssertionError(f"Bouton introuvable : {nom}")
+    QTest.mouseClick(b, Qt.MouseButton.LeftButton)
+
+
 def cliquer(libelle: str, racine: QWidget | None = None) -> None:
     candidats = [b for b in boutons(libelle, racine) if b.isEnabled()]
     if not candidats:
@@ -192,6 +200,26 @@ def resultats() -> None:
 @etape(4000)
 def table_mutabilite() -> None:
     capture("07-resultats-carte")
+    cliquer("Table mutabilité")
+
+
+@etape(1500)
+def site_sur_la_carte() -> None:
+    table = dock_titre("Mutabilité")
+    if table is not None:
+        table.close()
+    premier = parcours().synthese.sites_forte_compatibilite[0]
+    avant = iface.mapCanvas().scale()
+    cliquer_accessible(f"Voir sur la carte : {premier.nom}")
+    couche = parcours().couche_mutabilite
+    controler("site sélectionné sur la carte", couche.selectedFeatureCount() == 1 and iface.mapCanvas().scale() < avant, (couche.selectedFeatureCount(), avant, iface.mapCanvas().scale()))
+
+
+@etape(2500)
+def capture_site() -> None:
+    capture("07b-site-selectionne")
+    parcours().couche_mutabilite.removeSelection()
+    parcours().zoomer()
     cliquer("Table mutabilité")
 
 

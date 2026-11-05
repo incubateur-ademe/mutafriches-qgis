@@ -255,9 +255,12 @@ class PageResultats(Page):
                 self.zone.addWidget(Barre(niveau, nombre, s.nombre_sites, couleurs[niveau]))
         self.zone.addWidget(separateur())
         self.zone.addWidget(texte("Sites à forte compatibilité", "mfH3"))
+        self.zone.addWidget(texte("Cliquer un site le sélectionne et cadre la carte.", "mfAide"))
         for site in s.sites_forte_compatibilite[:8]:
             ligne = QHBoxLayout()
-            ligne.addWidget(texte(site.nom, "mfValeur"), 1)
+            lien = bouton(site.nom, "lien", lambda _=False, site=site: parcours.mettre_en_avant(site))
+            lien.setAccessibleName(f"Voir sur la carte : {site.nom}")
+            ligne.addWidget(lien, 1)
             ligne.addWidget(badge(f"{libelle_usage(site.usage_prioritaire)} · {round(site.indice_max)} %", "tag"), 0, Qt.AlignmentFlag.AlignTop)
             self.zone.addLayout(ligne)
         if len(s.sites_forte_compatibilite) > 8:

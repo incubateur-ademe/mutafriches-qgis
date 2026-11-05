@@ -133,6 +133,18 @@ class Parcours(QObject):
         self.canvas.setExtent(emprise_carte(self.couche_mutabilite, self.canvas.mapSettings().destinationCrs()))
         self.canvas.refresh()
 
+    def mettre_en_avant(self, site: SiteAttributaire) -> None:
+        """Sélectionne le site dans la couche de mutabilité et cadre la carte dessus."""
+        couche = self.couche_mutabilite
+        if couche is None:
+            return
+        identifiant = (site.site_id or site.cle).replace("'", "''")
+        couche.selectByExpression(f"\"site_id\" = '{identifiant}'")
+        if couche.selectedFeatureCount():
+            self.canvas.zoomToSelected(couche)
+            self.canvas.zoomScale(max(self.canvas.scale() * 1.6, 2000))
+        self.iface.setActiveLayer(couche)
+
     def ouvrir_table_mutabilite(self) -> None:
         if self.couche_mutabilite is not None:
             self.iface.showAttributeTable(self.couche_mutabilite)
