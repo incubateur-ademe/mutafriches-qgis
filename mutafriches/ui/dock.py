@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from qgis.gui import QgsDockWidget
-from qgis.PyQt.QtCore import QPoint, Qt
+from qgis.PyQt.QtCore import QPoint, Qt, QTimer
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
@@ -84,4 +84,5 @@ class DockMutafriches(QgsDockWidget):
         self.pages[etape].rafraichir()
         if etape != self._etape_affichee:
             self._etape_affichee = etape
-            self.defilement.verticalScrollBar().setValue(0)
+            # Après la mise en page : le focus d'un bouton ferait sinon défiler la page au milieu
+            QTimer.singleShot(0, lambda: self.defilement.verticalScrollBar().setValue(0))

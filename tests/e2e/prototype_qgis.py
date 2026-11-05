@@ -16,6 +16,8 @@ from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtTest import QTest
 from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QPushButton, QWidget
 
+from mutafriches.ui.widgets import Encadre
+
 SORTIE = Path(os.environ["MF_E2E_SORTIE"])
 # Captures PNG dans un dossier dédié (partagées), rapport et journal dans la sortie E2E
 CAPTURES = Path(os.environ.get("MF_E2E_CAPTURES", str(SORTIE)))
@@ -191,15 +193,16 @@ def resultats() -> None:
     noms = [c.name() for c in QgsProject.instance().mapLayers().values()]
     controler("deux couches créées", any("Mutabilité" in n for n in noms) and any("Qualification" in n for n in noms), noms)
     controler("étiquettes activées", p.couche_mutabilite.labelsEnabled())
-    controler("tableau de bord écrit", p.dashboard is not None and p.dashboard.exists() and "pie-chart" in p.dashboard.read_text(encoding="utf-8"))
-    copie = SORTIE / "tableau-de-bord-28-sites.html"
-    copie.write_text(p.dashboard.read_text(encoding="utf-8"), encoding="utf-8")
-    contexte["dashboard"] = str(copie)
 
 
 @etape(4000)
 def table_mutabilite() -> None:
     capture("07-resultats-carte")
+    barre = dock().defilement.verticalScrollBar()
+    for numero, position in enumerate((0.33, 0.66, 1.0), start=1):
+        barre.setValue(int(barre.maximum() * position))
+        capture(f"07{'abc'[numero - 1]}-tableau-de-bord-{numero}")
+    barre.setValue(0)
     cliquer("Table mutabilité")
 
 
@@ -217,7 +220,7 @@ def site_sur_la_carte() -> None:
 
 @etape(2500)
 def capture_site() -> None:
-    capture("07b-site-selectionne")
+    capture("07d-site-selectionne")
     parcours().couche_mutabilite.removeSelection()
     parcours().zoomer()
     cliquer("Table mutabilité")
@@ -265,9 +268,7 @@ def envoyer_fichier_erreurs() -> None:
 def resultats_avec_alertes() -> None:
     p = parcours()
     controler("4 sites analysés, 6 lignes écartées", p.etape == 2 and p.synthese.nombre_sites == 4 and len(p.lignes_ecartees) == 6)
-    controler("alerte attention dans le tableau de bord", "nécessitent votre attention" in p.dashboard.read_text(encoding="utf-8"))
-    contexte["dashboard_alertes"] = str(p.dashboard)
-    iface.mainWindow().findChild(QDockWidget, "mfTableCapture")
+    controler("alerte attention dans le panneau", any("nécessitent votre attention" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()))
 
 
 @etape(2500)
@@ -277,8 +278,6 @@ def capture_alertes() -> None:
 
 
 def terminer() -> None:
-    rapport["dashboard"] = contexte.get("dashboard", "")
-    rapport["dashboard_alertes"] = contexte.get("dashboard_alertes", "")
     (SORTIE / f"rapport-{PHASE}.json").write_text(json.dumps(rapport, ensure_ascii=False, indent=2), encoding="utf-8")
     # Les couches mémoire déclenchent sinon une question à la fermeture
     QgsProject.instance().removeAllMapLayers()

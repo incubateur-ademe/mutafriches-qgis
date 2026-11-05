@@ -16,7 +16,6 @@ from mutafriches.core.attributaire import (
     synthese,
 )
 from mutafriches.core.cnig import lire_cnig
-from mutafriches.dashboard.generer import generer_html
 
 
 class TestCnig(unittest.TestCase):
@@ -94,7 +93,7 @@ class TestAttributaire(unittest.TestCase):
         self.assertEqual(profil_ecart(40)[0], "Fort contraste")
 
 
-class TestCouchesEtDashboard(unittest.TestCase):
+class TestCouches(unittest.TestCase):
     def test_colonnes_mutabilite_dans_l_ordre_demande(self) -> None:
         noms = [c.name() for c in champs_mutabilite()]
         self.assertEqual(noms[:5], ["site_id", "site_nom", "mf_usage_prioritaire", "mf_usage_prioritaire_lib", "mf_indice_prioritaire"])
@@ -114,17 +113,6 @@ class TestCouchesEtDashboard(unittest.TestCase):
         entite = next(mutabilite.getFeatures())
         self.assertTrue(entite["mf_usage_prioritaire"])
         self.assertTrue(QgsProject.instance().mapLayersByName(mutabilite.name()))
-
-    def test_dashboard_html(self) -> None:
-        sites, meta = charger_table()
-        html = generer_html(synthese(sites, meta), sites, "avertissement test", ["ligne 4 : Doublon"])
-        self.assertIn("<pie-chart", html)
-        self.assertIn("nécessite votre attention", html)
-        self.assertIn("ligne 4 : Doublon", html)
-        self.assertIn("<gauge-chart", html)
-        self.assertIn("DSFRChart.umd.cjs", html)
-        self.assertIn("Montereau-Fault-Yonne", html)
-        self.assertIn("avertissement test", html)
 
 
 if __name__ == "__main__":

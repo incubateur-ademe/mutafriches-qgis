@@ -1,14 +1,12 @@
 """État du parcours prototype : utilisateur, envoi des sites CNIG, résultats figés."""
 
 import shutil
-import tempfile
 from pathlib import Path
 from typing import Optional
 
 from qgis.core import QgsVectorLayer
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QObject, QTimer, QUrl, pyqtSignal
-from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 
 from ..carto.couches import creer_couches, emprise_carte
 from ..core.attributaire import (
@@ -20,7 +18,6 @@ from ..core.attributaire import (
     synthese,
 )
 from ..core.cnig import LectureCnig, lire_cnig
-from ..dashboard.generer import ecrire_dashboard
 from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 
 # Attente simulée de l'analyse par lot, proche d'un appel réel pour quelques dizaines de sites
@@ -53,7 +50,6 @@ class Parcours(QObject):
         self.avertissement = ""
         self.couche_mutabilite: Optional[QgsVectorLayer] = None
         self.couche_qualification: Optional[QgsVectorLayer] = None
-        self.dashboard: Optional[Path] = None
         self._timer: Optional[QTimer] = None
 
     # --- Accueil ------------------------------------------------------------------------------
@@ -114,13 +110,6 @@ class Parcours(QObject):
         self.avertissement = str(meta.get("avertissement", ""))
         self.synthese = synthese(self.sites, meta)
         self.couche_mutabilite, self.couche_qualification = creer_couches(self.sites, self.synthese.code_insee)
-        self.dashboard = ecrire_dashboard(
-            Path(tempfile.gettempdir()) / "mutafriches-qgis",
-            self.synthese,
-            self.sites,
-            self.avertissement,
-            self.lignes_ecartees + [f"non retrouvé dans la table : {n}" for n in self.non_retrouves],
-        )
         self.etape = Etape.RESULTATS
         self.change.emit()
         self.zoomer()
@@ -153,9 +142,10 @@ class Parcours(QObject):
         if self.couche_qualification is not None:
             self.iface.showAttributeTable(self.couche_qualification)
 
-    def ouvrir_dashboard(self) -> None:
-        if self.dashboard is not None:
-            QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.dashboard)))
+    @property
+    def attention(self) -> list[str]:
+        """Sites non analysés : lignes écartées et sites absents de la table figée."""
+        return self.lignes_ecartees + [f"non retrouvé dans la table : {n}" for n in self.non_retrouves]
 
     def nouvelle_analyse(self) -> None:
         if self._timer is not None:

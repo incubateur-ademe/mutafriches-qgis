@@ -49,16 +49,6 @@ for PHASE in prototype; do
   fi
 done
 
-# Tableaux de bord générés, copiés avec des chemins relatifs vers les ressources du dépôt
-copier_tdb() {
-  if [ -n "$1" ] && [ -f "$1" ]; then
-    sed -e "s#file://.*/dashboard/vendor#../mutafriches/dashboard/vendor#g" \
-        -e "s#file://.*/logo-mutafriches.png#../mutafriches/icons/logo-mutafriches.png#g" "$1" > "$CAPTURES/$2"
-  fi
-}
-copier_tdb "$(python3 -c "import json;print(json.load(open('$E2E/rapport-prototype.json')).get('dashboard',''))")" "tableau-de-bord.html"
-copier_tdb "$(python3 -c "import json;print(json.load(open('$E2E/rapport-prototype.json')).get('dashboard_alertes',''))")" "tableau-de-bord-avec-alertes.html"
-
 python3 - "$E2E" <<'PY'
 import json, sys
 from pathlib import Path
