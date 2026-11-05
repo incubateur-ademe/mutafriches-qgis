@@ -2,15 +2,18 @@
 
 from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
+from qgis.PyQt.QtWidgets import QCheckBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
 from ..carto.couches import COULEURS_USAGES
 from ..core.attributaire import NIVEAUX_FIABILITE, ORDRE_USAGES, Synthese, libelle_usage
+from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
 from .widgets import Encadre, badge, bouton, entete_champ, separateur, texte, vider
+
+MAX_LIGNES_AFFICHEES = 40
 
 
 class PageAccueil(Page):
@@ -77,6 +80,9 @@ class PageImport(Page):
         self.zone.setSpacing(8)
         self.corps.addLayout(self.zone)
         self.corps.addStretch(1)
+        self.corps.addWidget(separateur())
+        self.corps.addWidget(texte(contenus.AIDE_EXEMPLE_CNIG, "mfAide"))
+        self.corps.addWidget(bouton(contenus.BOUTON_MODELE_CNIG, "secondaire", self._telecharger_modele))
         self.utilisateur = texte("", "mfAide")
         ligne = QHBoxLayout()
         ligne.addWidget(self.utilisateur, 1)
@@ -84,6 +90,13 @@ class PageImport(Page):
         self.pied_layout.addLayout(ligne)
         self.bouton_envoyer = bouton("Envoyer mes sites", "primaire", parcours.envoyer)
         self.pied_layout.addWidget(self.bouton_envoyer)
+
+    def _telecharger_modele(self) -> None:
+        chemin, _ = QFileDialog.getSaveFileName(
+            self.contenu, "Enregistrer le fichier exemple CNIG", "modele-friches-cnig.csv", "CSV (*.csv)"
+        )
+        if chemin:
+            self.parcours.enregistrer_modele(chemin)
 
     def rafraichir(self) -> None:
         parcours = self.parcours
@@ -95,40 +108,57 @@ class PageImport(Page):
         if parcours.analyse_en_cours and lecture is not None:
             self.zone.addWidget(
                 Chargement(
-                    f"Analyse de {pluriel(len(lecture.sites), 'site')} en cours...",
+                    f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
                     contenus.SOUS_TITRE_CHARGEMENT,
                     contenus.MESSAGE_ANALYSE_LOT,
                 )
             )
-        elif lecture is None:
-            self.zone.addWidget(texte(contenus.AIDE_EXEMPLE_CNIG, "mfAide"))
-            self.zone.addWidget(bouton(contenus.LIEN_EXEMPLE_CNIG, "lien", parcours.utiliser_exemple))
-            self.zone.addWidget(bouton(contenus.LIEN_EXEMPLE_ERRONE, "lien", parcours.utiliser_exemple_errone))
-        elif lecture.valide:
-            self.zone.addWidget(
-                Encadre(
-                    "succes",
-                    f"{pluriel(len(lecture.sites), 'site')} lu{'s' if len(lecture.sites) > 1 else ''} dans {lecture.fichier}",
-                    "\n".join(p.message for p in lecture.problemes),
-                )
-            )
-        else:
-            bloquants = lecture.bloquants
-            self.zone.addWidget(
-                Encadre(
-                    "erreur",
-                    f"Fichier refusé : {pluriel(len(bloquants), 'erreur')}",
-                    "\n".join((f"Ligne {p.ligne} : " if p.ligne else "") + p.message for p in bloquants[:12])
-                    + ("\n…" if len(bloquants) > 12 else ""),
-                )
-            )
+        elif lecture is not None and lecture.bloquants:
+            self.zone.addWidget(Encadre("erreur", f"Fichier refusé : {lecture.fichier}", "\n".join(p.message for p in lecture.bloquants)))
             self.zone.addWidget(texte(contenus.AIDE_ERREUR_CNIG, "mfAide"))
+        elif lecture is not None:
+            ok, ko = lecture.sites_ok, lecture.sites_ko
+            if ko:
+                self.zone.addWidget(
+                    Encadre(
+                        "avertissement" if ok else "erreur",
+                        f"{pluriel(len(ok), 'site')} prêt{'s' if len(ok) > 1 else ''}, {pluriel(len(ko), 'ligne')} en erreur",
+                        contenus.AIDE_ERREUR_CNIG,
+                    )
+                )
+            else:
+                self.zone.addWidget(Encadre("succes", f"{pluriel(len(ok), 'site')} lu{'s' if len(ok) > 1 else ''} dans {lecture.fichier}", "\n".join(p.message for p in lecture.problemes)))
+            # Contrôle ligne à ligne, lignes en erreur en tête
+            for site in (ko + ok)[:MAX_LIGNES_AFFICHEES]:
+                self.zone.addWidget(LigneCnig(site))
+            if len(lecture.sites) > MAX_LIGNES_AFFICHEES:
+                self.zone.addWidget(texte(f"et {len(lecture.sites) - MAX_LIGNES_AFFICHEES} autres lignes", "mfAide"))
         utilisateur = parcours.utilisateur
         self.utilisateur.setText(f"{utilisateur.structure} · {utilisateur.mail}" if utilisateur.complet else "")
         self.utilisateur.setVisible(utilisateur.complet)
-        n = len(lecture.sites) if lecture is not None and lecture.valide else 0
+        n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Envoyer mes {n} sites" if n > 1 else "Envoyer mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
+
+
+class LigneCnig(QFrame):
+    """Une ligne du fichier : nom, identifiant, parcelles, et OK ou la liste de ses erreurs."""
+
+    def __init__(self, site: SiteCnig) -> None:
+        super().__init__()
+        self.setObjectName("mfLigneSite")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 6, 10, 6)
+        layout.setSpacing(2)
+        entete = QHBoxLayout()
+        entete.setSpacing(8)
+        entete.addWidget(texte(site.site_nom or site.site_id or f"Ligne {site.ligne}", "mfValeur"), 1)
+        entete.addWidget(badge("OK" if site.ok else "KO", "automatique" if site.ok else "alerte"), 0, Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(entete)
+        details = [f"ligne {site.ligne}", site.site_id or "sans identifiant", pluriel(len(site.parcelles), "parcelle")]
+        layout.addWidget(texte(" · ".join(details), "mfAide"))
+        for erreur in site.erreurs:
+            layout.addWidget(texte(erreur, "mfErreurChamp"))
 
 
 class Chiffre(QFrame):
@@ -182,10 +212,7 @@ class PageResultats(Page):
         ligne.addWidget(bouton("Table mutabilité", "secondaire", parcours.ouvrir_table_mutabilite))
         ligne.addWidget(bouton("Table qualification", "secondaire", parcours.ouvrir_table_qualification))
         self.pied_layout.addLayout(ligne)
-        ligne2 = QHBoxLayout()
-        ligne2.addWidget(bouton("Zoomer sur les sites", "secondaire", parcours.zoomer))
-        ligne2.addWidget(bouton("Nouvelle analyse", "secondaire", parcours.nouvelle_analyse))
-        self.pied_layout.addLayout(ligne2)
+        self.pied_layout.addWidget(bouton("Analyser un autre inventaire", "lien", parcours.nouvelle_analyse), 0, Qt.AlignmentFlag.AlignCenter)
 
     def rafraichir(self) -> None:
         parcours = self.parcours
@@ -195,15 +222,14 @@ class PageResultats(Page):
             return
         self.zone.addWidget(texte(f"{s.commune} ({s.code_insee})", "mfSurTitre"))
         self.zone.addWidget(texte(f"{pluriel(s.nombre_sites, 'site')} analysé{'s' if s.nombre_sites > 1 else ''}", "mfH2"))
-        if parcours.non_retrouves:
-            n = len(parcours.non_retrouves)
+        attention = parcours.lignes_ecartees + [f"non retrouvé dans la table : {n}" for n in parcours.non_retrouves]
+        if attention:
+            n = len(attention)
             self.zone.addWidget(
                 Encadre(
-                    "avertissement",
-                    f"{pluriel(n, 'site')} du fichier non retrouvé{'s' if n > 1 else ''} dans la table",
-                    "Prototype : seuls les sites déjà présents dans la table attributaire de Montereau-Fault-Yonne ont des résultats. "
-                    + ", ".join(parcours.non_retrouves[:5])
-                    + ("…" if n > 5 else ""),
+                    "erreur",
+                    f"{pluriel(n, 'site')} nécessite{'nt' if n > 1 else ''} votre attention",
+                    "Non analysés : " + " ; ".join(attention[:4]) + ("…" if n > 4 else "") + ". Détails dans le tableau de bord.",
                 )
             )
         dominant = max(s.par_usage.items(), key=lambda kv: kv[1])[0] if s.nombre_sites else None

@@ -195,10 +195,12 @@ AIDE_FICHIER = (
     "Fichier CSV ou GeoJSON au standard CNIG Friches (v2023-12). Colonnes attendues : site_id, "
     "site_nom, comm_insee, unite_fonciere_refcad (parcelles séparées par |) et geompoint."
 )
-AIDE_EXEMPLE_CNIG = "Pas d'inventaire sous la main ?"
-LIEN_EXEMPLE_CNIG = "Utiliser l'exemple de Montereau-Fault-Yonne (28 sites)"
-LIEN_EXEMPLE_ERRONE = "Voir un fichier refusé (erreurs de format)"
-AIDE_ERREUR_CNIG = "Corrigez le fichier puis choisissez-le à nouveau. Le standard est consultable sur schema.data.gouv.fr (cnigfr/schema-friches)."
+AIDE_EXEMPLE_CNIG = (
+    "Besoin du bon format ? Le fichier exemple contient trois sites fictifs à remplacer par les "
+    "vôtres ; il n'a de valeur que comme modèle."
+)
+BOUTON_MODELE_CNIG = "Télécharger un fichier exemple"
+AIDE_ERREUR_CNIG = "Les lignes en erreur sont écartées de l'envoi. Corrigez le fichier puis choisissez-le à nouveau. Standard : schema.data.gouv.fr (cnigfr/schema-friches)."
 MESSAGE_ANALYSE_LOT = (
     "Pour chaque site, nous recueillons des informations localisées depuis plus de dix bases de "
     "données nationales, puis calculons sa mutabilité pour sept usages."

@@ -14,6 +14,7 @@ DOSSIER_MONTEREAU = Path(__file__).resolve().parent.parent / "demo" / "montereau
 FICHIER_ATTRIBUTAIRE = DOSSIER_MONTEREAU / "attributaire-77305.geojson"
 FICHIER_CNIG_EXEMPLE = DOSSIER_MONTEREAU / "friches-cnig-montereau.csv"
 FICHIER_CNIG_ERREURS = DOSSIER_MONTEREAU / "friches-cnig-erreurs.csv"
+FICHIER_MODELE_CNIG = DOSSIER_MONTEREAU / "modele-cnig.csv"
 
 # Ordre des colonnes d'usage : usages les plus souvent prioritaires en premier. Valeur provisoire
 # à caler sur Metabase (répartition nationale des usages prioritaires) ; ici l'ordre observé sur

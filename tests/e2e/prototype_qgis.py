@@ -17,6 +17,8 @@ from qgis.PyQt.QtTest import QTest
 from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QPushButton, QWidget
 
 SORTIE = Path(os.environ["MF_E2E_SORTIE"])
+# Captures PNG dans un dossier dédié (partagées), rapport et journal dans la sortie E2E
+CAPTURES = Path(os.environ.get("MF_E2E_CAPTURES", str(SORTIE)))
 PHASE = os.environ.get("MF_E2E_PHASE", "prototype")
 iface = qgis.utils.iface
 rapport: dict[str, object] = {"phase": PHASE, "controles": [], "erreurs": []}
@@ -30,7 +32,7 @@ def controler(nom: str, condition: bool, detail: object = "") -> None:
 
 def capture(nom: str) -> None:
     QApplication.processEvents()
-    iface.mainWindow().grab().save(str(SORTIE / f"{PHASE}-{nom}.png"))
+    iface.mainWindow().grab().save(str(CAPTURES / f"{nom}.png"))
 
 
 def plugin():  # type: ignore[no-untyped-def]
@@ -137,20 +139,33 @@ def panneau_vide() -> None:
 
 
 @etape()
-def fichier_refuse() -> None:
-    cliquer("Voir un fichier refusé")
+def fichier_avec_erreurs() -> None:
+    from mutafriches.core.attributaire import FICHIER_CNIG_ERREURS
+
+    parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
     lecture = parcours().lecture
-    controler("fichier refusé", lecture is not None and not lecture.valide and len(lecture.bloquants) >= 1)
-    controler("bouton Envoyer toujours inactif", not any(b.isEnabled() for b in boutons("Envoyer")))
-    capture("04-fichier-refuse")
+    controler("lignes en erreur écartées, fichier envoyable", lecture is not None and lecture.valide and len(lecture.sites_ko) == 6)
+
+
+@etape(800)
+def modele() -> None:
+    capture("04-fichier-lignes-en-erreur")
+    chemin = parcours().enregistrer_modele(str(SORTIE / "modele-friches-cnig.csv"))
+    controler("modèle CNIG copié", chemin.exists() and "99999" in chemin.read_text(encoding="utf-8"))
 
 
 @etape()
 def exemple() -> None:
+    from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE
+
     parcours().nouvelle_analyse()
-    cliquer("Utiliser l'exemple de Montereau")
+    parcours().choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
     lecture = parcours().lecture
-    controler("28 sites lus", lecture is not None and lecture.valide and len(lecture.sites) == 28)
+    controler("28 sites lus", lecture is not None and lecture.valide and len(lecture.sites_ok) == 28)
+
+
+@etape(800)
+def envoyer() -> None:
     capture("05-fichier-valide")
     cliquer("Envoyer mes 28 sites")
 
@@ -169,7 +184,9 @@ def resultats() -> None:
     controler("deux couches créées", any("Mutabilité" in n for n in noms) and any("Qualification" in n for n in noms), noms)
     controler("étiquettes activées", p.couche_mutabilite.labelsEnabled())
     controler("tableau de bord écrit", p.dashboard is not None and p.dashboard.exists() and "pie-chart" in p.dashboard.read_text(encoding="utf-8"))
-    contexte["dashboard"] = str(p.dashboard)
+    copie = SORTIE / "tableau-de-bord-28-sites.html"
+    copie.write_text(p.dashboard.read_text(encoding="utf-8"), encoding="utf-8")
+    contexte["dashboard"] = str(copie)
 
 
 @etape(4000)
@@ -201,12 +218,39 @@ def capture_table_qualification() -> None:
 
 @etape()
 def nouvelle_analyse() -> None:
-    cliquer("Nouvelle analyse")
+    cliquer("Analyser un autre inventaire")
     controler("retour à l'import", parcours().etape == 1 and parcours().lecture is None)
+
+
+# --- Second passage : fichier avec lignes en erreur, pour l'alerte « attention » -------------
+
+
+@etape()
+def envoyer_fichier_erreurs() -> None:
+    from mutafriches.core.attributaire import FICHIER_CNIG_ERREURS
+
+    parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
+    cliquer("Envoyer mes 4 sites")
+
+
+@etape(3200)
+def resultats_avec_alertes() -> None:
+    p = parcours()
+    controler("4 sites analysés, 6 lignes écartées", p.etape == 2 and p.synthese.nombre_sites == 4 and len(p.lignes_ecartees) == 6)
+    controler("alerte attention dans le tableau de bord", "nécessitent votre attention" in p.dashboard.read_text(encoding="utf-8"))
+    contexte["dashboard_alertes"] = str(p.dashboard)
+    iface.mainWindow().findChild(QDockWidget, "mfTableCapture")
+
+
+@etape(2500)
+def capture_alertes() -> None:
+    capture("10-resultats-avec-alertes")
+    QgsSettings().remove("mutafriches/utilisateur")
 
 
 def terminer() -> None:
     rapport["dashboard"] = contexte.get("dashboard", "")
+    rapport["dashboard_alertes"] = contexte.get("dashboard_alertes", "")
     (SORTIE / f"rapport-{PHASE}.json").write_text(json.dumps(rapport, ensure_ascii=False, indent=2), encoding="utf-8")
     # Les couches mémoire déclenchent sinon une question à la fermeture
     QgsProject.instance().removeAllMapLayers()

@@ -85,7 +85,29 @@ def _tableau_sites(sites: list[SiteAttributaire]) -> str:
     return "\n".join(lignes) or "<tr><td colspan='6'>Aucun site</td></tr>"
 
 
-def generer_html(synthese: Synthese, sites: list[SiteAttributaire], avertissement: str) -> str:
+def _alerte_attention(synthese: Synthese, non_analyses: list[str]) -> str:
+    """Sites écartés, non retrouvés ou peu fiables : ce qui demande une action de l'utilisateur."""
+    peu_fiables = [s for s in sites_peu_fiables(synthese)]
+    total = len(non_analyses) + len(peu_fiables)
+    if not total:
+        return ""
+    details = "".join(f"<li>Non analysé — {_h(n)}</li>" for n in non_analyses)
+    details += "".join(
+        f"<li>{_h(s.nom)} — {_h(s.fiabilite_niveau.lower())} ({formater_note(s.fiabilite)} / 10) : compléter la qualification</li>"
+        for s in peu_fiables
+    )
+    return f"""<div class="mf-alerte fr-mt-2w">
+  <strong>{total} site{'s' if total > 1 else ''} nécessite{'nt' if total > 1 else ''} votre attention</strong>
+  <details class="fr-mt-1w"><summary class="fr-text--sm">Voir les détails</summary><ul class="fr-text--sm fr-mb-0">{details}</ul></details>
+</div>"""
+
+
+def sites_peu_fiables(synthese: Synthese) -> list[SiteAttributaire]:
+    return [s for s in synthese.sites_a_qualifier if s.fiabilite_niveau in ("Moyennement fiable", "Peu fiable", "Très peu fiable")]
+
+
+def generer_html(synthese: Synthese, sites: list[SiteAttributaire], avertissement: str, non_analyses: list[str] | None = None) -> str:
+    non_analyses = non_analyses or []
     usages_x = [libelle_usage(u) for u in ORDRE_USAGES]
     usages_y = [synthese.par_usage.get(u, 0) for u in ORDRE_USAGES]
     fiabilite_x = [n for n in NIVEAUX_FIABILITE if synthese.par_fiabilite.get(n, 0)]
@@ -166,7 +188,8 @@ def generer_html(synthese: Synthese, sites: list[SiteAttributaire], avertissemen
         <ul class="fr-text--sm fr-mt-2w">
           {''.join(f'<li><span class="mf-pastille" style="background:{COULEURS_FIABILITE.get(n, "#999")}"></span>{_h(n)} : {synthese.par_fiabilite.get(n, 0)} sites</li>' for n in NIVEAUX_FIABILITE if synthese.par_fiabilite.get(n, 0))}
         </ul>
-        {f'<div class="mf-alerte fr-mt-2w"><strong>{a_attention} site{"s" if a_attention > 1 else ""} jamais qualifié{"s" if a_attention > 1 else ""}</strong> : mutabilité calculée avec « Ne sait pas » pour les 9 critères terrain. Compléter la qualification améliorerait la fiabilité.</div>' if a_attention else ''}
+        {_alerte_attention(synthese, non_analyses)}
+        {f'<p class="fr-text--xs fr-mt-2w">{a_attention} site{"s" if a_attention > 1 else ""} jamais qualifié{"s" if a_attention > 1 else ""} : mutabilité calculée avec « Ne sait pas » pour les 9 critères terrain.</p>' if a_attention else ''}
       </div>
     </div>
     <div class="fr-col-12 fr-col-lg-7">
@@ -204,8 +227,10 @@ def generer_html(synthese: Synthese, sites: list[SiteAttributaire], avertissemen
 """
 
 
-def ecrire_dashboard(dossier: Path, synthese: Synthese, sites: list[SiteAttributaire], avertissement: str) -> Path:
+def ecrire_dashboard(
+    dossier: Path, synthese: Synthese, sites: list[SiteAttributaire], avertissement: str, non_analyses: list[str] | None = None
+) -> Path:
     dossier.mkdir(parents=True, exist_ok=True)
     chemin = dossier / f"mutafriches-tableau-de-bord-{synthese.code_insee}.html"
-    chemin.write_text(generer_html(synthese, sites, avertissement), encoding="utf-8")
+    chemin.write_text(generer_html(synthese, sites, avertissement, non_analyses), encoding="utf-8")
     return chemin
