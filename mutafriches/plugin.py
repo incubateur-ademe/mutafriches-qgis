@@ -8,7 +8,6 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QToolBar
 
-from .core.service_simule import ServiceSimule
 from .ui.dock import DockMutafriches
 from .ui.parcours import Parcours
 
@@ -37,11 +36,7 @@ class MutafrichesPlugin:
 
     def _assurer_panneau(self) -> DockMutafriches:
         if self.dock is None:
-            # Attente simulée de 2 s, proche des temps de réponse de l'API
-            service = ServiceSimule(delai_enrichissement_ms=2000, delai_evaluation_ms=2000)
-            self.parcours = Parcours(self.iface, service)
-            # Le profil générique simulé a besoin de la surface mesurée sur la sélection
-            service.mesurer = self.parcours.mesurer
+            self.parcours = Parcours(self.iface)
             self.dock = DockMutafriches(self.parcours, self.iface.mainWindow())
             self.dock.visibilityChanged.connect(self._visibilite)
             self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
@@ -50,8 +45,6 @@ class MutafrichesPlugin:
     def _basculer(self, visible: bool) -> None:
         dock = self._assurer_panneau()
         dock.setUserVisible(visible)
-        if visible and self.parcours is not None:
-            self.parcours.activer_selection(self.parcours.etape == 0)
 
     def _visibilite(self, visible: bool) -> None:
         if self.action is not None and self.dock is not None:

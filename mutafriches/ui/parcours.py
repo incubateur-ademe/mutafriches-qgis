@@ -1,251 +1,155 @@
-"""État du parcours, calqué sur l'application web : sélection, 3 étapes, résultats."""
+"""État du parcours prototype : utilisateur, envoi des sites CNIG, résultats figés."""
 
+import tempfile
+from pathlib import Path
 from typing import Optional
 
-from qgis.core import (
-    QgsCoordinateTransform,
-    QgsGeometry,
-    QgsMapLayer,
-    QgsProject,
-    QgsVectorLayer,
-)
+from qgis.core import QgsVectorLayer
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QObject, pyqtSignal
+from qgis.PyQt.QtCore import QObject, QTimer, QUrl, pyqtSignal
+from qgis.PyQt.QtGui import QDesktopServices
 
-from ..carto.exemple import ajouter_parcelles_exemple
-from ..carto.selection import (
-    LAMBERT_93,
-    AnalysePerimetre,
-    OutilParcelles,
-    Surbrillance,
-    analyser,
-    couche_polygones,
+from ..carto.couches import creer_couches, emprise_carte
+from ..core.attributaire import (
+    FICHIER_CNIG_ERREURS,
+    FICHIER_CNIG_EXEMPLE,
+    SiteAttributaire,
+    Synthese,
+    apparier,
+    charger_table,
+    synthese,
 )
-from ..core.modele import InfoSimulation, Site
-from ..core.service import ErreurService, ResultatEvaluation, ServiceMutafriches, Tache
-from ..core.service_simule import ServiceSimule
+from ..core.cnig import LectureCnig, lire_cnig
+from ..dashboard.generer import ecrire_dashboard
+from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
+
+# Attente simulée de l'analyse par lot, proche d'un appel réel pour quelques dizaines de sites
+DELAI_ANALYSE_MS = 2500
 
 
 class Etape:
-    SELECTION = 0
-    SITE_BATI = 1
-    ENVIRONNEMENT = 2
-    RISQUES = 3
-    RESULTATS = 4
+    ACCUEIL = 0
+    IMPORT = 1
+    RESULTATS = 2
 
 
 class Parcours(QObject):
     change = pyqtSignal()
 
-    def __init__(self, iface: QgisInterface, service: ServiceMutafriches) -> None:
+    def __init__(self, iface: QgisInterface) -> None:
         super().__init__()
         self.iface = iface
         self.canvas = iface.mapCanvas()
-        self.service = service
-        self.etape = Etape.SELECTION
-        self.site: Optional[Site] = None
-        self.couche: Optional[QgsVectorLayer] = None
-        self.analyse = AnalysePerimetre()
-        self.enrichissement_en_cours = False
-        self.erreur_enrichissement: Optional[ErreurService] = None
-        self.evaluation_en_cours = False
-        self.erreur_evaluation: Optional[ErreurService] = None
-        self._tache: Optional[Tache] = None
-        self.outil = OutilParcelles(self.canvas)
-        self.surbrillance = Surbrillance(self.canvas)
-        self.canvas.mapToolSet.connect(lambda *_: self.change.emit())
-        iface.currentLayerChanged.connect(self._couche_active_changee)
-        self._couche_active_changee(iface.activeLayer())
+        self.utilisateur: Utilisateur = charger_utilisateur()
+        # L'accueil n'est demandé qu'une fois : ensuite le panneau s'ouvre sur l'envoi des sites
+        self.etape = Etape.IMPORT if self.utilisateur.complet else Etape.ACCUEIL
+        self.fichier: Optional[Path] = None
+        self.lecture: Optional[LectureCnig] = None
+        self.analyse_en_cours = False
+        self.sites: list[SiteAttributaire] = []
+        self.non_retrouves: list[str] = []
+        self.synthese: Optional[Synthese] = None
+        self.avertissement = ""
+        self.couche_mutabilite: Optional[QgsVectorLayer] = None
+        self.couche_qualification: Optional[QgsVectorLayer] = None
+        self.dashboard: Optional[Path] = None
+        self._timer: Optional[QTimer] = None
+
+    # --- Accueil ------------------------------------------------------------------------------
+
+    def valider_accueil(self, structure: str, mail: str, consentement: bool) -> bool:
+        utilisateur = Utilisateur(structure, mail, consentement)
+        if not utilisateur.complet:
+            return False
+        self.utilisateur = utilisateur
+        enregistrer_utilisateur(utilisateur)
+        self.etape = Etape.IMPORT
+        self.change.emit()
+        return True
+
+    def modifier_utilisateur(self) -> None:
+        self.etape = Etape.ACCUEIL
+        self.change.emit()
+
+    # --- Étape 1 : fichier CNIG -------------------------------------------------------------
+
+    def choisir_fichier(self, chemin: str) -> None:
+        self.fichier = Path(chemin) if chemin else None
+        self.lecture = lire_cnig(self.fichier) if self.fichier else None
+        self.change.emit()
+
+    def utiliser_exemple(self) -> None:
+        self.choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
+
+    def utiliser_exemple_errone(self) -> None:
+        self.choisir_fichier(str(FICHIER_CNIG_ERREURS))
 
     @property
-    def version_algorithme(self) -> str:
-        return self.service.version_algorithme if isinstance(self.service, ServiceSimule) else ""
+    def pret_a_envoyer(self) -> bool:
+        return self.lecture is not None and self.lecture.valide and not self.analyse_en_cours
 
-    def mesurer(self, identifiants: list[str]) -> Optional[float]:
-        """Surface du site analysé, pour le profil générique du service simulé."""
-        if self.site is None or self.site.identifiants != sorted(identifiants):
-            return None
-        return self.site.surface_m2
-
-    # --- Couche et sélection ---------------------------------------------------------------
-
-    def _couche_active_changee(self, couche: Optional[QgsMapLayer]) -> None:
-        polygones = couche_polygones(couche)
-        if polygones is None or polygones is self.couche:
+    def envoyer(self) -> None:
+        if not self.pret_a_envoyer or self.lecture is None:
             return
-        if self.couche is not None:
-            self.couche.selectionChanged.disconnect(self._selection_changee)
-            self.couche.willBeDeleted.disconnect(self._couche_supprimee)
-        self.couche = polygones
-        polygones.selectionChanged.connect(self._selection_changee)
-        polygones.willBeDeleted.connect(self._couche_supprimee)
-        self.outil.couche = polygones
-        self._selection_changee()
-
-    def _couche_supprimee(self) -> None:
-        self.couche = None
-        self.outil.couche = None
-        self.analyse = AnalysePerimetre()
-        self.activer_selection(False)
+        self.analyse_en_cours = True
         self.change.emit()
+        self._timer = QTimer()
+        self._timer.setSingleShot(True)
+        self._timer.timeout.connect(self._resultats_recus)
+        self._timer.start(DELAI_ANALYSE_MS)
 
-    def ajouter_exemple(self) -> None:
-        couche = ajouter_parcelles_exemple()
-        self.iface.setActiveLayer(couche)
-        self._couche_active_changee(couche)
-        self._zoomer(QgsGeometry.fromRect(couche.extent()), couche=couche, marge=-0.35)
-        self.activer_selection(True)
-
-    def selection_active(self) -> bool:
-        return self.canvas.mapTool() is self.outil
-
-    def activer_selection(self, active: bool) -> None:
-        if active and self.couche is not None:
-            self.canvas.setMapTool(self.outil)
-        elif not active and self.selection_active():
-            self.canvas.unsetMapTool(self.outil)
-        self.change.emit()
-
-    def _selection_changee(self, *_: object) -> None:
-        if self.etape != Etape.SELECTION:
+    def _resultats_recus(self) -> None:
+        self.analyse_en_cours = False
+        if self.lecture is None:
             return
-        self.analyse = analyser(self.couche, self.couche.selectedFeatures()) if self.couche else AnalysePerimetre()
-        self.change.emit()
-
-    def retirer_parcelle(self, idu: str) -> None:
-        fid = self.analyse.entites.get(idu)
-        if self.couche is not None and fid is not None:
-            self.couche.deselect(fid)
-
-    def nouvelle_analyse(self) -> None:
-        self._annuler_tache()
-        self.site = None
-        self.erreur_enrichissement = None
-        self.erreur_evaluation = None
-        self.surbrillance.effacer()
-        if self.couche is not None:
-            self.couche.removeSelection()
-        self.etape = Etape.SELECTION
-        self._selection_changee()
-        self.activer_selection(True)
-
-    def analyser_selection(self) -> None:
-        """Fige le périmètre et lance la récupération des données (bouton « Analyser »)."""
-        if not self.analyse.valide or self.analyse.geometrie is None:
-            return
-        wkt = self.analyse.geometrie.asWkt(2)
-        if self.site is None:
-            self.site = Site(parcelles=self.analyse.parcelles, geometrie_wkt=wkt)
-        else:
-            self.site.changer_perimetre(self.analyse.parcelles, wkt)
-        # Le périmètre est figé : la sélection QGIS peut ensuite changer librement
-        if self.couche is not None:
-            self.couche.removeSelection()
-        self.activer_selection(False)
-        self.surbrillance.afficher(wkt)
-        self.etape = Etape.SITE_BATI
-        if self.site.enrichissement is None:
-            self.lancer_enrichissement()
-        else:
-            self.change.emit()
-
-    def modifier_selection(self) -> None:
-        self._annuler_tache()
-        self.surbrillance.effacer()
-        self.etape = Etape.SELECTION
-        self._selection_changee()
-        self.activer_selection(True)
-
-    # --- Qualification et résultats --------------------------------------------------------
-
-    def lancer_enrichissement(self) -> None:
-        if self.site is None:
-            return
-        self._annuler_tache()
-        self.erreur_enrichissement = None
-        self.enrichissement_en_cours = True
-        self.change.emit()
-        self._tache = self.service.enrichir(
-            self.site.identifiants, self._enrichissement_recu, self._enrichissement_echoue
-        )
-
-    def _enrichissement_recu(self, donnees: dict[str, object]) -> None:
-        self.enrichissement_en_cours = False
-        if self.site is not None:
-            self.site.enrichissement = donnees
-        self.change.emit()
-
-    def _enrichissement_echoue(self, erreur: ErreurService) -> None:
-        self.enrichissement_en_cours = False
-        self.erreur_enrichissement = erreur
-        self.change.emit()
-
-    def aller_etape(self, etape: int) -> None:
-        self.etape = etape
-        self.change.emit()
-
-    def definir_reponse(self, cle: str, valeur: str) -> None:
-        if self.site is not None:
-            self.site.definir_reponse(cle, valeur)
-
-    def evaluer(self) -> None:
-        if self.site is None or self.site.enrichissement is None:
-            return
-        self._annuler_tache()
-        self.erreur_evaluation = None
-        self.evaluation_en_cours = True
-        self.change.emit()
-        self._tache = self.service.evaluer(
-            self.site.enrichissement,
-            self.site.reponses_completes(),
-            self._evaluation_recue,
-            self._evaluation_echouee,
-        )
-
-    def _evaluation_recue(self, resultat: ResultatEvaluation) -> None:
-        self.evaluation_en_cours = False
-        if self.site is None:
-            return
-        self.site.evaluation = resultat.resultat
-        self.site.simulation = InfoSimulation(
-            variante_titre=resultat.variante_titre,
-            ecarts=resultat.ecarts,
-            note=resultat.note_simulation,
+        # Prototype : les résultats viennent de la table attributaire figée de Montereau
+        table, meta = charger_table()
+        apparies = apparier(table, {s.site_id: s.parcelles for s in self.lecture.sites})
+        retrouves = {s.site_id for s in apparies}
+        self.non_retrouves = [s.site_nom for s in self.lecture.sites if s.site_id not in retrouves]
+        self.sites = apparies or table
+        self.avertissement = str(meta.get("avertissement", ""))
+        self.synthese = synthese(self.sites, meta)
+        self.couche_mutabilite, self.couche_qualification = creer_couches(self.sites, self.synthese.code_insee)
+        self.dashboard = ecrire_dashboard(
+            Path(tempfile.gettempdir()) / "mutafriches-qgis", self.synthese, self.sites, self.avertissement
         )
         self.etape = Etape.RESULTATS
         self.change.emit()
+        self.zoomer()
 
-    def _evaluation_echouee(self, erreur: ErreurService) -> None:
-        self.evaluation_en_cours = False
-        self.erreur_evaluation = erreur
-        self.change.emit()
+    # --- Étape 2 : résultats ------------------------------------------------------------------
 
-    # --- Outils ----------------------------------------------------------------------------
-
-    def _annuler_tache(self) -> None:
-        if self._tache is not None:
-            self._tache.annuler()
-            self._tache = None
-        self.enrichissement_en_cours = False
-        self.evaluation_en_cours = False
-
-    def _zoomer(self, geometrie: QgsGeometry, couche: Optional[QgsVectorLayer] = None, marge: float = 0.6) -> None:
-        if geometrie.isEmpty():
+    def zoomer(self) -> None:
+        if self.couche_mutabilite is None:
             return
-        etendue = geometrie.boundingBox()
-        etendue.grow(max(etendue.width(), etendue.height()) * marge + 20)
-        source = couche.crs() if couche is not None else LAMBERT_93
-        transformation = QgsCoordinateTransform(
-            source, self.canvas.mapSettings().destinationCrs(), QgsProject.instance()
-        )
-        self.canvas.setExtent(transformation.transformBoundingBox(etendue))
+        self.canvas.setExtent(emprise_carte(self.couche_mutabilite, self.canvas.mapSettings().destinationCrs()))
         self.canvas.refresh()
 
+    def ouvrir_table_mutabilite(self) -> None:
+        if self.couche_mutabilite is not None:
+            self.iface.showAttributeTable(self.couche_mutabilite)
+
+    def ouvrir_table_qualification(self) -> None:
+        if self.couche_qualification is not None:
+            self.iface.showAttributeTable(self.couche_qualification)
+
+    def ouvrir_dashboard(self) -> None:
+        if self.dashboard is not None:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.dashboard)))
+
+    def nouvelle_analyse(self) -> None:
+        if self._timer is not None:
+            self._timer.stop()
+        self.analyse_en_cours = False
+        self.fichier = None
+        self.lecture = None
+        self.sites = []
+        self.non_retrouves = []
+        self.synthese = None
+        self.etape = Etape.IMPORT
+        self.change.emit()
+
     def nettoyer(self) -> None:
-        self._annuler_tache()
-        self.activer_selection(False)
-        self.surbrillance.supprimer()
-        try:
-            self.iface.currentLayerChanged.disconnect(self._couche_active_changee)
-        except TypeError:
-            pass
+        if self._timer is not None:
+            self._timer.stop()

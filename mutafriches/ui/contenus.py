@@ -180,6 +180,30 @@ ETAPES: dict[int, tuple[str, str, list[Element]]] = {
     ),
 }
 
+# Prototype V0 : accueil, envoi des sites, résultats
+TITRE_ACCUEIL = "Bienvenue dans Mutafriches !"
+INTRO_ACCUEIL = "Pour nous aider à améliorer le service, dites-nous qui vous êtes."
+CONSENTEMENT_ACCUEIL = (
+    "J'accepte d'être contacté par l'équipe Mutafriches (ADEME) à des fins d'amélioration du service"
+)
+TITRE_IMPORT = "Trouver le bon usage pour vos friches"
+INTRO_IMPORT = (
+    "Envoyez votre inventaire de sites au standard CNIG Friches : Mutafriches qualifie chaque site "
+    "et calcule sa mutabilité pour sept usages."
+)
+AIDE_FICHIER = (
+    "Fichier CSV ou GeoJSON au standard CNIG Friches (v2023-12). Colonnes attendues : site_id, "
+    "site_nom, comm_insee, unite_fonciere_refcad (parcelles séparées par |) et geompoint."
+)
+AIDE_EXEMPLE_CNIG = "Pas d'inventaire sous la main ?"
+LIEN_EXEMPLE_CNIG = "Utiliser l'exemple de Montereau-Fault-Yonne (28 sites)"
+LIEN_EXEMPLE_ERRONE = "Voir un fichier refusé (erreurs de format)"
+AIDE_ERREUR_CNIG = "Corrigez le fichier puis choisissez-le à nouveau. Le standard est consultable sur schema.data.gouv.fr (cnigfr/schema-friches)."
+MESSAGE_ANALYSE_LOT = (
+    "Pour chaque site, nous recueillons des informations localisées depuis plus de dix bases de "
+    "données nationales, puis calculons sa mutabilité pour sept usages."
+)
+
 # AnalyserPage et carte de sélection
 TITRE_SELECTION = "Trouver le bon usage pour une friche"
 INTRO_SELECTION = (

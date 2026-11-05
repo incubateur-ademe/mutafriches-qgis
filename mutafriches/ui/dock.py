@@ -8,9 +8,9 @@ from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from . import style
-from .pages import Page, PageEtape, PageSelection
-from .resultats import PageResultats
+from .pages import Page
 from .parcours import Etape, Parcours
+from .prototype import PageAccueil, PageImport, PageResultats
 
 LOGO = Path(__file__).resolve().parent.parent / "icons" / "logo-mutafriches.png"
 
@@ -29,8 +29,8 @@ class DockMutafriches(QgsDockWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        if parcours.service.est_simule:
-            bandeau = QLabel("Mode démonstration — données fictives")
+        if True:  # Prototype : résultats figés, jamais calculés en direct
+            bandeau = QLabel("Mode démonstration — prototype sur données figées")
             bandeau.setObjectName("mfDemo")
             bandeau.setAccessibleName("Mode démonstration, données fictives")
             layout.addWidget(bandeau)
@@ -47,10 +47,8 @@ class DockMutafriches(QgsDockWidget):
         layout.addWidget(entete)
 
         self.pages: dict[int, Page] = {
-            Etape.SELECTION: PageSelection(parcours),
-            Etape.SITE_BATI: PageEtape(parcours, Etape.SITE_BATI),
-            Etape.ENVIRONNEMENT: PageEtape(parcours, Etape.ENVIRONNEMENT),
-            Etape.RISQUES: PageEtape(parcours, Etape.RISQUES),
+            Etape.ACCUEIL: PageAccueil(parcours),
+            Etape.IMPORT: PageImport(parcours),
             Etape.RESULTATS: PageResultats(parcours),
         }
         # Pages masquées plutôt qu'empilées : une page cachée ne réserve pas de hauteur
