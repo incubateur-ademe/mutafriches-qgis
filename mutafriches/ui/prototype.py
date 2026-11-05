@@ -2,15 +2,20 @@
 
 from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
+from qgis.PyQt.QtWidgets import QCheckBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
 from ..carto.couches import COULEURS_USAGES
-from ..core.attributaire import NIVEAUX_FIABILITE, ORDRE_USAGES, Synthese, libelle_usage
+from ..core.attributaire import ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
+from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
+from .graphiques import anneau_avec_legende, tableau
 from .widgets import Encadre, badge, bouton, entete_champ, separateur, texte, vider
+
+MAX_LIGNES_AFFICHEES = 40
+
 
 
 class PageAccueil(Page):
@@ -77,6 +82,9 @@ class PageImport(Page):
         self.zone.setSpacing(8)
         self.corps.addLayout(self.zone)
         self.corps.addStretch(1)
+        self.corps.addWidget(separateur())
+        self.corps.addWidget(texte(contenus.AIDE_EXEMPLE_CNIG, "mfAide"))
+        self.corps.addWidget(bouton(contenus.BOUTON_MODELE_CNIG, "secondaire", self._telecharger_modele))
         self.utilisateur = texte("", "mfAide")
         ligne = QHBoxLayout()
         ligne.addWidget(self.utilisateur, 1)
@@ -84,6 +92,13 @@ class PageImport(Page):
         self.pied_layout.addLayout(ligne)
         self.bouton_envoyer = bouton("Envoyer mes sites", "primaire", parcours.envoyer)
         self.pied_layout.addWidget(self.bouton_envoyer)
+
+    def _telecharger_modele(self) -> None:
+        chemin, _ = QFileDialog.getSaveFileName(
+            self.contenu, "Enregistrer le fichier exemple CNIG", "modele-friches-cnig.csv", "CSV (*.csv)"
+        )
+        if chemin:
+            self.parcours.enregistrer_modele(chemin)
 
     def rafraichir(self) -> None:
         parcours = self.parcours
@@ -95,40 +110,57 @@ class PageImport(Page):
         if parcours.analyse_en_cours and lecture is not None:
             self.zone.addWidget(
                 Chargement(
-                    f"Analyse de {pluriel(len(lecture.sites), 'site')} en cours...",
+                    f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
                     contenus.SOUS_TITRE_CHARGEMENT,
                     contenus.MESSAGE_ANALYSE_LOT,
                 )
             )
-        elif lecture is None:
-            self.zone.addWidget(texte(contenus.AIDE_EXEMPLE_CNIG, "mfAide"))
-            self.zone.addWidget(bouton(contenus.LIEN_EXEMPLE_CNIG, "lien", parcours.utiliser_exemple))
-            self.zone.addWidget(bouton(contenus.LIEN_EXEMPLE_ERRONE, "lien", parcours.utiliser_exemple_errone))
-        elif lecture.valide:
-            self.zone.addWidget(
-                Encadre(
-                    "succes",
-                    f"{pluriel(len(lecture.sites), 'site')} lu{'s' if len(lecture.sites) > 1 else ''} dans {lecture.fichier}",
-                    "\n".join(p.message for p in lecture.problemes),
-                )
-            )
-        else:
-            bloquants = lecture.bloquants
-            self.zone.addWidget(
-                Encadre(
-                    "erreur",
-                    f"Fichier refusé : {pluriel(len(bloquants), 'erreur')}",
-                    "\n".join((f"Ligne {p.ligne} : " if p.ligne else "") + p.message for p in bloquants[:12])
-                    + ("\n…" if len(bloquants) > 12 else ""),
-                )
-            )
+        elif lecture is not None and lecture.bloquants:
+            self.zone.addWidget(Encadre("erreur", f"Fichier refusé : {lecture.fichier}", "\n".join(p.message for p in lecture.bloquants)))
             self.zone.addWidget(texte(contenus.AIDE_ERREUR_CNIG, "mfAide"))
+        elif lecture is not None:
+            ok, ko = lecture.sites_ok, lecture.sites_ko
+            if ko:
+                self.zone.addWidget(
+                    Encadre(
+                        "avertissement" if ok else "erreur",
+                        f"{pluriel(len(ok), 'site')} prêt{'s' if len(ok) > 1 else ''}, {pluriel(len(ko), 'ligne')} en erreur",
+                        contenus.AIDE_ERREUR_CNIG,
+                    )
+                )
+            else:
+                self.zone.addWidget(Encadre("succes", f"{pluriel(len(ok), 'site')} lu{'s' if len(ok) > 1 else ''} dans {lecture.fichier}", "\n".join(p.message for p in lecture.problemes)))
+            # Contrôle ligne à ligne, lignes en erreur en tête
+            for site in (ko + ok)[:MAX_LIGNES_AFFICHEES]:
+                self.zone.addWidget(LigneCnig(site))
+            if len(lecture.sites) > MAX_LIGNES_AFFICHEES:
+                self.zone.addWidget(texte(f"et {len(lecture.sites) - MAX_LIGNES_AFFICHEES} autres lignes", "mfAide"))
         utilisateur = parcours.utilisateur
         self.utilisateur.setText(f"{utilisateur.structure} · {utilisateur.mail}" if utilisateur.complet else "")
         self.utilisateur.setVisible(utilisateur.complet)
-        n = len(lecture.sites) if lecture is not None and lecture.valide else 0
+        n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Envoyer mes {n} sites" if n > 1 else "Envoyer mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
+
+
+class LigneCnig(QFrame):
+    """Une ligne du fichier : nom, identifiant, parcelles, et OK ou la liste de ses erreurs."""
+
+    def __init__(self, site: SiteCnig) -> None:
+        super().__init__()
+        self.setObjectName("mfLigneSite")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 6, 10, 6)
+        layout.setSpacing(2)
+        entete = QHBoxLayout()
+        entete.setSpacing(8)
+        entete.addWidget(texte(site.site_nom or site.site_id or f"Ligne {site.ligne}", "mfValeur"), 1)
+        entete.addWidget(badge("OK" if site.ok else "KO", "automatique" if site.ok else "alerte"), 0, Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(entete)
+        details = [f"ligne {site.ligne}", site.site_id or "sans identifiant", pluriel(len(site.parcelles), "parcelle")]
+        layout.addWidget(texte(" · ".join(details), "mfAide"))
+        for erreur in site.erreurs:
+            layout.addWidget(texte(erreur, "mfErreurChamp"))
 
 
 class Chiffre(QFrame):
@@ -171,21 +203,25 @@ class Barre(QWidget):
 
 
 class PageResultats(Page):
+    """Tableau de bord territorial, entièrement dans le panneau."""
+
     def __init__(self, parcours: Parcours) -> None:
         super().__init__(parcours)
         self.zone = QVBoxLayout()
         self.zone.setSpacing(10)
         self.corps.addLayout(self.zone)
         self.corps.addStretch(1)
-        self.pied_layout.addWidget(bouton("Ouvrir le tableau de bord territorial", "primaire", parcours.ouvrir_dashboard))
         ligne = QHBoxLayout()
         ligne.addWidget(bouton("Table mutabilité", "secondaire", parcours.ouvrir_table_mutabilite))
         ligne.addWidget(bouton("Table qualification", "secondaire", parcours.ouvrir_table_qualification))
         self.pied_layout.addLayout(ligne)
-        ligne2 = QHBoxLayout()
-        ligne2.addWidget(bouton("Zoomer sur les sites", "secondaire", parcours.zoomer))
-        ligne2.addWidget(bouton("Nouvelle analyse", "secondaire", parcours.nouvelle_analyse))
-        self.pied_layout.addLayout(ligne2)
+        self.pied_layout.addWidget(bouton("Analyser un autre inventaire", "lien", parcours.nouvelle_analyse), 0, Qt.AlignmentFlag.AlignCenter)
+
+    def _titre(self, contenu: str, aide: str = "") -> None:
+        self.zone.addWidget(separateur())
+        self.zone.addWidget(texte(contenu, "mfH3"))
+        if aide:
+            self.zone.addWidget(texte(aide, "mfAide"))
 
     def rafraichir(self) -> None:
         parcours = self.parcours
@@ -194,46 +230,58 @@ class PageResultats(Page):
         if s is None:
             return
         self.zone.addWidget(texte(f"{s.commune} ({s.code_insee})", "mfSurTitre"))
-        self.zone.addWidget(texte(f"{pluriel(s.nombre_sites, 'site')} analysé{'s' if s.nombre_sites > 1 else ''}", "mfH2"))
-        if parcours.non_retrouves:
-            n = len(parcours.non_retrouves)
-            self.zone.addWidget(
-                Encadre(
-                    "avertissement",
-                    f"{pluriel(n, 'site')} du fichier non retrouvé{'s' if n > 1 else ''} dans la table",
-                    "Prototype : seuls les sites déjà présents dans la table attributaire de Montereau-Fault-Yonne ont des résultats. "
-                    + ", ".join(parcours.non_retrouves[:5])
-                    + ("…" if n > 5 else ""),
-                )
-            )
-        dominant = max(s.par_usage.items(), key=lambda kv: kv[1])[0] if s.nombre_sites else None
+        self.zone.addWidget(texte("Tableau de bord territorial", "mfH2"))
+        self.zone.addWidget(texte(f"Algorithme {s.version_algorithme} · table figée le {s.date_table}", "mfAide"))
+
+        # 1 et 2 : nombre de sites, fiabilité
         grille = QGridLayout()
         grille.setSpacing(8)
-        grille.addWidget(Chiffre("Usage qui ressort le plus", libelle_usage(dominant), f"{s.par_usage.get(dominant or '', 0)} sites"), 0, 0)
-        grille.addWidget(Chiffre("Fiabilité moyenne", f"{formater_note(s.fiabilite_moyenne)} / 10", f"{s.par_fiabilite.get('Très fiable', 0)} très fiables"), 0, 1)
-        grille.addWidget(Chiffre("Forte compatibilité", str(len(s.sites_forte_compatibilite)), "indice ≥ 70 %"), 1, 0)
-        grille.addWidget(Chiffre("À qualifier", str(len(s.sites_a_qualifier)), "sans saisie terrain"), 1, 1)
+        grille.addWidget(Chiffre("Sites analysés", str(s.nombre_sites), f"{len(s.sites_a_qualifier)} sans saisie terrain"), 0, 0)
+        grille.addWidget(Chiffre("Fiabilité moyenne", f"{formater_note(s.fiabilite_moyenne)} / 10", f"{s.par_fiabilite.get('Très fiable', 0)} très fiables sur {s.nombre_sites}"), 0, 1)
         self.zone.addLayout(grille)
 
-        self.zone.addWidget(texte("Usage le plus compatible", "mfH3"))
+        # 3 : jauges par usage le plus compatible
+        self._titre("Usage le plus compatible", "Nombre de sites dont c'est l'usage prioritaire.")
         for usage in ORDRE_USAGES:
-            nombre = s.par_usage.get(usage, 0)
-            if nombre:
-                self.zone.addWidget(Barre(libelle_usage(usage), nombre, s.nombre_sites, COULEURS_USAGES[usage]))
-        self.zone.addWidget(separateur())
-        self.zone.addWidget(texte("Fiabilité des résultats", "mfH3"))
-        couleurs = {"Très fiable": style.SUCCES, "Fiable": "#27a658", "Moyennement fiable": "#c3992a", "Peu fiable": style.AVERTISSEMENT, "Très peu fiable": style.ERREUR}
-        for niveau in NIVEAUX_FIABILITE:
-            nombre = s.par_fiabilite.get(niveau, 0)
-            if nombre:
-                self.zone.addWidget(Barre(niveau, nombre, s.nombre_sites, couleurs[niveau]))
-        self.zone.addWidget(separateur())
-        self.zone.addWidget(texte("Sites à forte compatibilité", "mfH3"))
-        for site in s.sites_forte_compatibilite[:8]:
+            self.zone.addWidget(Barre(libelle_usage(usage), s.par_usage.get(usage, 0), s.nombre_sites, COULEURS_USAGES[usage]))
+
+        # 4 : répartition
+        self._titre("Répartition des usages les plus compatibles")
+        serie_usages = [(libelle_usage(u), s.par_usage.get(u, 0), COULEURS_USAGES[u]) for u in ORDRE_USAGES]
+        self.zone.addWidget(anneau_avec_legende(serie_usages, str(s.nombre_sites), "sites"))
+
+        # 5 : profils
+        self._titre("Profils de sites", "Écart entre le meilleur et le moins bon usage d'un même site. Grille de lecture du prototype, à valider.")
+        lignes = []
+        for seuil, libelle, lecture in PROFILS_ECART:
+            nombre = s.par_profil.get(libelle, 0)
+            borne = "30 pts et plus" if seuil == float("inf") else f"< {int(seuil)} pts"
+            lignes.append([libelle, borne, str(nombre), f"{round(100 * nombre / s.nombre_sites) if s.nombre_sites else 0} %", lecture])
+        self.zone.addWidget(tableau(["Profil", "Écart", "Sites", "Part", "Lecture"], lignes, [3, 2, 1, 1, 4]))
+
+        # 6 : sites à forte compatibilité, cliquables
+        self._titre(f"Sites à forte compatibilité ({len(s.sites_forte_compatibilite)})", "Indice de l'usage prioritaire supérieur ou égal à 70 %. Cliquer un site le sélectionne et cadre la carte.")
+        for site in s.sites_forte_compatibilite:
             ligne = QHBoxLayout()
-            ligne.addWidget(texte(site.nom, "mfValeur"), 1)
+            lien = bouton(site.nom, "lien", lambda _=False, site=site: parcours.mettre_en_avant(site))
+            lien.setAccessibleName(f"Voir sur la carte : {site.nom}")
+            ligne.addWidget(lien, 1)
             ligne.addWidget(badge(f"{libelle_usage(site.usage_prioritaire)} · {round(site.indice_max)} %", "tag"), 0, Qt.AlignmentFlag.AlignTop)
             self.zone.addLayout(ligne)
-        if len(s.sites_forte_compatibilite) > 8:
-            self.zone.addWidget(texte(f"et {len(s.sites_forte_compatibilite) - 8} autres sites, voir le tableau de bord", "mfAide"))
-        self.zone.addWidget(texte(f"Démonstration : table attributaire figée le {s.date_table}, algorithme {s.version_algorithme}. {parcours.avertissement}", "mfAide"))
+
+        # 7 : sites nécessitant une attention (lignes écartées, non retrouvés, peu fiables)
+        peu_fiables = [x for x in s.sites_a_qualifier if x.fiabilite_niveau in ("Moyennement fiable", "Peu fiable", "Très peu fiable")]
+        attention = parcours.attention + [f"{x.nom} : {x.fiabilite_niveau.lower()}, qualification à compléter" for x in peu_fiables]
+        self._titre("Sites nécessitant votre attention")
+        if attention:
+            n = len(attention)
+            self.zone.addWidget(
+                Encadre(
+                    "erreur",
+                    f"{pluriel(n, 'site')} à reprendre",
+                    "\n".join(attention[:6]) + (f"\net {n - 6} autres" if n > 6 else ""),
+                )
+            )
+        else:
+            self.zone.addWidget(Encadre("succes", "Aucun site à reprendre", "Toutes les lignes ont été analysées et aucune n'est peu fiable."))
+        self.zone.addWidget(texte(f"Démonstration : {parcours.avertissement}", "mfAide"))

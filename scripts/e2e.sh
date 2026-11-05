@@ -7,11 +7,13 @@ set -euo pipefail
 RACINE="$(cd "$(dirname "$0")/.." && pwd)"
 QGIS_APP="${QGIS_APP:-/Applications/QGIS.app}"
 E2E="$RACINE/dist/e2e"
+CAPTURES="$RACINE/captures"
 PROFILS="$E2E/profils"
 PROFIL="$PROFILS/profiles/default"
 
 "$RACINE/scripts/package.sh" > /dev/null
-rm -rf "$E2E"
+rm -rf "$E2E" "$CAPTURES"
+mkdir -p "$CAPTURES"
 # Sous macOS, QSettings range les réglages sous le domaine de l'organisation (qgis.org)
 mkdir -p "$PROFIL/python/plugins" "$PROFIL/qgis.org"
 unzip -q "$RACINE"/dist/mutafriches-*.zip -d "$PROFIL/python/plugins"
@@ -38,7 +40,7 @@ fi
 
 for PHASE in prototype; do
   echo "Phase $PHASE…"
-  MF_E2E_SORTIE="$E2E" MF_E2E_PHASE="$PHASE" \
+  MF_E2E_SORTIE="$E2E" MF_E2E_CAPTURES="$CAPTURES" MF_E2E_PHASE="$PHASE" \
     "$QGIS_APP/Contents/MacOS/QGIS" --profiles-path "$PROFILS" --noversioncheck --nologo \
     --code "$RACINE/tests/e2e/prototype_qgis.py" > "$E2E/qgis-$PHASE.log" 2>&1 || true
   if [ ! -f "$E2E/rapport-$PHASE.json" ]; then
@@ -60,6 +62,6 @@ for phase in ("prototype",):
     for e in rapport["erreurs"]:
         print(f"[ERREUR] {phase} : {e['etape']}\n{e['trace']}")
         echecs += 1
-print(f"Captures : {dossier}")
+print("Captures : " + str(dossier.parent.parent / "captures"))
 sys.exit(1 if echecs else 0)
 PY

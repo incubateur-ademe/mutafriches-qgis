@@ -8,6 +8,7 @@ from mutafriches.carto.couches import NOM_COUCHE_MUTABILITE, champs_mutabilite, 
 from mutafriches.core.attributaire import (
     FICHIER_CNIG_ERREURS,
     FICHIER_CNIG_EXEMPLE,
+    FICHIER_MODELE_CNIG,
     ORDRE_USAGES,
     apparier,
     charger_table,
@@ -15,7 +16,6 @@ from mutafriches.core.attributaire import (
     synthese,
 )
 from mutafriches.core.cnig import lire_cnig
-from mutafriches.dashboard.generer import generer_html
 
 
 class TestCnig(unittest.TestCase):
@@ -27,12 +27,25 @@ class TestCnig(unittest.TestCase):
         self.assertEqual(lecture.sites[0].comm_insee, "77305")
         self.assertTrue(all(s.parcelles for s in lecture.sites))
 
-    def test_fichier_errone_refuse(self) -> None:
+    def test_lignes_en_erreur_ecartees_sans_refuser_le_fichier(self) -> None:
         lecture = lire_cnig(FICHIER_CNIG_ERREURS)
-        self.assertFalse(lecture.valide)
-        messages = " ".join(p.message for p in lecture.bloquants)
-        self.assertIn("comm_insee", messages)
-        self.assertIn("geompoint", messages)
+        self.assertTrue(lecture.valide)
+        self.assertEqual((len(lecture.sites_ok), len(lecture.sites_ko)), (4, 6))
+        erreurs = {s.ligne: s.erreurs for s in lecture.sites_ko}
+        self.assertIn("déjà utilisé ligne 3", erreurs[4][0])
+        self.assertIn("mal formée", erreurs[5][0])
+        self.assertEqual(erreurs[7], ["site_nom vide"])
+        self.assertIn("comm_insee", erreurs[8][0])
+        self.assertEqual(erreurs[9], ["geompoint vide"])
+        self.assertEqual(erreurs[10], ["unite_fonciere_refcad vide"])
+
+    def test_modele_fictif_valide_mais_hors_table(self) -> None:
+        lecture = lire_cnig(FICHIER_MODELE_CNIG)
+        self.assertTrue(lecture.valide)
+        self.assertEqual(len(lecture.sites_ok), 3)
+        self.assertTrue(all(s.comm_insee == "99999" for s in lecture.sites))
+        sites, _ = charger_table()
+        self.assertEqual(apparier(sites, {s.site_id: s.parcelles for s in lecture.sites}), [])
 
     def test_erreurs_ligne_a_ligne(self) -> None:
         chemin = Path(RACINE) / "dist" / "test-cnig.csv"
@@ -44,10 +57,9 @@ class TestCnig(unittest.TestCase):
             encoding="utf-8",
         )
         lecture = lire_cnig(chemin)
-        self.assertFalse(lecture.valide)
-        lignes = sorted({p.ligne for p in lecture.bloquants})
-        self.assertEqual(lignes, [3])
-        self.assertEqual(len(lecture.bloquants), 5)
+        self.assertTrue(lecture.valide)
+        self.assertEqual([s.ligne for s in lecture.sites_ko], [3])
+        self.assertEqual(len(lecture.sites_ko[0].erreurs), 5)
 
     def test_format_inconnu(self) -> None:
         lecture = lire_cnig(Path("sites.xlsx"))
@@ -81,7 +93,7 @@ class TestAttributaire(unittest.TestCase):
         self.assertEqual(profil_ecart(40)[0], "Fort contraste")
 
 
-class TestCouchesEtDashboard(unittest.TestCase):
+class TestCouches(unittest.TestCase):
     def test_colonnes_mutabilite_dans_l_ordre_demande(self) -> None:
         noms = [c.name() for c in champs_mutabilite()]
         self.assertEqual(noms[:5], ["site_id", "site_nom", "mf_usage_prioritaire", "mf_usage_prioritaire_lib", "mf_indice_prioritaire"])
@@ -101,15 +113,6 @@ class TestCouchesEtDashboard(unittest.TestCase):
         entite = next(mutabilite.getFeatures())
         self.assertTrue(entite["mf_usage_prioritaire"])
         self.assertTrue(QgsProject.instance().mapLayersByName(mutabilite.name()))
-
-    def test_dashboard_html(self) -> None:
-        sites, meta = charger_table()
-        html = generer_html(synthese(sites, meta), sites, "avertissement test")
-        self.assertIn("<pie-chart", html)
-        self.assertIn("<gauge-chart", html)
-        self.assertIn("DSFRChart.umd.cjs", html)
-        self.assertIn("Montereau-Fault-Yonne", html)
-        self.assertIn("avertissement test", html)
 
 
 if __name__ == "__main__":

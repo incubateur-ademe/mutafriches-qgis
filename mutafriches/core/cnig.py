@@ -43,18 +43,34 @@ class SiteCnig:
     comm_insee: str
     parcelles: list[str]
     ligne: int
+    # Erreurs de la ligne : une ligne en erreur est écartée, pas le fichier
+    erreurs: list[str] = field(default_factory=list)
+
+    @property
+    def ok(self) -> bool:
+        return not self.erreurs
 
 
 @dataclass
 class LectureCnig:
     fichier: str
+    # Toutes les lignes lues, correctes ou non, dans l'ordre du fichier
     sites: list[SiteCnig] = field(default_factory=list)
+    # Problèmes du fichier entier (format, colonnes) ; les erreurs de ligne sont sur les sites
     problemes: list[Probleme] = field(default_factory=list)
     colonnes: list[str] = field(default_factory=list)
 
     @property
+    def sites_ok(self) -> list[SiteCnig]:
+        return [s for s in self.sites if s.ok]
+
+    @property
+    def sites_ko(self) -> list[SiteCnig]:
+        return [s for s in self.sites if not s.ok]
+
+    @property
     def valide(self) -> bool:
-        return bool(self.sites) and not any(p.bloquant for p in self.problemes)
+        return bool(self.sites_ok) and not any(p.bloquant for p in self.problemes)
 
     @property
     def bloquants(self) -> list[Probleme]:
@@ -128,23 +144,24 @@ def lire_cnig(chemin: Path) -> LectureCnig:
         insee = ligne.get("comm_insee", "")
         refcad = ligne.get("unite_fonciere_refcad", "")
         parcelles = [p.strip() for p in refcad.split(SEPARATEUR_VALEURS) if p.strip()]
+        site = SiteCnig(site_id, nom, insee, parcelles, numero)
         if not site_id:
-            lecture.problemes.append(Probleme(numero, "site_id vide."))
+            site.erreurs.append("site_id vide")
         elif site_id in identifiants:
-            lecture.problemes.append(Probleme(numero, f"site_id « {site_id} » déjà utilisé ligne {identifiants[site_id]}."))
+            site.erreurs.append(f"site_id déjà utilisé ligne {identifiants[site_id]}")
         else:
             identifiants[site_id] = numero
         if not nom:
-            lecture.problemes.append(Probleme(numero, f"site_nom vide pour « {site_id or '?'} »."))
+            site.erreurs.append("site_nom vide")
         if not FORMAT_INSEE.match(insee):
-            lecture.problemes.append(Probleme(numero, f"comm_insee « {insee} » invalide (5 caractères attendus)."))
+            site.erreurs.append(f"comm_insee « {insee} » invalide (5 caractères attendus)")
         if not parcelles:
-            lecture.problemes.append(Probleme(numero, f"unite_fonciere_refcad vide pour « {site_id or '?'} »."))
+            site.erreurs.append("unite_fonciere_refcad vide")
         else:
             mal_formees = [p for p in parcelles if not FORMAT_IDU.match(p)]
             if mal_formees:
-                lecture.problemes.append(Probleme(numero, f"Parcelle mal formée : « {mal_formees[0]} » (14 caractères attendus, ex. 77305000AB0160)."))
+                site.erreurs.append(f"parcelle « {mal_formees[0]} » mal formée (14 caractères, ex. 77305000AB0160)")
         if not ligne.get("geompoint"):
-            lecture.problemes.append(Probleme(numero, f"geompoint vide pour « {site_id or '?'} »."))
-        lecture.sites.append(SiteCnig(site_id, nom, insee, parcelles, numero))
+            site.erreurs.append("geompoint vide")
+        lecture.sites.append(site)
     return lecture

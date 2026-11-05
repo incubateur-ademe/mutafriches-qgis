@@ -1,18 +1,16 @@
 """État du parcours prototype : utilisateur, envoi des sites CNIG, résultats figés."""
 
-import tempfile
+import shutil
 from pathlib import Path
 from typing import Optional
 
 from qgis.core import QgsVectorLayer
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QObject, QTimer, QUrl, pyqtSignal
-from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 
 from ..carto.couches import creer_couches, emprise_carte
 from ..core.attributaire import (
-    FICHIER_CNIG_ERREURS,
-    FICHIER_CNIG_EXEMPLE,
+    FICHIER_MODELE_CNIG,
     SiteAttributaire,
     Synthese,
     apparier,
@@ -20,7 +18,6 @@ from ..core.attributaire import (
     synthese,
 )
 from ..core.cnig import LectureCnig, lire_cnig
-from ..dashboard.generer import ecrire_dashboard
 from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 
 # Attente simulée de l'analyse par lot, proche d'un appel réel pour quelques dizaines de sites
@@ -48,11 +45,11 @@ class Parcours(QObject):
         self.analyse_en_cours = False
         self.sites: list[SiteAttributaire] = []
         self.non_retrouves: list[str] = []
+        self.lignes_ecartees: list[str] = []
         self.synthese: Optional[Synthese] = None
         self.avertissement = ""
         self.couche_mutabilite: Optional[QgsVectorLayer] = None
         self.couche_qualification: Optional[QgsVectorLayer] = None
-        self.dashboard: Optional[Path] = None
         self._timer: Optional[QTimer] = None
 
     # --- Accueil ------------------------------------------------------------------------------
@@ -78,11 +75,11 @@ class Parcours(QObject):
         self.lecture = lire_cnig(self.fichier) if self.fichier else None
         self.change.emit()
 
-    def utiliser_exemple(self) -> None:
-        self.choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
-
-    def utiliser_exemple_errone(self) -> None:
-        self.choisir_fichier(str(FICHIER_CNIG_ERREURS))
+    def enregistrer_modele(self, chemin: str) -> Path:
+        """Copie du modèle CNIG à remplir, là où l'utilisateur le demande."""
+        cible = Path(chemin)
+        shutil.copyfile(FICHIER_MODELE_CNIG, cible)
+        return cible
 
     @property
     def pret_a_envoyer(self) -> bool:
@@ -104,16 +101,15 @@ class Parcours(QObject):
             return
         # Prototype : les résultats viennent de la table attributaire figée de Montereau
         table, meta = charger_table()
-        apparies = apparier(table, {s.site_id: s.parcelles for s in self.lecture.sites})
+        envoyes = self.lecture.sites_ok
+        apparies = apparier(table, {s.site_id: s.parcelles for s in envoyes})
         retrouves = {s.site_id for s in apparies}
-        self.non_retrouves = [s.site_nom for s in self.lecture.sites if s.site_id not in retrouves]
+        self.non_retrouves = [s.site_nom for s in envoyes if s.site_id not in retrouves]
+        self.lignes_ecartees = [f"ligne {s.ligne} : {s.site_nom or s.site_id or 'sans nom'}" for s in self.lecture.sites_ko]
         self.sites = apparies or table
         self.avertissement = str(meta.get("avertissement", ""))
         self.synthese = synthese(self.sites, meta)
         self.couche_mutabilite, self.couche_qualification = creer_couches(self.sites, self.synthese.code_insee)
-        self.dashboard = ecrire_dashboard(
-            Path(tempfile.gettempdir()) / "mutafriches-qgis", self.synthese, self.sites, self.avertissement
-        )
         self.etape = Etape.RESULTATS
         self.change.emit()
         self.zoomer()
@@ -126,6 +122,18 @@ class Parcours(QObject):
         self.canvas.setExtent(emprise_carte(self.couche_mutabilite, self.canvas.mapSettings().destinationCrs()))
         self.canvas.refresh()
 
+    def mettre_en_avant(self, site: SiteAttributaire) -> None:
+        """Sélectionne le site dans la couche de mutabilité et cadre la carte dessus."""
+        couche = self.couche_mutabilite
+        if couche is None:
+            return
+        identifiant = (site.site_id or site.cle).replace("'", "''")
+        couche.selectByExpression(f"\"site_id\" = '{identifiant}'")
+        if couche.selectedFeatureCount():
+            self.canvas.zoomToSelected(couche)
+            self.canvas.zoomScale(max(self.canvas.scale() * 1.6, 2000))
+        self.iface.setActiveLayer(couche)
+
     def ouvrir_table_mutabilite(self) -> None:
         if self.couche_mutabilite is not None:
             self.iface.showAttributeTable(self.couche_mutabilite)
@@ -134,9 +142,10 @@ class Parcours(QObject):
         if self.couche_qualification is not None:
             self.iface.showAttributeTable(self.couche_qualification)
 
-    def ouvrir_dashboard(self) -> None:
-        if self.dashboard is not None:
-            QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.dashboard)))
+    @property
+    def attention(self) -> list[str]:
+        """Sites non analysés : lignes écartées et sites absents de la table figée."""
+        return self.lignes_ecartees + [f"non retrouvé dans la table : {n}" for n in self.non_retrouves]
 
     def nouvelle_analyse(self) -> None:
         if self._timer is not None:
@@ -146,6 +155,7 @@ class Parcours(QObject):
         self.lecture = None
         self.sites = []
         self.non_retrouves = []
+        self.lignes_ecartees = []
         self.synthese = None
         self.etape = Etape.IMPORT
         self.change.emit()

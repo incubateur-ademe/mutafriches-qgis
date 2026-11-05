@@ -8,8 +8,8 @@ fiabilité associé, directement dans QGIS.
 
 **Phase actuelle : prototype V0 pour captures d'écran (ADR-0002).** L'utilisateur se présente,
 envoie un inventaire au **standard CNIG Friches**, et reçoit deux couches attributaires
-(mutabilité, qualification), une carte symbolisée par usage et un tableau de bord HTML
-(DSFR + dsfr-chart, navigateur). Lecture et contrôle du fichier sont réels ; les résultats sont
+(mutabilité, qualification), une carte symbolisée par usage et un tableau de bord territorial dans le
+panneau (anneaux et barres QPainter, pas de QtCharts dans QGIS). Lecture et contrôle du fichier sont réels ; les résultats sont
 la **table attributaire publique de Montereau-Fault-Yonne figée** dans le plugin. Aucun appel à
 l'API. Le parcours site à site (ADR-0001) reste dans le code, hors panneau.
 
@@ -44,22 +44,21 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── couches.py           # Couches mutabilité et qualification, symbologie, étiquettes, fond OSM
 │   ├── exemple.py           # Couche de parcelles d'exemple (parcours site à site)
 │   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
-├── dashboard/
-│   ├── generer.py           # Tableau de bord territorial HTML (DSFR + dsfr-chart)
-│   └── vendor/              # DSFR 1.15.4, dsfr-chart 2.1.1, Marianne (hors ligne)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
 │   ├── accueil.py           # Fenêtre d'accueil (structure, mail, consentement), QgsSettings
 │   ├── parcours.py          # État : fichier CNIG, analyse simulée, résultats figés
-│   ├── prototype.py         # Pages Import et Résultats
+│   ├── prototype.py         # Pages Accueil, Import et Résultats (tableau de bord territorial)
+│   ├── graphiques.py        # Anneaux, légendes et petits tableaux dessinés avec QPainter
 │   ├── contenus.py          # Wording
 │   ├── pages.py             # Socle des pages, chargement, champ de saisie terrain
 │   ├── resultats.py         # Détail d'un site (hors panneau, à rebrancher)
 │   └── dock.py              # Bandeau, en-tête, page courante
 └── demo/
-    ├── montereau/           # Table attributaire 77305 figée, fichier CNIG d'exemple et refusé
+    ├── montereau/           # Table attributaire 77305 figée, fichiers CNIG (exemple, erreurs, modèle)
     ├── terrain/parcelles.geojson  # Parcelles d'exemple (IGN, Trélazé), outils/generer_terrain.py
     ├── scenarios/*.json     # Réponses détaillées de 3 friches de l'exemple, outils/figer-reponses.sh
     └── generique.json       # Grille du profil générique, idem (ne pas éditer)
+captures/                    # Captures QGIS et tableaux de bord produits par scripts/e2e.sh (local, ignoré)
 outils/                      # Génération des données de démonstration (hors ZIP)
 scripts/                     # Packaging, tests, parcours E2E dans QGIS
 tests/                       # Tests unittest exécutés avec le Python de QGIS
@@ -151,6 +150,7 @@ Une ligne, le **pourquoi** et jamais le quoi. Pas de docstrings longues sauf sé
 ./scripts/tests.sh      # Tests unitaires avec le Python de QGIS
 ./scripts/package.sh    # Construit dist/mutafriches-<version>.zip
 ./scripts/e2e.sh        # Parcours complet dans une vraie session QGIS (profil isolé)
+./scripts/reinitialiser.sh  # Efface l'accueil mémorisé dans le profil QGIS (QGIS fermé)
 ```
 
 Ne jamais présenter une vérification syntaxique ou une capture simulée comme un test dans
@@ -159,7 +159,9 @@ QGIS. Préciser la version et l'OS réellement testés.
 ### Données de démonstration
 
 - Prototype : `python3 outils/figer_attributaire.py` gèle la table attributaire publique de
-  Montereau (`demo/montereau/`), ne jamais éditer les fichiers produits. Les sites SCET nommés
+  Montereau (`demo/montereau/`), ne jamais éditer les fichiers produits. Le modèle CNIG proposé
+  à l'utilisateur porte des valeurs fictives (commune 99999) pour qu'il ne soit jamais envoyé
+  tel quel ; les fichiers de Montereau servent aux démonstrations et aux tests seulement. Les sites SCET nommés
   sont des données partenaires publiques via l'API ; la saisie est déclarative.
 - Terrain : modifier `outils/generer_terrain.py`, jamais les GeoJSON à la main.
 - Réponses simulées : `./outils/figer-reponses.sh` (nécessite `../mutafriches` avec
@@ -192,9 +194,10 @@ jamais en `--force`.
 
 ### QtWebEngine absent de QGIS 3.44 macOS
 
-- QtWebKit n'exécute pas non plus dsfr-chart (`SyntaxError` sur la syntaxe moderne) : le
-  tableau de bord est un fichier HTML ouvert dans le navigateur (`QDesktopServices`), avec ses
-  ressources embarquées en `file://`.
+- QtWebKit n'exécute pas non plus dsfr-chart (`SyntaxError` sur la syntaxe moderne) et QtCharts
+  n'est pas embarqué : les graphiques du panneau sont dessinés avec QPainter (`ui/graphiques.py`).
+- Un changement de page du panneau doit remettre le défilement en haut **après** la mise en
+  page (`QTimer.singleShot(0, …)`) : le focus d'un bouton fait sinon défiler au milieu.
 
 - Le build officiel QGIS 3.44 macOS (Qt 5.15.19) n'embarque **pas** `PyQt5.QtWebEngineWidgets` :
   le module `qgis.PyQt.QtWebEngineWidgets` existe mais échoue à l'import. Seul QtWebKit 5.212
