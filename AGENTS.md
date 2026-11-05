@@ -56,10 +56,11 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── resultats.py         # Détail d'un site (hors panneau, à rebrancher)
 │   └── dock.py              # Bandeau, en-tête, page courante
 └── demo/
-    ├── montereau/           # Table attributaire 77305 figée, fichier CNIG d'exemple et refusé
+    ├── montereau/           # Table attributaire 77305 figée, fichiers CNIG (exemple, erreurs, modèle)
     ├── terrain/parcelles.geojson  # Parcelles d'exemple (IGN, Trélazé), outils/generer_terrain.py
     ├── scenarios/*.json     # Réponses détaillées de 3 friches de l'exemple, outils/figer-reponses.sh
     └── generique.json       # Grille du profil générique, idem (ne pas éditer)
+captures/                    # Captures QGIS et tableaux de bord produits par scripts/e2e.sh (local, ignoré)
 outils/                      # Génération des données de démonstration (hors ZIP)
 scripts/                     # Packaging, tests, parcours E2E dans QGIS
 tests/                       # Tests unittest exécutés avec le Python de QGIS
@@ -159,7 +160,9 @@ QGIS. Préciser la version et l'OS réellement testés.
 ### Données de démonstration
 
 - Prototype : `python3 outils/figer_attributaire.py` gèle la table attributaire publique de
-  Montereau (`demo/montereau/`), ne jamais éditer les fichiers produits. Les sites SCET nommés
+  Montereau (`demo/montereau/`), ne jamais éditer les fichiers produits. Le modèle CNIG proposé
+  à l'utilisateur porte des valeurs fictives (commune 99999) pour qu'il ne soit jamais envoyé
+  tel quel ; les fichiers de Montereau servent aux démonstrations et aux tests seulement. Les sites SCET nommés
   sont des données partenaires publiques via l'API ; la saisie est déclarative.
 - Terrain : modifier `outils/generer_terrain.py`, jamais les GeoJSON à la main.
 - Réponses simulées : `./outils/figer-reponses.sh` (nécessite `../mutafriches` avec

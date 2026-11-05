@@ -27,17 +27,27 @@ précédente est remplacée).
 ## Tester en 3 minutes
 
 1. Ouvrir le panneau **Mutafriches** : la fenêtre d'accueil demande structure et mail (une fois).
-2. Choisir un fichier CNIG Friches (CSV ou GeoJSON), ou cliquer **Utiliser l'exemple de
-   Montereau-Fault-Yonne** (28 sites). **Voir un fichier refusé** montre l'écran d'erreur.
-3. **Envoyer mes 28 sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
+2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
+   OK ou KO avec ses erreurs ; les lignes KO sont écartées de l'envoi. **Télécharger un fichier
+   exemple** enregistre un modèle à remplir, aux valeurs volontairement fictives (commune 99999).
+   Pour une démonstration, utiliser `mutafriches/demo/montereau/friches-cnig-montereau.csv`
+   (28 sites) ou `friches-cnig-erreurs.csv` (4 sites corrects, 6 lignes en erreur).
+3. **Envoyer mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
    par usage et indice ; Qualification, masquée), avec un fond OpenStreetMap si le projet était
    vide.
-4. Panneau : chiffres clés, répartition des usages et de la fiabilité, sites à forte
-   compatibilité. Boutons **Table mutabilité**, **Table qualification**, **Ouvrir le tableau de
-   bord territorial** (navigateur), **Zoomer sur les sites**, **Nouvelle analyse**.
+4. Panneau : alerte « sites nécessitant votre attention » (lignes écartées, sites non retrouvés),
+   chiffres clés, répartition des usages et de la fiabilité, sites à forte compatibilité. Boutons
+   **Ouvrir le tableau de bord territorial** (navigateur), **Table mutabilité**, **Table
+   qualification**, lien **Analyser un autre inventaire**.
 
 Un fichier CNIG d'une autre commune est accepté mais ses sites ne sont pas retrouvés dans la
 table figée : le panneau le signale et affiche les résultats de Montereau.
+
+## Captures
+
+`./scripts/e2e.sh` écrit les captures de la fenêtre QGIS dans `captures/` (local, ignoré par git), plus
+`tableau-de-bord.html` (28 sites) et `tableau-de-bord-avec-alertes.html` (4 sites, 6 lignes
+écartées), à ouvrir depuis le dépôt : ils référencent les ressources DSFR du plugin en relatif.
 
 ### Captures en mode clair (macOS)
 
@@ -68,9 +78,8 @@ dans une fenêtre ancrée ».
 ```
 
 `scripts/e2e.sh` joue le parcours du prototype dans QGIS sur un profil temporaire (le profil
-de l'utilisateur n'est pas modifié) et écrit captures et rapport dans `dist/e2e/` : accueil,
-fichier refusé, exemple, résultats, tables attributaires. Le tableau de bord généré est copié
-dans `dist/e2e/tableau-de-bord.html`.
+de l'utilisateur n'est pas modifié) : captures dans `captures/`, rapport et journal dans
+`dist/e2e/`.
 
 ### Données de démonstration
 
