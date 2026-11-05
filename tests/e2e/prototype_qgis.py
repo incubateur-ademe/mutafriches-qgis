@@ -199,7 +199,7 @@ def resultats() -> None:
 def table_mutabilite() -> None:
     capture("07-resultats-carte")
     barre = dock().defilement.verticalScrollBar()
-    for numero, position in enumerate((0.33, 0.66, 1.0), start=1):
+    for numero, position in enumerate((0.5, 1.0), start=1):
         barre.setValue(int(barre.maximum() * position))
         capture(f"07{'abc'[numero - 1]}-tableau-de-bord-{numero}")
     barre.setValue(0)
@@ -268,12 +268,15 @@ def envoyer_fichier_erreurs() -> None:
 def resultats_avec_alertes() -> None:
     p = parcours()
     controler("4 sites analysés, 6 lignes écartées", p.etape == 2 and p.synthese.nombre_sites == 4 and len(p.lignes_ecartees) == 6)
-    controler("alerte attention dans le panneau", any("nécessitent votre attention" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()))
+    controler("sites à reprendre signalés dans le panneau", any("à reprendre" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()))
 
 
 @etape(2500)
 def capture_alertes() -> None:
     capture("10-resultats-avec-alertes")
+    barre = dock().defilement.verticalScrollBar()
+    barre.setValue(barre.maximum())
+    capture("10b-sites-a-reprendre")
     QgsSettings().remove("mutafriches/utilisateur")
 
 

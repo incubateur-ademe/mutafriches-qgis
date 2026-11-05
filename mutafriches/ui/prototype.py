@@ -5,7 +5,7 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QCheckBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
 from ..carto.couches import COULEURS_USAGES
-from ..core.attributaire import NIVEAUX_FIABILITE, ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
+from ..core.attributaire import ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
 from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
@@ -14,15 +14,8 @@ from .parcours import Parcours
 from .graphiques import anneau_avec_legende, tableau
 from .widgets import Encadre, badge, bouton, entete_champ, separateur, texte, vider
 
-COULEURS_FIABILITE = {
-    "Très fiable": style.SUCCES,
-    "Fiable": "#27a658",
-    "Moyennement fiable": "#c3992a",
-    "Peu fiable": style.AVERTISSEMENT,
-    "Très peu fiable": style.ERREUR,
-}
-
 MAX_LIGNES_AFFICHEES = 40
+
 
 
 class PageAccueil(Page):
@@ -237,46 +230,27 @@ class PageResultats(Page):
         if s is None:
             return
         self.zone.addWidget(texte(f"{s.commune} ({s.code_insee})", "mfSurTitre"))
-        self.zone.addWidget(texte(f"{pluriel(s.nombre_sites, 'site')} analysé{'s' if s.nombre_sites > 1 else ''}", "mfH2"))
+        self.zone.addWidget(texte("Tableau de bord territorial", "mfH2"))
         self.zone.addWidget(texte(f"Algorithme {s.version_algorithme} · table figée le {s.date_table}", "mfAide"))
 
-        # Alerte : ce qui demande une action (lignes écartées, sites non retrouvés, sites peu fiables)
-        peu_fiables = [x for x in s.sites_a_qualifier if x.fiabilite_niveau in ("Moyennement fiable", "Peu fiable", "Très peu fiable")]
-        attention = parcours.attention + [f"{x.nom} : {x.fiabilite_niveau.lower()}, qualification à compléter" for x in peu_fiables]
-        if attention:
-            n = len(attention)
-            self.zone.addWidget(
-                Encadre(
-                    "erreur",
-                    f"{pluriel(n, 'site')} nécessite{'nt' if n > 1 else ''} votre attention",
-                    "\n".join(attention[:6]) + (f"\net {n - 6} autres" if n > 6 else ""),
-                )
-            )
-
-        dominant = max(s.par_usage.items(), key=lambda kv: kv[1])[0] if s.nombre_sites else None
+        # 1 et 2 : nombre de sites, fiabilité
         grille = QGridLayout()
         grille.setSpacing(8)
-        grille.addWidget(Chiffre("Usage qui ressort le plus", libelle_usage(dominant), f"{s.par_usage.get(dominant or '', 0)} sites"), 0, 0)
-        grille.addWidget(Chiffre("Fiabilité moyenne", f"{formater_note(s.fiabilite_moyenne)} / 10", f"{s.par_fiabilite.get('Très fiable', 0)} très fiables"), 0, 1)
-        grille.addWidget(Chiffre("Forte compatibilité", str(len(s.sites_forte_compatibilite)), "indice ≥ 70 %"), 1, 0)
-        grille.addWidget(Chiffre("À qualifier", str(len(s.sites_a_qualifier)), "sans saisie terrain"), 1, 1)
+        grille.addWidget(Chiffre("Sites analysés", str(s.nombre_sites), f"{len(s.sites_a_qualifier)} sans saisie terrain"), 0, 0)
+        grille.addWidget(Chiffre("Fiabilité moyenne", f"{formater_note(s.fiabilite_moyenne)} / 10", f"{s.par_fiabilite.get('Très fiable', 0)} très fiables sur {s.nombre_sites}"), 0, 1)
         self.zone.addLayout(grille)
 
+        # 3 : jauges par usage le plus compatible
+        self._titre("Usage le plus compatible", "Nombre de sites dont c'est l'usage prioritaire.")
+        for usage in ORDRE_USAGES:
+            self.zone.addWidget(Barre(libelle_usage(usage), s.par_usage.get(usage, 0), s.nombre_sites, COULEURS_USAGES[usage]))
+
+        # 4 : répartition
         self._titre("Répartition des usages les plus compatibles")
         serie_usages = [(libelle_usage(u), s.par_usage.get(u, 0), COULEURS_USAGES[u]) for u in ORDRE_USAGES]
         self.zone.addWidget(anneau_avec_legende(serie_usages, str(s.nombre_sites), "sites"))
 
-        self._titre("Usage le plus compatible, site par site", "Nombre de sites dont c'est l'usage prioritaire, et indice moyen de l'usage sur la commune.")
-        for usage in ORDRE_USAGES:
-            nombre = s.par_usage.get(usage, 0)
-            self.zone.addWidget(Barre(f"{libelle_usage(usage)} · indice moyen {formater_note(s.indice_moyen_par_usage.get(usage, 0.0))} %", nombre, s.nombre_sites, COULEURS_USAGES[usage]))
-
-        self._titre("Qualité des résultats", "Fiabilité moyenne au centre, répartition des sites par niveau.")
-        serie_fiabilite = [(n, s.par_fiabilite.get(n, 0), COULEURS_FIABILITE[n]) for n in NIVEAUX_FIABILITE]
-        self.zone.addWidget(anneau_avec_legende(serie_fiabilite, formater_note(s.fiabilite_moyenne), "/ 10", s.nombre_sites))
-        if s.sites_a_qualifier:
-            self.zone.addWidget(texte(f"{pluriel(len(s.sites_a_qualifier), 'site')} jamais qualifié{'s' if len(s.sites_a_qualifier) > 1 else ''} : mutabilité calculée avec « Ne sait pas » pour les 9 critères terrain.", "mfAide"))
-
+        # 5 : profils
         self._titre("Profils de sites", "Écart entre le meilleur et le moins bon usage d'un même site. Grille de lecture du prototype, à valider.")
         lignes = []
         for seuil, libelle, lecture in PROFILS_ECART:
@@ -285,11 +259,7 @@ class PageResultats(Page):
             lignes.append([libelle, borne, str(nombre), f"{round(100 * nombre / s.nombre_sites) if s.nombre_sites else 0} %", lecture])
         self.zone.addWidget(tableau(["Profil", "Écart", "Sites", "Part", "Lecture"], lignes, [3, 2, 1, 1, 4]))
 
-        self._titre("Niveau de compatibilité de l'usage prioritaire", "Paliers d'affichage de l'application web.")
-        couleurs_compat = {"Excellent": style.SUCCES, "Très bon": "#27a658", "Bon": "#c3992a", "Moyen": style.AVERTISSEMENT, "Faible": style.ERREUR}
-        for niveau, nombre in s.par_compatibilite.items():
-            self.zone.addWidget(Barre(niveau, nombre, s.nombre_sites, couleurs_compat[niveau]))
-
+        # 6 : sites à forte compatibilité, cliquables
         self._titre(f"Sites à forte compatibilité ({len(s.sites_forte_compatibilite)})", "Indice de l'usage prioritaire supérieur ou égal à 70 %. Cliquer un site le sélectionne et cadre la carte.")
         for site in s.sites_forte_compatibilite:
             ligne = QHBoxLayout()
@@ -298,5 +268,20 @@ class PageResultats(Page):
             ligne.addWidget(lien, 1)
             ligne.addWidget(badge(f"{libelle_usage(site.usage_prioritaire)} · {round(site.indice_max)} %", "tag"), 0, Qt.AlignmentFlag.AlignTop)
             self.zone.addLayout(ligne)
-        self.zone.addWidget(separateur())
+
+        # 7 : sites nécessitant une attention (lignes écartées, non retrouvés, peu fiables)
+        peu_fiables = [x for x in s.sites_a_qualifier if x.fiabilite_niveau in ("Moyennement fiable", "Peu fiable", "Très peu fiable")]
+        attention = parcours.attention + [f"{x.nom} : {x.fiabilite_niveau.lower()}, qualification à compléter" for x in peu_fiables]
+        self._titre("Sites nécessitant votre attention")
+        if attention:
+            n = len(attention)
+            self.zone.addWidget(
+                Encadre(
+                    "erreur",
+                    f"{pluriel(n, 'site')} à reprendre",
+                    "\n".join(attention[:6]) + (f"\net {n - 6} autres" if n > 6 else ""),
+                )
+            )
+        else:
+            self.zone.addWidget(Encadre("succes", "Aucun site à reprendre", "Toutes les lignes ont été analysées et aucune n'est peu fiable."))
         self.zone.addWidget(texte(f"Démonstration : {parcours.avertissement}", "mfAide"))
