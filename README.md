@@ -46,6 +46,15 @@ précédente est remplacée).
 Un fichier CNIG d'une autre commune est accepté mais ses sites ne sont pas retrouvés dans la
 table figée : le panneau le signale et affiche les résultats de Montereau.
 
+### Revoir l'accueil
+
+L'accueil (structure, mail, consentement) n'est demandé qu'une fois : il est mémorisé dans le
+profil QGIS. Pour le revoir, le lien **Modifier** en bas de la page d'import, ou, QGIS fermé :
+
+```bash
+./scripts/reinitialiser.sh
+```
+
 ## Captures
 
 `./scripts/e2e.sh` écrit les captures de la fenêtre QGIS dans `captures/` (local, ignoré par git).

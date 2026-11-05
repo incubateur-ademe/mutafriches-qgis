@@ -150,6 +150,7 @@ Une ligne, le **pourquoi** et jamais le quoi. Pas de docstrings longues sauf sé
 ./scripts/tests.sh      # Tests unitaires avec le Python de QGIS
 ./scripts/package.sh    # Construit dist/mutafriches-<version>.zip
 ./scripts/e2e.sh        # Parcours complet dans une vraie session QGIS (profil isolé)
+./scripts/reinitialiser.sh  # Efface l'accueil mémorisé dans le profil QGIS (QGIS fermé)
 ```
 
 Ne jamais présenter une vérification syntaxique ou une capture simulée comme un test dans
