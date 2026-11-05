@@ -3,11 +3,13 @@
 Extension QGIS de [Mutafriches](https://mutafriches.beta.gouv.fr) — **maquette locale non
 publiée**.
 
-Le panneau reprend le parcours de l'application web : sélection des parcelles d'un site dans une
-couche QGIS, trois étapes de qualification, puis mutabilité sur sept usages et fiabilité.
+Prototype V0 (ADR-0002) : l'utilisateur se présente, envoie son inventaire de sites au
+**standard CNIG Friches**, et reçoit une table attributaire de mutabilité, une table de
+qualification, une carte symbolisée par usage et un tableau de bord territorial (DSFR,
+dsfr-chart) ouvert dans le navigateur. Objectif : captures d'écran.
 
-> **Données fictives.** Les données récupérées et les résultats sont simulés à partir de
-> réponses figées par le calcul Mutafriches : aucun appel à l'API n'est effectué.
+> **Données figées.** Les résultats sont ceux de la table attributaire publique de
+> Montereau-Fault-Yonne (77305), gelée dans le plugin : aucun appel à l'API n'est effectué.
 
 Seule version testée : **QGIS 3.44.14 sous macOS (Apple Silicon)**.
 
@@ -24,32 +26,38 @@ précédente est remplacée).
 
 ## Tester en 3 minutes
 
-Le panneau reprend le wording et le parcours de l'application web (`/analyser`, puis les 3 étapes
-de qualification et `/resultats`).
+1. Ouvrir le panneau **Mutafriches** : la fenêtre d'accueil demande structure et mail (une fois).
+2. Choisir un fichier CNIG Friches (CSV ou GeoJSON), ou cliquer **Utiliser l'exemple de
+   Montereau-Fault-Yonne** (28 sites). **Voir un fichier refusé** montre l'écran d'erreur.
+3. **Envoyer mes 28 sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
+   par usage et indice ; Qualification, masquée), avec un fond OpenStreetMap si le projet était
+   vide.
+4. Panneau : chiffres clés, répartition des usages et de la fiabilité, sites à forte
+   compatibilité. Boutons **Table mutabilité**, **Table qualification**, **Ouvrir le tableau de
+   bord territorial** (navigateur), **Zoomer sur les sites**, **Nouvelle analyse**.
 
-1. Ouvrir le panneau **Mutafriches**.
-2. Dans le panneau Couches, sélectionner une couche de parcelles (n'importe quelle couche de
-   polygones ; l'identifiant cadastral est repéré dans un champ `idu` ou `id`). Sans couche
-   sous la main : lien **Ajouter des parcelles d'exemple** (Trélazé, parcellaire IGN).
-3. Cliquer sur une parcelle, puis sur une parcelle adjacente pour l'ajouter au site, puis
-   **Analyser ce site** (environ 2 secondes de qualification automatique).
-4. Compléter les 3 étapes : chaque liste démarre sur « Sélectionner une option » et doit être
-   renseignée (« Ne sait pas » est possible). Le « ? » de chaque champ donne son aide ou sa source.
-5. Résultats : indice de fiabilité, **voir récapitulatif du site**, podium des 3 usages les plus
-   compatibles, tableau de tous les usages (survol : aperçu ; clic : détail des critères).
+Un fichier CNIG d'une autre commune est accepté mais ses sites ne sont pas retrouvés dans la
+table figée : le panneau le signale et affiche les résultats de Montereau.
 
-Parcelles d'exemple avec des réponses détaillées (toute autre sélection reçoit un profil
-générique) :
+### Captures en mode clair (macOS)
 
-- **Ancienne station-service** (11 ter rue Joseph Le Sciellour, friche Cartofriches) :
-  AV 1255, 1256, 1257, 1258 ;
-- **AV 1351** (sans adresse, à côté du 7 rue Pierre Timbaud) : site d'une parcelle ;
-- **AV 1349 et AV 1350** (près du 18 square des Forges) : premier appel en échec (bouton
-  Réessayer), puis trois données indisponibles.
+QGIS suit l'apparence du système. Pour des captures claires sans changer tout le Mac, forcer
+l'apparence claire pour QGIS seulement (à faire QGIS fermé, puis à retirer) :
 
-Le site analysé est une sélection dans une couche QGIS : l'extension n'enregistre rien. Les
-surfaces sont mesurées sur la géométrie (en Lambert 93, quel que soit le SCR de la couche) ; les
-autres données et les indices sont fictifs.
+```bash
+defaults write org.qgis.qgis3 NSRequiresAquaSystemAppearance -bool true
+```
+
+```bash
+defaults delete org.qgis.qgis3 NSRequiresAquaSystemAppearance
+```
+
+`scripts/e2e.sh` applique ce réglage le temps du parcours et le retire ensuite, sauf s'il
+était déjà posé. Si QGIS reste sombre, vérifier le thème d'interface (Préférences, Général,
+« Thème de l'interface » : `default`, pas « Night Mapping »), qui l'emporte sur l'apparence
+du système. Pour que les tables attributaires
+s'ouvrent ancrées en bas : Préférences, Sources de données, « Ouvrir la table attributaire
+dans une fenêtre ancrée ».
 
 ## Développement
 
@@ -59,12 +67,17 @@ autres données et les indices sont fictifs.
 ./scripts/e2e.sh       # Parcours complet dans une vraie session QGIS, sur un profil isolé
 ```
 
-`scripts/e2e.sh` ouvre QGIS deux fois (parcelles d'exemple, puis couche utilisateur en WGS84
-dans un projet en Web Mercator), sur un profil temporaire dans `dist/e2e/` : le profil de
-l'utilisateur n'est pas modifié. Captures et rapports sont écrits dans `dist/e2e/`.
+`scripts/e2e.sh` joue le parcours du prototype dans QGIS sur un profil temporaire (le profil
+de l'utilisateur n'est pas modifié) et écrit captures et rapport dans `dist/e2e/` : accueil,
+fichier refusé, exemple, résultats, tables attributaires. Le tableau de bord généré est copié
+dans `dist/e2e/tableau-de-bord.html`.
 
 ### Données de démonstration
 
+`python3 outils/figer_attributaire.py` (réseau) gèle la table attributaire de Montereau
+(`mutafriches/demo/montereau/`) et en dérive le fichier CNIG d'exemple et un fichier refusé.
+
+Les données du parcours site à site (conservées pour une future vue de détail) :
 `./outils/figer-reponses.sh` régénère tout :
 
 - `outils/generer_terrain.py` (Python de QGIS, réseau requis) interroge le WFS de la
