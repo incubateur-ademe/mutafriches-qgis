@@ -6,10 +6,12 @@ Extension QGIS de Mutafriches : qualifier un site composé d'une ou plusieurs pa
 cadastrales, puis consulter son potentiel de mutabilité pour sept usages et l'indice de
 fiabilité associé, directement dans QGIS.
 
-**Phase actuelle : maquette locale non publiée.** Le site analysé est une **sélection dans une
-couche QGIS** (n'importe quelle couche de polygones) ; l'extension n'enregistre rien. Les
-interactions QGIS (panneau, sélection, géométrie, saisie) sont réelles ; l'enrichissement et
-l'évaluation sont **simulés** à partir de réponses figées. Aucun appel à l'API Mutafriches.
+**Phase actuelle : prototype V0 pour captures d'écran (ADR-0002).** L'utilisateur se présente,
+envoie un inventaire au **standard CNIG Friches**, et reçoit deux couches attributaires
+(mutabilité, qualification), une carte symbolisée par usage et un tableau de bord HTML
+(DSFR + dsfr-chart, navigateur). Lecture et contrôle du fichier sont réels ; les résultats sont
+la **table attributaire publique de Montereau-Fault-Yonne figée** dans le plugin. Aucun appel à
+l'API. Le parcours site à site (ADR-0001) reste dans le code, hors panneau.
 
 Projet Beta.gouv / incubateur ADEME. Application web et API :
 `../mutafriches` (dépôt voisin, NestJS + React). Ses contrats (`packages/shared-types`) sont la
@@ -33,19 +35,28 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 ├── core/                    # Sans dépendance à l'interface
 │   ├── referentiel.py       # Champs, valeurs, libellés, badges (miroir de shared-types et apps/ui)
 │   ├── recapitulatif.py     # Récapitulatif, détail d'usage, valeurs des étapes (miroir des builders web)
-│   ├── modele.py            # Site analysé (parcelles, réponses, résultats)
+│   ├── cnig.py              # Lecture et contrôle d'un fichier CNIG Friches (51 colonnes)
+│   ├── attributaire.py      # Table attributaire figée, appariement, synthèse territoriale
+│   ├── modele.py            # Site analysé (parcours site à site, hors panneau)
 │   ├── service.py           # Interface du service (enrichir / évaluer), erreurs
 │   └── service_simule.py    # Implémentation simulée (réponses figées, délai, erreur)
 ├── carto/                   # Interactions cartographiques
-│   ├── exemple.py           # Couche de parcelles d'exemple (lien du tutoriel)
-│   └── selection.py         # Couche active, identifiant cadastral, contiguïté, surbrillance
+│   ├── couches.py           # Couches mutabilité et qualification, symbologie, étiquettes, fond OSM
+│   ├── exemple.py           # Couche de parcelles d'exemple (parcours site à site)
+│   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
+├── dashboard/
+│   ├── generer.py           # Tableau de bord territorial HTML (DSFR + dsfr-chart)
+│   └── vendor/              # DSFR 1.15.4, dsfr-chart 2.1.1, Marianne (hors ligne)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
-│   ├── parcours.py          # État : sélection, 3 étapes, résultats
-│   ├── contenus.py          # Wording, ordre des champs et infobulles des pages web
-│   ├── pages.py             # Sélection et 3 étapes (calquées sur les pages web de qualification)
-│   ├── resultats.py         # Résultats, podium, tableau, récapitulatif et détail d'un usage
+│   ├── accueil.py           # Fenêtre d'accueil (structure, mail, consentement), QgsSettings
+│   ├── parcours.py          # État : fichier CNIG, analyse simulée, résultats figés
+│   ├── prototype.py         # Pages Import et Résultats
+│   ├── contenus.py          # Wording
+│   ├── pages.py             # Socle des pages, chargement, champ de saisie terrain
+│   ├── resultats.py         # Détail d'un site (hors panneau, à rebrancher)
 │   └── dock.py              # Bandeau, en-tête, page courante
 └── demo/
+    ├── montereau/           # Table attributaire 77305 figée, fichier CNIG d'exemple et refusé
     ├── terrain/parcelles.geojson  # Parcelles d'exemple (IGN, Trélazé), outils/generer_terrain.py
     ├── scenarios/*.json     # Réponses détaillées de 3 friches de l'exemple, outils/figer-reponses.sh
     └── generique.json       # Grille du profil générique, idem (ne pas éditer)
@@ -147,6 +158,9 @@ QGIS. Préciser la version et l'OS réellement testés.
 
 ### Données de démonstration
 
+- Prototype : `python3 outils/figer_attributaire.py` gèle la table attributaire publique de
+  Montereau (`demo/montereau/`), ne jamais éditer les fichiers produits. Les sites SCET nommés
+  sont des données partenaires publiques via l'API ; la saisie est déclarative.
 - Terrain : modifier `outils/generer_terrain.py`, jamais les GeoJSON à la main.
 - Réponses simulées : `./outils/figer-reponses.sh` (nécessite `../mutafriches` avec
   `node_modules` et `packages/shared-types/dist` à jour). Régénérer après toute évolution de
@@ -178,6 +192,10 @@ jamais en `--force`.
 
 ### QtWebEngine absent de QGIS 3.44 macOS
 
+- QtWebKit n'exécute pas non plus dsfr-chart (`SyntaxError` sur la syntaxe moderne) : le
+  tableau de bord est un fichier HTML ouvert dans le navigateur (`QDesktopServices`), avec ses
+  ressources embarquées en `file://`.
+
 - Le build officiel QGIS 3.44 macOS (Qt 5.15.19) n'embarque **pas** `PyQt5.QtWebEngineWidgets` :
   le module `qgis.PyQt.QtWebEngineWidgets` existe mais échoue à l'import. Seul QtWebKit 5.212
   est présent, moteur obsolète et retiré de Qt6 / QGIS 4.
@@ -199,6 +217,13 @@ jamais en `--force`.
   degrés carrés et une tolérance de contiguïté de plusieurs kilomètres.
 - Dans un test, ajouter une couche à un projet vide lui impose son SCR : fixer le SCR voulu
   après une première couche.
+
+### Couches mémoire et fermeture de QGIS
+
+- Les couches mémoire déclenchent une question à la fermeture : un script E2E doit
+  `removeAllMapLayers()` avant `actionExit()`.
+- Les widgets ajoutés par un rafraîchissement ne sont visibles qu'après `processEvents()` :
+  un clic E2E juste après un changement d'état échoue sinon.
 
 ### Un site multiparcellaire est UN site
 

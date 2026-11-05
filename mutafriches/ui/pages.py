@@ -1,35 +1,14 @@
-"""Écrans de sélection et de qualification, calqués sur l'application web."""
+"""Socle des pages du panneau, encart de chargement et champ de saisie terrain."""
 
-import random
 from typing import Optional
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import (
-    QComboBox,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QProgressBar,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from qgis.PyQt.QtWidgets import QComboBox, QFrame, QLabel, QProgressBar, QVBoxLayout, QWidget
 
-from ..core.recapitulatif import valeur_etape
-from ..core.referentiel import (
-    CHAMP_OBLIGATOIRE,
-    CHAMPS_PAR_CLE,
-    CHOIX_VIDE,
-    DONNEE_NON_ACCESSIBLE,
-    NE_SAIT_PAS,
-    PAS_DE_BATI,
-    TYPES_POLLUTION,
-    formater_surface,
-)
-from . import contenus, style
-from .contenus import SEPARATEUR, Info, Saisie
-from .parcours import Etape, Parcours
-from .widgets import Encadre, Stepper, badge, badges, bouton, entete_champ, separateur, texte, vider
+from ..core.referentiel import CHAMP_OBLIGATOIRE, CHAMPS_PAR_CLE, CHOIX_VIDE, TYPES_POLLUTION
+from . import style
+from .parcours import Parcours
+from .widgets import entete_champ, texte
 
 TYPES_POLLUTION_CLES = {cle for cle, _ in TYPES_POLLUTION}
 
@@ -84,58 +63,6 @@ class Chargement(QFrame):
             layout.addWidget(citation)
 
 
-class PageSelection(Page):
-    def __init__(self, parcours: Parcours) -> None:
-        super().__init__(parcours)
-        self.corps.addWidget(texte(contenus.TITRE_SELECTION, "mfH2"))
-        self.corps.addWidget(texte(contenus.INTRO_SELECTION))
-        self.zone = QVBoxLayout()
-        self.zone.setSpacing(8)
-        self.corps.addLayout(self.zone)
-        self.corps.addStretch(1)
-        self.compteur = texte("", "mfH3")
-        self.compteur.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.compteur.setStyleSheet(f"color: {style.BLEU_FRANCE}; font-weight: bold;")
-        self.bouton_analyser = bouton("Analyser ce site", "primaire", parcours.analyser_selection)
-        self.pied_layout.addWidget(self.compteur)
-        self.pied_layout.addWidget(self.bouton_analyser)
-
-    def rafraichir(self) -> None:
-        parcours = self.parcours
-        analyse = parcours.analyse
-        vider(self.zone)
-        n = len(analyse.parcelles)
-        if parcours.couche is None:
-            self.zone.addWidget(texte(contenus.TUTORIEL))
-            self.zone.addWidget(
-                Encadre("info", "Aucune couche de parcelles", "Sélectionnez une couche de polygones dans le panneau Couches.")
-            )
-        else:
-            self.zone.addWidget(texte(f"Couche : {parcours.couche.name()}", "mfAide"))
-            self.zone.addWidget(texte(contenus.TUTORIEL if n == 0 else contenus.AIDE_ADJACENTE, "mfAide"))
-        if n == 0:
-            self.zone.addWidget(texte("Pas de couche sous la main ?", "mfAide"))
-            self.zone.addWidget(bouton("Ajouter des parcelles d'exemple", "lien", parcours.ajouter_exemple))
-        else:
-            for parcelle in analyse.parcelles:
-                ligne = QHBoxLayout()
-                ligne.addWidget(texte(parcelle.libelle, "mfValeur"), 1)
-                ligne.addWidget(texte(formater_surface(parcelle.surface_m2), "mfAide"))
-                retirer = QPushButton("✕")
-                retirer.setObjectName("mfRetirer")
-                retirer.setToolTip(f"Retirer la parcelle {parcelle.libelle}")
-                retirer.setAccessibleName(f"Retirer la parcelle {parcelle.libelle}")
-                retirer.setCursor(Qt.CursorShape.PointingHandCursor)
-                retirer.clicked.connect(lambda _=False, idu=parcelle.idu: parcours.retirer_parcelle(idu))
-                ligne.addWidget(retirer)
-                self.zone.addLayout(ligne)
-            if analyse.problemes:
-                self.zone.addWidget(Encadre("erreur", "", "\n".join(analyse.problemes)))
-        self.compteur.setText(f"{pluriel(n, 'parcelle')} ajoutée{'s' if n > 1 else ''}" if n else "")
-        self.compteur.setVisible(n > 0)
-        self.bouton_analyser.setEnabled(analyse.valide)
-
-
 class ChampSaisie(QWidget):
     """Champ obligatoire : choix vide par défaut, message d'erreur sous la liste."""
 
@@ -143,6 +70,8 @@ class ChampSaisie(QWidget):
         super().__init__()
         self.cle = cle
         self.parcours = parcours
+        # Rebranché par la page qui l'utilise (vue de détail d'un site, hors prototype)
+        self.on_change = lambda cle, valeur: None
         champ = CHAMPS_PAR_CLE[cle]
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -191,7 +120,7 @@ class ChampSaisie(QWidget):
         valeur = self.valeur()
         if valeur:
             self.montrer_erreur(False)
-        self.parcours.definir_reponse(self.cle, valeur)
+        self.on_change(self.cle, valeur)
 
     def _afficher_type(self) -> None:
         if self.type_pollution is not None and self.libelle_type is not None:
@@ -226,139 +155,3 @@ class ChampSaisie(QWidget):
                 liste.setProperty("erreur", visible)
                 liste.style().unpolish(liste)
                 liste.style().polish(liste)
-
-
-class PageEtape(Page):
-    """Une étape de qualification, dans l'ordre et avec les libellés de la page web."""
-
-    def __init__(self, parcours: Parcours, etape: int) -> None:
-        super().__init__(parcours)
-        self.etape = etape
-        titre, suivante, elements = contenus.ETAPES[etape]
-        self.elements = elements
-        self.stepper = Stepper()
-        self.stepper.definir(etape, titre, suivante)
-        self.corps.addWidget(self.stepper)
-        self.zone_attente = QVBoxLayout()
-        self.corps.addLayout(self.zone_attente)
-
-        self.formulaire = QWidget()
-        formulaire = QVBoxLayout(self.formulaire)
-        formulaire.setContentsMargins(0, 4, 0, 0)
-        formulaire.setSpacing(12)
-        self.infos: dict[str, QVBoxLayout] = {}
-        self.entetes_infos: dict[str, QLabel] = {}
-        self.champs: dict[str, ChampSaisie] = {}
-        for element in elements:
-            if element == SEPARATEUR:
-                formulaire.addWidget(separateur())
-            elif isinstance(element, Info):
-                bloc = QWidget()
-                layout = QVBoxLayout(bloc)
-                layout.setContentsMargins(0, 0, 0, 0)
-                layout.setSpacing(4)
-                entete = entete_champ(element.libelle, element.aide + (f" {element.lien}" if element.lien else ""))
-                layout.addWidget(entete)
-                valeurs = QVBoxLayout()
-                layout.addLayout(valeurs)
-                self.infos[element.cle] = valeurs
-                self.entetes_infos[element.cle] = entete.findChild(QLabel)
-                formulaire.addWidget(bloc)
-            elif isinstance(element, Saisie):
-                champ = ChampSaisie(element.cle, parcours)
-                champ.liste.currentIndexChanged.connect(lambda *_: self._masquer_bati())
-                self.champs[element.cle] = champ
-                formulaire.addWidget(champ)
-        self.corps.addWidget(self.formulaire)
-        self.corps.addStretch(1)
-
-        self.zone_pied = QVBoxLayout()
-        self.pied_layout.addLayout(self.zone_pied)
-        ligne = QHBoxLayout()
-        ligne.addWidget(bouton("Précédent", "secondaire", self._precedent))
-        self.bouton_suivant = bouton("Suivant", "primaire", self._suivant)
-        ligne.addWidget(self.bouton_suivant)
-        self.pied_layout.addLayout(ligne)
-        self._message_attente = random.choice(contenus.MESSAGES_CHARGEMENT)
-
-    def _precedent(self) -> None:
-        if self.etape == Etape.SITE_BATI:
-            self.parcours.modifier_selection()
-        else:
-            self.parcours.aller_etape(self.etape - 1)
-
-    def _champs_visibles(self) -> list[ChampSaisie]:
-        return [c for c in self.champs.values() if not c.isHidden()]
-
-    def _suivant(self) -> None:
-        manquants = [c for c in self._champs_visibles() if not c.valeur()]
-        for champ in self.champs.values():
-            champ.montrer_erreur(champ in manquants)
-        if manquants:
-            self.defiler_vers(manquants[0])
-            return
-        if self.etape == Etape.SITE_BATI:
-            self._normaliser_bati()
-        if self.etape == Etape.RISQUES:
-            self.parcours.evaluer()
-        else:
-            self.parcours.aller_etape(self.etape + 1)
-
-    def _normaliser_bati(self) -> None:
-        # « Pas de bâti » rend l'autre champ sans objet : aligné à l'envoi (normaliserBati)
-        site = self.parcours.site
-        if site is None:
-            return
-        cles = ("valeurArchitecturaleHistorique", "etatBatiInfrastructure")
-        if any(site.reponses.get(c) == PAS_DE_BATI for c in cles):
-            for cle in cles:
-                site.definir_reponse(cle, PAS_DE_BATI)
-
-    def _masquer_bati(self) -> None:
-        site = self.parcours.site
-        if site is None or "etatBatiInfrastructure" not in self.champs:
-            return
-        architecture = site.reponses.get("valeurArchitecturaleHistorique")
-        etat = site.reponses.get("etatBatiInfrastructure")
-        self.champs["etatBatiInfrastructure"].setVisible(architecture != PAS_DE_BATI)
-        self.champs["valeurArchitecturaleHistorique"].setVisible(etat != PAS_DE_BATI or architecture == PAS_DE_BATI)
-
-    def rafraichir(self) -> None:
-        parcours = self.parcours
-        site = parcours.site
-        if site is None:
-            return
-        vider(self.zone_attente)
-        donnees = site.enrichissement
-        self.formulaire.setVisible(donnees is not None)
-        if parcours.enrichissement_en_cours:
-            self.zone_attente.addWidget(
-                Chargement(contenus.TITRE_CHARGEMENT, contenus.SOUS_TITRE_CHARGEMENT, self._message_attente)
-            )
-        elif donnees is None and parcours.erreur_enrichissement is not None:
-            erreur = parcours.erreur_enrichissement
-            self.zone_attente.addWidget(Encadre("erreur", "Données non récupérées", erreur.message))
-            if erreur.recuperable:
-                self.zone_attente.addWidget(bouton("Réessayer", "secondaire", parcours.lancer_enrichissement))
-        if donnees is not None:
-            for cle, valeurs in self.infos.items():
-                vider(valeurs)
-                valeur = valeur_etape(cle, donnees, site.reponses)
-                if cle == "parcelles":
-                    multi = isinstance(valeur, list)
-                    self.entetes_infos[cle].setText("Parcelles du site" if multi else "Identifiant parcelle")
-                liste = valeur if isinstance(valeur, list) else [valeur]
-                if not any(liste) or liste == [DONNEE_NON_ACCESSIBLE]:
-                    valeurs.addWidget(badges([DONNEE_NON_ACCESSIBLE], "non-accessible"))
-                else:
-                    valeurs.addWidget(badges([v for v in liste if v]))
-            for cle, champ in self.champs.items():
-                champ.charger(site.reponses.get(cle, ""), donnees.get("siteReferencePollue") is True)
-            self._masquer_bati()
-
-        vider(self.zone_pied)
-        if parcours.erreur_evaluation is not None:
-            self.zone_pied.addWidget(Encadre("erreur", "Analyse impossible", parcours.erreur_evaluation.message))
-        if parcours.evaluation_en_cours:
-            self.zone_pied.addWidget(texte("Calcul en cours : analyse de la mutabilité de votre friche...", "mfAide"))
-        self.bouton_suivant.setEnabled(donnees is not None and not parcours.evaluation_en_cours)

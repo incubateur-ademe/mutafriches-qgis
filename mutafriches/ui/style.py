@@ -58,14 +58,16 @@ def feuille_de_style() -> str:
     declaration_police = f'font-family: "{police}";' if police else ""
     return f"""
 #mfRacine {{ background: #ffffff; {declaration_police} font-size: 13px; color: {TEXTE}; }}
-#mfRacine QLabel {{ color: {TEXTE}; }}
+#mfRacine QLabel, #mfRacine QCheckBox {{ color: {TEXTE}; }}
+#mfRacine QCheckBox::indicator {{ width: 16px; height: 16px; border: 1px solid {TEXTE}; background: #ffffff; }}
+#mfRacine QCheckBox::indicator:checked {{ background: {BLEU_FRANCE}; border-color: {BLEU_FRANCE}; }}
 #mfRacine QScrollArea, #mfPages, #mfPages > QWidget {{ background: #ffffff; border: none; }}
 
 QLabel#mfDemo {{
   background: {DEMO_FOND}; color: {DEMO_TEXTE}; font-weight: bold; font-size: 12px;
   padding: 6px 12px; border-bottom: 1px solid #e9d99f;
 }}
-QLabel#mfTitre {{ color: {BLEU_FRANCE}; font-size: 22px; font-weight: bold; }}
+QLabel#mfTitre {{ color: {BLEU_FRANCE}; font-size: 20px; font-weight: bold; }}
 QLabel#mfSousTitre {{ color: {BLEU_FRANCE}; font-size: 14px; }}
 QLabel#mfH2 {{ font-size: 17px; font-weight: bold; color: {TEXTE}; }}
 QLabel#mfH3 {{ font-size: 14px; font-weight: bold; color: {TEXTE}; }}
@@ -118,6 +120,8 @@ QFrame#mfCartePodium {{ background: #ffffff; border: 1px solid #e5e5e5; }}
 QFrame#mfBandeauSite {{ background: {FOND_BLEU_ALT}; border-radius: 8px; }}
 QFrame#mfLigneTableau {{ background: #ffffff; border: none; border-bottom: 1px solid {BORDURE}; }}
 QFrame#mfLigneTableau:hover {{ background: {FOND_GRIS}; }}
+
+QFrame#mfChiffre {{ background: {FOND_BLEU_ALT}; border: 1px solid #e5e5e5; }}
 
 QProgressBar#mfChargement {{ background: #eeeeee; border: none; max-height: 4px; min-height: 4px; }}
 QProgressBar#mfChargement::chunk {{ background: {BLEU_FRANCE}; }}
