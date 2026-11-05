@@ -1,0 +1,105 @@
+{
+  "id": "pont-malembert",
+  "titre": "Site du Pont-Malembert",
+  "description": "Site de 2 parcelles : le premier appel échoue (erreur récupérable), puis plusieurs sources restent indisponibles.",
+  "nomSuggere": "Site du Pont-Malembert",
+  "parcelles": [
+    "49353000AV1349",
+    "49353000AV1350"
+  ],
+  "echecsAvantSucces": 1,
+  "enrichissement": {
+    "codeInsee": "49353",
+    "commune": "Trélazé",
+    "siteEnCentreVille": false,
+    "distanceAutoroute": 4200,
+    "distanceTransportCommun": 450,
+    "proximiteCommercesServices": true,
+    "distanceIte": "moins-1km-mauvais-etat",
+    "distanceReseauChaleur": 380,
+    "tauxLogementsVacants": 6.9,
+    "presenceRisquesTechnologiques": false,
+    "risqueRetraitGonflementArgile": "faible-ou-moyen",
+    "risqueInondation": "non",
+    "siteReferencePollue": false,
+    "zonageReglementaire": "zone-urbaine-u-activite",
+    "zonageEnvironnemental": "hors-zone",
+    "zonagePatrimonial": "non-concerne",
+    "zonageAbcLogement": "b2",
+    "siteEnQpv": false,
+    "saturationReseauEnr": false,
+    "zoneAccelerationEnr": "non",
+    "ilotChaleurUrbain": "non-couvert",
+    "identifiantParcelle": "49353000AV1349",
+    "surfaceSite": 5060,
+    "identifiantsParcelles": [
+      "49353000AV1349",
+      "49353000AV1350"
+    ],
+    "nombreParcelles": 2,
+    "parcellePredominante": "49353000AV1349",
+    "communePredominante": "Trélazé",
+    "sourcesEchouees": [
+      "BDNB-SurfaceBatie",
+      "Enedis-Raccordement",
+      "GeoRisques-Cavites"
+    ],
+    "champsManquants": [
+      "surfaceBati",
+      "distanceRaccordementElectrique",
+      "risqueCavitesSouterraines"
+    ],
+    "sourcesUtilisees": [
+      "Cadastre",
+      "API Service Public",
+      "bpe",
+      "Lovac",
+      "Transport Data Gouv",
+      "IGN WFS",
+      "IGN Itinéraire",
+      "GeoRisques-RGA",
+      "GeoRisques-TRI",
+      "GeoRisques-ICPE",
+      "ApiCartoNature",
+      "ApiCartoGPU",
+      "ZAER-ENR",
+      "ZonageABC-Logement",
+      "ITE-Fret",
+      "France-Chaleur-Urbaine",
+      "QPV-ANCT",
+      "Enedis-Zones-Contrainte-EnR"
+    ]
+  },
+  "variantes": [
+    {
+      "id": "sans-saisie",
+      "titre": "Sans connaissance terrain",
+      "reponses": {
+        "typeProprietaire": "ne-sait-pas",
+        "etatBatiInfrastructure": "ne-sait-pas",
+        "presencePollution": "ne-sait-pas",
+        "valeurArchitecturaleHistorique": "ne-sait-pas",
+        "qualitePaysage": "ne-sait-pas",
+        "qualiteVoieDesserte": "ne-sait-pas",
+        "trameVerteEtBleue": "ne-sait-pas",
+        "presenceEspecesProtegees": "ne-sait-pas",
+        "presenceZoneHumide": "ne-sait-pas"
+      }
+    },
+    {
+      "id": "complete",
+      "titre": "Connaissance terrain complète",
+      "reponses": {
+        "typeProprietaire": "prive",
+        "etatBatiInfrastructure": "degradation-tres-importante",
+        "presencePollution": "oui-amiante",
+        "valeurArchitecturaleHistorique": "sans-interet",
+        "qualitePaysage": "ordinaire",
+        "qualiteVoieDesserte": "degradee",
+        "trameVerteEtBleue": "hors-trame",
+        "presenceEspecesProtegees": "non",
+        "presenceZoneHumide": "non"
+      }
+    }
+  ]
+}

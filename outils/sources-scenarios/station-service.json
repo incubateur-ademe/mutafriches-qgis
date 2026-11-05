@@ -1,0 +1,124 @@
+{
+  "id": "station-service",
+  "titre": "Ancienne station-service",
+  "description": "Friche de 4 parcelles contiguës (Cartofriches), une donnée indisponible.",
+  "nomSuggere": "Ancienne station-service",
+  "parcelles": [
+    "49353000AV1255",
+    "49353000AV1256",
+    "49353000AV1257",
+    "49353000AV1258"
+  ],
+  "echecsAvantSucces": 0,
+  "enrichissement": {
+    "codeInsee": "49353",
+    "commune": "Trélazé",
+    "siteEnCentreVille": false,
+    "distanceAutoroute": 4200,
+    "distanceTransportCommun": 210,
+    "proximiteCommercesServices": true,
+    "distanceIte": "plus-1km",
+    "distanceRaccordementElectrique": 150,
+    "tauxLogementsVacants": 6.9,
+    "presenceRisquesTechnologiques": false,
+    "risqueRetraitGonflementArgile": "faible-ou-moyen",
+    "risqueCavitesSouterraines": "non",
+    "risqueInondation": "non",
+    "siteReferencePollue": true,
+    "zonageReglementaire": "zone-urbaine-u",
+    "zonageEnvironnemental": "hors-zone",
+    "zonagePatrimonial": "non-concerne",
+    "zonageAbcLogement": "b2",
+    "siteEnQpv": false,
+    "saturationReseauEnr": false,
+    "zoneAccelerationEnr": "non",
+    "ilotChaleurUrbain": "non-couvert",
+    "identifiantParcelle": "49353000AV1255",
+    "surfaceSite": 1205,
+    "surfaceBati": 393,
+    "identifiantsParcelles": [
+      "49353000AV1255",
+      "49353000AV1256",
+      "49353000AV1257",
+      "49353000AV1258"
+    ],
+    "nombreParcelles": 4,
+    "parcellePredominante": "49353000AV1255",
+    "communePredominante": "Trélazé",
+    "sourcesEchouees": [
+      "France-Chaleur-Urbaine"
+    ],
+    "champsManquants": [
+      "distanceReseauChaleur"
+    ],
+    "sourcesUtilisees": [
+      "Cadastre",
+      "BDNB-SurfaceBatie",
+      "Enedis-Raccordement",
+      "API Service Public",
+      "bpe",
+      "Lovac",
+      "Transport Data Gouv",
+      "IGN WFS",
+      "IGN Itinéraire",
+      "GeoRisques-RGA",
+      "GeoRisques-Cavites",
+      "GeoRisques-TRI",
+      "GeoRisques-ICPE",
+      "ApiCartoNature",
+      "ApiCartoGPU",
+      "ZAER-ENR",
+      "ZonageABC-Logement",
+      "ITE-Fret",
+      "QPV-ANCT",
+      "Enedis-Zones-Contrainte-EnR"
+    ]
+  },
+  "variantes": [
+    {
+      "id": "sans-saisie",
+      "titre": "Sans connaissance terrain",
+      "reponses": {
+        "typeProprietaire": "ne-sait-pas",
+        "etatBatiInfrastructure": "ne-sait-pas",
+        "presencePollution": "ne-sait-pas",
+        "valeurArchitecturaleHistorique": "ne-sait-pas",
+        "qualitePaysage": "ne-sait-pas",
+        "qualiteVoieDesserte": "ne-sait-pas",
+        "trameVerteEtBleue": "ne-sait-pas",
+        "presenceEspecesProtegees": "ne-sait-pas",
+        "presenceZoneHumide": "ne-sait-pas"
+      }
+    },
+    {
+      "id": "partielle",
+      "titre": "Connaissance terrain partielle",
+      "reponses": {
+        "typeProprietaire": "prive",
+        "etatBatiInfrastructure": "degradation-heterogene",
+        "presencePollution": "ne-sait-pas",
+        "valeurArchitecturaleHistorique": "ne-sait-pas",
+        "qualitePaysage": "ne-sait-pas",
+        "qualiteVoieDesserte": "ne-sait-pas",
+        "trameVerteEtBleue": "ne-sait-pas",
+        "presenceEspecesProtegees": "ne-sait-pas",
+        "presenceZoneHumide": "ne-sait-pas"
+      }
+    },
+    {
+      "id": "complete",
+      "titre": "Connaissance terrain complète",
+      "reponses": {
+        "typeProprietaire": "prive",
+        "etatBatiInfrastructure": "degradation-heterogene",
+        "presencePollution": "oui-autres-composes",
+        "valeurArchitecturaleHistorique": "ordinaire",
+        "qualitePaysage": "ordinaire",
+        "qualiteVoieDesserte": "accessible",
+        "trameVerteEtBleue": "corridor-a-preserver",
+        "presenceEspecesProtegees": "non",
+        "presenceZoneHumide": "non"
+      }
+    }
+  ]
+}

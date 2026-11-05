@@ -1,0 +1,95 @@
+{
+  "id": "pierre-timbaud",
+  "titre": "Site de la rue Pierre Timbaud",
+  "description": "Site d'une seule parcelle, toutes les données automatiques disponibles.",
+  "nomSuggere": "Site de la rue Pierre Timbaud",
+  "parcelles": [
+    "49353000AV1351"
+  ],
+  "echecsAvantSucces": 0,
+  "enrichissement": {
+    "codeInsee": "49353",
+    "commune": "Trélazé",
+    "siteEnCentreVille": false,
+    "distanceAutoroute": 4200,
+    "distanceTransportCommun": 320,
+    "proximiteCommercesServices": true,
+    "distanceIte": "plus-1km",
+    "distanceRaccordementElectrique": 80,
+    "distanceReseauChaleur": 540,
+    "tauxLogementsVacants": 6.9,
+    "presenceRisquesTechnologiques": false,
+    "risqueRetraitGonflementArgile": "faible-ou-moyen",
+    "risqueCavitesSouterraines": "non",
+    "risqueInondation": "non",
+    "siteReferencePollue": false,
+    "zonageReglementaire": "zone-urbaine-u",
+    "zonageEnvironnemental": "hors-zone",
+    "zonagePatrimonial": "non-concerne",
+    "zonageAbcLogement": "b2",
+    "siteEnQpv": false,
+    "saturationReseauEnr": false,
+    "zoneAccelerationEnr": "non",
+    "ilotChaleurUrbain": "non-couvert",
+    "identifiantParcelle": "49353000AV1351",
+    "surfaceSite": 16720,
+    "surfaceBati": 568,
+    "sourcesEchouees": [],
+    "champsManquants": [],
+    "sourcesUtilisees": [
+      "Cadastre",
+      "BDNB-SurfaceBatie",
+      "Enedis-Raccordement",
+      "API Service Public",
+      "bpe",
+      "Lovac",
+      "Transport Data Gouv",
+      "IGN WFS",
+      "IGN Itinéraire",
+      "GeoRisques-RGA",
+      "GeoRisques-Cavites",
+      "GeoRisques-TRI",
+      "GeoRisques-ICPE",
+      "ApiCartoNature",
+      "ApiCartoGPU",
+      "ZAER-ENR",
+      "ZonageABC-Logement",
+      "ITE-Fret",
+      "France-Chaleur-Urbaine",
+      "QPV-ANCT",
+      "Enedis-Zones-Contrainte-EnR"
+    ]
+  },
+  "variantes": [
+    {
+      "id": "sans-saisie",
+      "titre": "Sans connaissance terrain",
+      "reponses": {
+        "typeProprietaire": "ne-sait-pas",
+        "etatBatiInfrastructure": "ne-sait-pas",
+        "presencePollution": "ne-sait-pas",
+        "valeurArchitecturaleHistorique": "ne-sait-pas",
+        "qualitePaysage": "ne-sait-pas",
+        "qualiteVoieDesserte": "ne-sait-pas",
+        "trameVerteEtBleue": "ne-sait-pas",
+        "presenceEspecesProtegees": "ne-sait-pas",
+        "presenceZoneHumide": "ne-sait-pas"
+      }
+    },
+    {
+      "id": "complete",
+      "titre": "Connaissance terrain complète",
+      "reponses": {
+        "typeProprietaire": "prive",
+        "etatBatiInfrastructure": "degradation-moyenne",
+        "presencePollution": "oui-composes-volatils",
+        "valeurArchitecturaleHistorique": "ordinaire",
+        "qualitePaysage": "sans-interet",
+        "qualiteVoieDesserte": "accessible",
+        "trameVerteEtBleue": "hors-trame",
+        "presenceEspecesProtegees": "non",
+        "presenceZoneHumide": "non"
+      }
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "gabarit": {
+    "codeInsee": "49353",
+    "commune": "Trélazé",
+    "siteEnCentreVille": false,
+    "distanceAutoroute": 4200,
+    "distanceTransportCommun": 210,
+    "proximiteCommercesServices": true,
+    "distanceIte": "plus-1km",
+    "distanceRaccordementElectrique": 150,
+    "distanceReseauChaleur": 380,
+    "tauxLogementsVacants": 6.9,
+    "presenceRisquesTechnologiques": false,
+    "risqueRetraitGonflementArgile": "faible-ou-moyen",
+    "risqueCavitesSouterraines": "non",
+    "risqueInondation": "non",
+    "siteReferencePollue": false,
+    "zonageReglementaire": "zone-urbaine-u",
+    "zonageEnvironnemental": "hors-zone",
+    "zonagePatrimonial": "non-concerne",
+    "zonageAbcLogement": "b2",
+    "siteEnQpv": false,
+    "saturationReseauEnr": false,
+    "zoneAccelerationEnr": "non",
+    "ilotChaleurUrbain": "non-couvert",
+    "sourcesUtilisees": [
+      "Cadastre",
+      "BDNB-SurfaceBatie",
+      "Enedis-Raccordement",
+      "API Service Public",
+      "bpe",
+      "Lovac",
+      "Transport Data Gouv",
+      "IGN WFS",
+      "IGN Itinéraire",
+      "GeoRisques-RGA",
+      "GeoRisques-Cavites",
+      "GeoRisques-TRI",
+      "GeoRisques-ICPE",
+      "ApiCartoNature",
+      "ApiCartoGPU",
+      "ZAER-ENR",
+      "ZonageABC-Logement",
+      "ITE-Fret",
+      "France-Chaleur-Urbaine",
+      "QPV-ANCT",
+      "Enedis-Zones-Contrainte-EnR"
+    ],
+    "sourcesEchouees": [],
+    "champsManquants": []
+  },
+  "points": [
+    {
+      "surfaceSite": 300,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 300,
+      "surfaceBati": 60
+    },
+    {
+      "surfaceSite": 300,
+      "surfaceBati": 150
+    },
+    {
+      "surfaceSite": 1000,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 1000,
+      "surfaceBati": 200
+    },
+    {
+      "surfaceSite": 1000,
+      "surfaceBati": 500
+    },
+    {
+      "surfaceSite": 2500,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 2500,
+      "surfaceBati": 500
+    },
+    {
+      "surfaceSite": 2500,
+      "surfaceBati": 1250
+    },
+    {
+      "surfaceSite": 5000,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 5000,
+      "surfaceBati": 1000
+    },
+    {
+      "surfaceSite": 5000,
+      "surfaceBati": 2500
+    },
+    {
+      "surfaceSite": 8000,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 8000,
+      "surfaceBati": 1600
+    },
+    {
+      "surfaceSite": 8000,
+      "surfaceBati": 4000
+    },
+    {
+      "surfaceSite": 12500,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 12500,
+      "surfaceBati": 2500
+    },
+    {
+      "surfaceSite": 12500,
+      "surfaceBati": 6250
+    },
+    {
+      "surfaceSite": 20000,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 20000,
+      "surfaceBati": 4000
+    },
+    {
+      "surfaceSite": 20000,
+      "surfaceBati": 10000
+    },
+    {
+      "surfaceSite": 40000,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 40000,
+      "surfaceBati": 8000
+    },
+    {
+      "surfaceSite": 40000,
+      "surfaceBati": 20000
+    },
+    {
+      "surfaceSite": 80000,
+      "surfaceBati": 0
+    },
+    {
+      "surfaceSite": 80000,
+      "surfaceBati": 16000
+    },
+    {
+      "surfaceSite": 80000,
+      "surfaceBati": 40000
+    }
+  ],
+  "variantes": [
+    {
+      "id": "sans-saisie",
+      "titre": "Sans connaissance terrain",
+      "reponses": {
+        "typeProprietaire": "ne-sait-pas",
+        "etatBatiInfrastructure": "ne-sait-pas",
+        "presencePollution": "ne-sait-pas",
+        "valeurArchitecturaleHistorique": "ne-sait-pas",
+        "qualitePaysage": "ne-sait-pas",
+        "qualiteVoieDesserte": "ne-sait-pas",
+        "trameVerteEtBleue": "ne-sait-pas",
+        "presenceEspecesProtegees": "ne-sait-pas",
+        "presenceZoneHumide": "ne-sait-pas"
+      }
+    },
+    {
+      "id": "complete",
+      "titre": "Connaissance terrain complète (réponses types)",
+      "reponses": {
+        "typeProprietaire": "prive",
+        "etatBatiInfrastructure": "degradation-moyenne",
+        "presencePollution": "non",
+        "valeurArchitecturaleHistorique": "ordinaire",
+        "qualitePaysage": "ordinaire",
+        "qualiteVoieDesserte": "accessible",
+        "trameVerteEtBleue": "hors-trame",
+        "presenceEspecesProtegees": "non",
+        "presenceZoneHumide": "non"
+      }
+    }
+  ]
+}
