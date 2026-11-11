@@ -4,11 +4,17 @@ import shutil
 from datetime import date
 from pathlib import Path
 
-from qgis.core import QgsProject, QgsVectorLayer
+from qgis.core import (
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsProject,
+    QgsRectangle,
+    QgsVectorLayer,
+)
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 
-from ..carto.couches import creer_couches, emprise_carte
+from ..carto.couches import EMPRISE_FRANCE, ajouter_fond_osm, creer_couches, emprise_carte
 from ..core.attributaire import (
     FICHIER_MODELE_CNIG,
     SiteAttributaire,
@@ -97,11 +103,36 @@ class Parcours(QObject):
         self.lecture = lire_cnig(self.fichier) if self.fichier else None
         self.change.emit()
 
-    def enregistrer_modele(self, chemin: str) -> Path:
+    def enregistrer_modele(self, chemin: str) -> Path | None:
         """Copie du modèle CNIG à remplir, là où l'utilisateur le demande."""
         cible = Path(chemin)
-        shutil.copyfile(FICHIER_MODELE_CNIG, cible)
+        try:
+            shutil.copyfile(FICHIER_MODELE_CNIG, cible)
+        except OSError as erreur:
+            # Dossier protégé ou disparu : un message, pas une trace Python
+            self.iface.messageBar().pushCritical(
+                "Mutafriches", f"Fichier exemple non enregistré dans {cible.parent} : {erreur.strerror or erreur}."
+            )
+            return None
+        self.iface.messageBar().pushSuccess("Mutafriches", f"Fichier exemple enregistré : {cible}")
         return cible
+
+    def preparer_carte(self) -> None:
+        """À l'ouverture du panneau sur un projet vide : fond de carte, cadré sur la France."""
+        if not ajouter_fond_osm():
+            return
+        # La carte ne prend la projection du projet qu'au tour d'événements suivant : cadrer après
+        QTimer.singleShot(300, self._cadrer_france)
+
+    def _cadrer_france(self) -> None:
+        # Entre-temps l'utilisateur a pu obtenir des résultats : ne pas défaire leur cadrage
+        if self.couche_mutabilite is not None:
+            return
+        vers_carte = QgsCoordinateTransform(
+            QgsCoordinateReferenceSystem("EPSG:4326"), QgsProject.instance().crs(), QgsProject.instance()
+        )
+        self.canvas.setExtent(vers_carte.transformBoundingBox(QgsRectangle(*EMPRISE_FRANCE)))
+        self.canvas.refresh()
 
     @property
     def pret_a_envoyer(self) -> bool:

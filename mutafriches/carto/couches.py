@@ -263,11 +263,15 @@ def _remplacer(nom: str) -> None:
 NOM_FOND = "Fond de carte OpenStreetMap"
 
 
-def ajouter_fond_osm() -> None:
-    """Fond OSM dans un projet vide, pour situer les sites (URI encodée par QgsDataSourceUri)."""
+# France métropolitaine (ouest, sud, est, nord, en WGS84) : cadrage d'un projet encore vide
+EMPRISE_FRANCE = (-5.5, 41.0, 10.0, 51.5)
+
+
+def ajouter_fond_osm() -> bool:
+    """Fond OSM dans un projet vide, pour situer les sites ; vrai s'il vient d'être ajouté."""
     projet = QgsProject.instance()
     if projet.mapLayers():
-        return
+        return False
     projet.setCrs(QgsCoordinateReferenceSystem("EPSG:3857"))
     uri = QgsDataSourceUri()
     uri.setParam("type", "xyz")
@@ -275,8 +279,10 @@ def ajouter_fond_osm() -> None:
     uri.setParam("zmax", "19")
     uri.setParam("zmin", "0")
     fond = QgsRasterLayer(bytes(uri.encodedUri()).decode(), NOM_FOND, "wms")
-    if fond.isValid():
-        projet.addMapLayer(fond)
+    if not fond.isValid():
+        return False
+    projet.addMapLayer(fond)
+    return True
 
 
 def creer_couches(sites: list[SiteAttributaire], suffixe: str) -> tuple[QgsVectorLayer, QgsVectorLayer]:
