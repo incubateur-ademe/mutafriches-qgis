@@ -2,10 +2,11 @@
 
 from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QCheckBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
+from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
 from ..carto.couches import COULEURS_USAGES
 from ..core.attributaire import ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
+from ..core.client_api import DEMONSTRATION, LIBELLES_ENVIRONNEMENTS, PRODUCTION, mode_developpeur
 from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
@@ -92,6 +93,17 @@ class PageImport(Page):
         self.pied_layout.addLayout(ligne)
         self.bouton_envoyer = bouton("Envoyer mes sites", "primaire", parcours.envoyer)
         self.pied_layout.addWidget(self.bouton_envoyer)
+        self.bouton_mode = bouton("", "lien", lambda: parcours.changer_environnement(DEMONSTRATION if parcours.reel else PRODUCTION))
+        self.pied_layout.addWidget(self.bouton_mode, 0, Qt.AlignmentFlag.AlignCenter)
+        # Réservé à l'équipe (mode développeur) : production, staging ou démonstration
+        self.environnements = QComboBox()
+        self.environnements.setAccessibleName("Environnement de l'API")
+        for cle, libelle in LIBELLES_ENVIRONNEMENTS.items():
+            self.environnements.addItem(f"Environnement : {libelle}", cle)
+        self.environnements.currentIndexChanged.connect(
+            lambda *_: parcours.changer_environnement(str(self.environnements.currentData()))
+        )
+        self.pied_layout.addWidget(self.environnements)
 
     def _telecharger_modele(self) -> None:
         chemin, _ = QFileDialog.getSaveFileName(
@@ -108,13 +120,21 @@ class PageImport(Page):
         self.fichier.blockSignals(False)
         vider(self.zone)
         if parcours.analyse_en_cours and lecture is not None:
+            traites, total = parcours.avancement
             self.zone.addWidget(
                 Chargement(
-                    f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
-                    contenus.SOUS_TITRE_CHARGEMENT,
+                    f"Analyse en cours : {traites} / {total} sites" if parcours.reel else f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
+                    contenus.SOUS_TITRE_ANALYSE_REELLE if parcours.reel else contenus.SOUS_TITRE_CHARGEMENT,
                     contenus.MESSAGE_ANALYSE_LOT,
+                    parcours.avancement if parcours.reel else None,
                 )
             )
+            self.zone.addWidget(bouton("Annuler l'analyse", "secondaire", parcours.annuler_analyse))
+        elif parcours.erreur_api is not None:
+            self.zone.addWidget(Encadre("erreur", "Analyse impossible", parcours.erreur_api.message))
+            if parcours.reel:
+                self.zone.addWidget(texte(contenus.AIDE_ERREUR_API, "mfAide"))
+                self.zone.addWidget(bouton("Passer en mode démonstration", "secondaire", lambda: parcours.changer_environnement(DEMONSTRATION)))
         elif lecture is not None and lecture.bloquants:
             self.zone.addWidget(Encadre("erreur", f"Fichier refusé : {lecture.fichier}", "\n".join(p.message for p in lecture.bloquants)))
             self.zone.addWidget(texte(contenus.AIDE_ERREUR_CNIG, "mfAide"))
@@ -141,6 +161,13 @@ class PageImport(Page):
         n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Envoyer mes {n} sites" if n > 1 else "Envoyer mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
+        self.bouton_mode.setText("Passer en mode démonstration (données figées)" if parcours.reel else "Passer en mode réel (API Mutafriches)")
+        developpeur = mode_developpeur()
+        self.bouton_mode.setVisible(not developpeur and not parcours.analyse_en_cours)
+        self.environnements.blockSignals(True)
+        self.environnements.setCurrentIndex(self.environnements.findData(parcours.environnement))
+        self.environnements.blockSignals(False)
+        self.environnements.setVisible(developpeur and not parcours.analyse_en_cours)
 
 
 class LigneCnig(QFrame):
@@ -231,7 +258,7 @@ class PageResultats(Page):
             return
         self.zone.addWidget(texte(f"{s.commune} ({s.code_insee})", "mfSurTitre"))
         self.zone.addWidget(texte("Tableau de bord territorial", "mfH2"))
-        self.zone.addWidget(texte(f"Algorithme {s.version_algorithme} · table figée le {s.date_table}", "mfAide"))
+        self.zone.addWidget(texte(s.provenance, "mfAide"))
 
         # 1 et 2 : nombre de sites, fiabilité
         grille = QGridLayout()
@@ -284,4 +311,4 @@ class PageResultats(Page):
             )
         else:
             self.zone.addWidget(Encadre("succes", "Aucun site à reprendre", "Toutes les lignes ont été analysées et aucune n'est peu fiable."))
-        self.zone.addWidget(texte(f"Démonstration : {parcours.avertissement}", "mfAide"))
+        self.zone.addWidget(texte(parcours.avertissement if parcours.reel else f"Démonstration : {parcours.avertissement}", "mfAide"))

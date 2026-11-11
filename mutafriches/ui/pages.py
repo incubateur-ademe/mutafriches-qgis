@@ -39,7 +39,7 @@ class Page:
 class Chargement(QFrame):
     """Encart d'attente de la qualification automatique (EnrichmentLoadingCallout)."""
 
-    def __init__(self, titre: str, sous_titre: str, message: str = "") -> None:
+    def __init__(self, titre: str, sous_titre: str, message: str = "", avancement: Optional[tuple[int, int]] = None) -> None:
         super().__init__()
         self.setObjectName("mfBandeauSite")
         layout = QVBoxLayout(self)
@@ -54,7 +54,12 @@ class Chargement(QFrame):
         layout.addWidget(sous)
         barre = QProgressBar()
         barre.setObjectName("mfChargement")
-        barre.setRange(0, 0)
+        # Sans total connu, barre d'attente indéterminée
+        if avancement is not None and avancement[1] > 0:
+            barre.setRange(0, avancement[1])
+            barre.setValue(avancement[0])
+        else:
+            barre.setRange(0, 0)
         barre.setTextVisible(False)
         layout.addWidget(barre)
         if message:

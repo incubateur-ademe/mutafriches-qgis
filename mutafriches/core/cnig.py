@@ -26,6 +26,32 @@ EXTENSIONS = (".csv", ".geojson", ".json")
 FORMAT_IDU = re.compile(r"^(?:\d{5}|2[AB]\d{3})[0-9A-Z]{3}[0-9A-Z]{2}\d{4}$")
 FORMAT_INSEE = re.compile(r"^(?:\d{5}|2[AB]\d{3})$")
 SEPARATEUR_VALEURS = "|"
+COLONNES_SAISIE = ("bati_etat", "bati_patrimoine", "bati_pollution", "sol_pollution_existe")
+# Miroir de CHAMPS_COMPLEMENTAIRES_REQUIS (shared-types) : les 9 critères manuels, tous obligatoires
+CHAMPS_COMPLEMENTAIRES = (
+    "typeProprietaire",
+    "etatBatiInfrastructure",
+    "presencePollution",
+    "valeurArchitecturaleHistorique",
+    "qualitePaysage",
+    "qualiteVoieDesserte",
+    "trameVerteEtBleue",
+    "presenceEspecesProtegees",
+    "presenceZoneHumide",
+)
+NE_SAIT_PAS = "ne-sait-pas"
+PAS_DE_BATI = "pas-de-bati"
+# Inverse des correspondances de l'export CNIG de Mutafriches (friche-cnig.mapping.ts), pour les
+# seules valeurs sans ambiguïté : « dégradation inexistante ou faible », « aucun » ou « pollution
+# avérée » recouvrent plusieurs réponses Mutafriches et restent « ne sait pas »
+BATI_ETAT = {
+    "dégradation moyenne": "degradation-moyenne",
+    "dégradation très importante": "degradation-tres-importante",
+    "dégradation hétérogène": "degradation-heterogene",
+    "sans objet": PAS_DE_BATI,
+}
+BATI_PATRIMOINE = {"présence d'un bâtiment d'intérêt": "interet-remarquable", "sans objet": PAS_DE_BATI}
+SOL_POLLUTION = {"pollution inexistante": "non", "pollution traitée": "deja-geree"}
 
 
 @dataclass(frozen=True)
@@ -45,6 +71,8 @@ class SiteCnig:
     ligne: int
     # Erreurs de la ligne : une ligne en erreur est écartée, pas le fichier
     erreurs: list[str] = field(default_factory=list)
+    # Attributs CNIG qui renseignent un critère manuel de Mutafriches
+    valeurs: dict[str, str] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -145,6 +173,7 @@ def lire_cnig(chemin: Path) -> LectureCnig:
         refcad = ligne.get("unite_fonciere_refcad", "")
         parcelles = [p.strip() for p in refcad.split(SEPARATEUR_VALEURS) if p.strip()]
         site = SiteCnig(site_id, nom, insee, parcelles, numero)
+        site.valeurs = {c: ligne.get(c, "") for c in COLONNES_SAISIE}
         if not site_id:
             site.erreurs.append("site_id vide")
         elif site_id in identifiants:
@@ -165,3 +194,20 @@ def lire_cnig(chemin: Path) -> LectureCnig:
             site.erreurs.append("geompoint vide")
         lecture.sites.append(site)
     return lecture
+
+
+def complementaires_depuis_cnig(site: SiteCnig) -> dict[str, str]:
+    """Les 9 critères manuels attendus par l'API, renseignés depuis le CNIG quand c'est sûr."""
+    reponses = {champ: NE_SAIT_PAS for champ in CHAMPS_COMPLEMENTAIRES}
+    valeurs = {cle: valeur.strip().lower() for cle, valeur in site.valeurs.items()}
+    reponses["etatBatiInfrastructure"] = BATI_ETAT.get(valeurs.get("bati_etat", ""), NE_SAIT_PAS)
+    reponses["valeurArchitecturaleHistorique"] = BATI_PATRIMOINE.get(valeurs.get("bati_patrimoine", ""), NE_SAIT_PAS)
+    if valeurs.get("sol_pollution_existe") == "pollution avérée" and valeurs.get("bati_pollution") == "amiante":
+        reponses["presencePollution"] = "oui-amiante"
+    else:
+        reponses["presencePollution"] = SOL_POLLUTION.get(valeurs.get("sol_pollution_existe", ""), NE_SAIT_PAS)
+    # « Pas de bâti » vaut pour les deux critères du bâti (normaliserBati du web)
+    if PAS_DE_BATI in (reponses["etatBatiInfrastructure"], reponses["valeurArchitecturaleHistorique"]):
+        reponses["etatBatiInfrastructure"] = PAS_DE_BATI
+        reponses["valeurArchitecturaleHistorique"] = PAS_DE_BATI
+    return reponses

@@ -11,6 +11,13 @@ from qgis.PyQt.QtWidgets import QAction, QToolBar
 from .ui.dock import DockMutafriches
 from .ui.parcours import Parcours
 
+def version_extension() -> str:
+    for ligne in (Path(__file__).resolve().parent / "metadata.txt").read_text(encoding="utf-8").splitlines():
+        if ligne.startswith("version="):
+            return ligne.split("=", 1)[1].strip()
+    return ""
+
+
 ICONE = str(Path(__file__).resolve().parent / "icons" / "mutafriches.svg")
 MENU = "&Mutafriches"
 
@@ -36,7 +43,7 @@ class MutafrichesPlugin:
 
     def _assurer_panneau(self) -> DockMutafriches:
         if self.dock is None:
-            self.parcours = Parcours(self.iface)
+            self.parcours = Parcours(self.iface, version_extension())
             self.dock = DockMutafriches(self.parcours, self.iface.mainWindow())
             self.dock.visibilityChanged.connect(self._visibilite)
             self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
