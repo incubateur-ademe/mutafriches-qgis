@@ -49,6 +49,9 @@ def enregistrer(image: QPixmap, nom: str) -> None:
 
 
 def capture(nom: str) -> None:
+    taille = iface.mainWindow().size()
+    if (taille.width(), taille.height()) != (1600, 1000):
+        raise AssertionError(f"Fenêtre QGIS en {taille.width()}x{taille.height()}, 1600x1000 attendu")
     # Le tutoriel montre l'extension telle qu'en production : pas de bandeau d'environnement
     dock().bandeau.hide()
     QApplication.processEvents()
@@ -115,7 +118,10 @@ def etape(delai_ms: int = 600) -> Callable[[Callable[[], None]], Callable[[], No
 def preparer() -> None:
     from mutafriches.carto.couches import ajouter_fond_osm
 
-    iface.mainWindow().resize(1600, 1000)
+    # Taille fixe, même si QGIS s'ouvre maximisé ou en plein écran : sinon le texte des captures rétrécit
+    fenetre = iface.mainWindow()
+    fenetre.showNormal()
+    fenetre.setFixedSize(1600, 1000)
     QgsSettings().remove("mutafriches/utilisateur")
     QgsSettings().setValue("qgis/dockAttributeTable", True)
     for nom in ("Browser", "Browser2"):
