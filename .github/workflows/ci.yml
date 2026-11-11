@@ -14,7 +14,7 @@ jobs:
     name: Format, lint, types et paquet
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Installer uv
         uses: astral-sh/setup-uv@v6
@@ -40,11 +40,11 @@ jobs:
     name: Tests unitaires dans QGIS 3.44
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Source des constantes recopiées dans l'extension : tests/test_miroirs.py la compare
       - name: Récupérer Mutafriches (shared-types)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: incubateur-ademe/mutafriches
           path: _mutafriches
