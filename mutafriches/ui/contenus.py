@@ -1,7 +1,6 @@
 """Textes et ordre des écrans, repris de l'application web (apps/ui/src/features)."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -11,7 +10,7 @@ class Info:
     cle: str
     libelle: str
     aide: str
-    lien: Optional[str] = None
+    lien: str | None = None
 
 
 @dataclass(frozen=True)

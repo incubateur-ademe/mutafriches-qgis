@@ -157,9 +157,8 @@ CONTEXTE_QUARTIER = {
     "ilotChaleurUrbain": "non-couvert",
 }
 
-NE_SAIT_PAS = {
-    cle: "ne-sait-pas"
-    for cle in [
+NE_SAIT_PAS = dict.fromkeys(
+    [
         "typeProprietaire",
         "etatBatiInfrastructure",
         "presencePollution",
@@ -169,8 +168,9 @@ NE_SAIT_PAS = {
         "trameVerteEtBleue",
         "presenceEspecesProtegees",
         "presenceZoneHumide",
-    ]
-}
+    ],
+    "ne-sait-pas",
+)
 
 SANS_SAISIE = {"id": "sans-saisie", "titre": "Sans connaissance terrain", "reponses": {}}
 

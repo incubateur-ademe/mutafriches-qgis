@@ -4,6 +4,7 @@ from _qgis import RACINE  # noqa: F401  (initialise QGIS)
 from qgis.core import QgsFeature, QgsGeometry, QgsVectorLayer
 
 from mutafriches.carto.selection import analyser, champ_identifiant, libelle_parcelle
+from mutafriches.core.modele import ParcelleSite, Site
 from mutafriches.core.recapitulatif import (
     construire_detail_usage,
     construire_recapitulatif,
@@ -11,8 +12,6 @@ from mutafriches.core.recapitulatif import (
     valeur_etape,
 )
 from mutafriches.core.referentiel import CLES_TERRAIN, SECTIONS
-
-from mutafriches.core.modele import ParcelleSite, Site
 from mutafriches.core.service import ErreurService, ResultatEvaluation
 from mutafriches.core.service_simule import ServiceSimule, choisir_point, choisir_variante
 
@@ -158,11 +157,11 @@ class TestRecapitulatif(unittest.TestCase):
         enrichissement = appeler_enrichir(svc, STATION)
         sortie: list[ResultatEvaluation] = []
         svc.evaluer(enrichissement, {}, sortie.append, self.fail)  # type: ignore[arg-type]
-        complementaires = {**{c: "ne-sait-pas" for c in CLES_TERRAIN}, "typeProprietaire": "prive"}
+        complementaires = {**dict.fromkeys(CLES_TERRAIN, "ne-sait-pas"), "typeProprietaire": "prive"}
         complementaires["raccordementEau"] = deriver_raccordement_eau(enrichissement["surfaceBati"])  # type: ignore[arg-type, index]
         sections = construire_recapitulatif(enrichissement, complementaires)  # type: ignore[arg-type]
         self.assertEqual([s.titre for s in sections], list(SECTIONS.values()))
-        lignes = {l.cle: l for s in sections for l in s.lignes}
+        lignes = {ligne.cle: ligne for s in sections for ligne in s.lignes}
         self.assertEqual(lignes["typeProprietaire"].valeur, "Privé")
         self.assertEqual(lignes["qualitePaysage"].valeur, "Ne sait pas")
         self.assertEqual(lignes["surfaceSite"].valeur, "1\u202f205 m²")
@@ -170,7 +169,7 @@ class TestRecapitulatif(unittest.TestCase):
         self.assertTrue(lignes["ilotChaleurUrbain"].informatif)
         resultat = sortie[0].resultat["resultats"][0]  # type: ignore[index]
         detail = construire_detail_usage(resultat, enrichissement, complementaires)  # type: ignore[arg-type]
-        impacts = {l.impact.libelle for _, ls in detail for l in ls}
+        impacts = {ligne.impact.libelle for _, lignes_usage in detail for ligne in lignes_usage}
         self.assertTrue(impacts <= {"Très positif", "Positif", "Neutre", "Négatif", "Très négatif", "Bloquant"})
         self.assertTrue(resultat["tags"])  # type: ignore[index]
 

@@ -1,10 +1,10 @@
 import unittest
 
+import serveur_factice
 from _qgis import RACINE  # noqa: F401  (initialise QGIS)
 from qgis.core import QgsSettings
 from qgis.PyQt.QtCore import QEventLoop, QTimer
 
-import serveur_factice
 from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE, site_depuis_api, synthese
 from mutafriches.core.client_api import CLE_ORIGINE, CLE_URL, AnalyseInventaire, ErreurApi, ResultatSite
 from mutafriches.core.cnig import SiteCnig, complementaires_depuis_cnig, lire_cnig

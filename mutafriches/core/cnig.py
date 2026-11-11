@@ -249,7 +249,7 @@ def lire_cnig(chemin: Path) -> LectureCnig:
 
 def complementaires_depuis_cnig(site: SiteCnig) -> dict[str, str]:
     """Les 9 critères manuels attendus par l'API, renseignés depuis le CNIG quand c'est sûr."""
-    reponses = {champ: NE_SAIT_PAS for champ in CHAMPS_COMPLEMENTAIRES}
+    reponses = dict.fromkeys(CHAMPS_COMPLEMENTAIRES, NE_SAIT_PAS)
     valeurs = {cle: valeur.strip().lower() for cle, valeur in site.valeurs.items()}
     reponses["etatBatiInfrastructure"] = BATI_ETAT.get(valeurs.get("bati_etat", ""), NE_SAIT_PAS)
     reponses["valeurArchitecturaleHistorique"] = BATI_PATRIMOINE.get(valeurs.get("bati_patrimoine", ""), NE_SAIT_PAS)

@@ -165,7 +165,7 @@ if __name__ == "__main__":
     ecrire_csv(DOSSIER / "friches-cnig-montereau.csv", COLONNES_CNIG, lignes)
     # Fichier mêlant lignes correctes et lignes en erreur : doublon, parcelle mal formée, nom
     # vide, code INSEE invalide, géométrie absente, parcelles vides
-    erreurs = [dict(l) for l in lignes[:10]]
+    erreurs = [dict(ligne) for ligne in lignes[:10]]
     erreurs[2]["site_id"] = erreurs[1]["site_id"]
     erreurs[3]["unite_fonciere_refcad"] = "AB 160|77305000AB0161"
     erreurs[5]["site_nom"] = ""

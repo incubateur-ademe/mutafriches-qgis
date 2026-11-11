@@ -7,8 +7,8 @@ Les clics passent par de vrais événements Qt ; le navigateur n'est pas ouvert 
 import json
 import os
 import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import qgis.utils
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsSettings
@@ -425,7 +425,7 @@ def suivante(index: int = 0) -> None:
     def executer() -> None:
         try:
             fonction()
-        except Exception:  # noqa: BLE001 (tout échec doit apparaître dans le rapport)
+        except Exception:
             rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
             capture(f"erreur-{fonction.__name__}")
             terminer()

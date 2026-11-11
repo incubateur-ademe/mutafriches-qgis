@@ -1,7 +1,10 @@
 """Pages du prototype : envoi des sites au format CNIG, puis résultats territoriaux."""
 
+from functools import partial
+
 from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QResizeEvent
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -20,9 +23,9 @@ from ..core.client_api import DEMONSTRATION, LIBELLES_ENVIRONNEMENTS, PRODUCTION
 from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
+from .graphiques import anneau_avec_legende, tableau
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
-from .graphiques import anneau_avec_legende, tableau
 from .widgets import Encadre, badge, bouton, entete_champ, separateur, texte, vider
 
 MAX_LIGNES_AFFICHEES = 40
@@ -259,7 +262,7 @@ class Barre(QWidget):
         valeur.setMinimumWidth(64)
         layout.addWidget(valeur, 1, 1)
 
-    def resizeEvent(self, evenement) -> None:  # type: ignore[no-untyped-def]
+    def resizeEvent(self, evenement: QResizeEvent) -> None:
         super().resizeEvent(evenement)
         self._remplissage.setGeometry(0, 0, int(self._piste.width() * self._part), self._piste.height())
 
@@ -353,7 +356,7 @@ class PageResultats(Page):
         )
         for site in s.sites_forte_compatibilite:
             ligne = QHBoxLayout()
-            lien = bouton(site.nom, "lien", lambda _=False, site=site: parcours.mettre_en_avant(site))
+            lien = bouton(site.nom, "lien", partial(parcours.mettre_en_avant, site))
             lien.setAccessibleName(f"Voir sur la carte : {site.nom}")
             ligne.addWidget(lien, 1)
             ligne.addWidget(

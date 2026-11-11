@@ -8,8 +8,8 @@ Images en WebP, 1600 px de large, noms stables repris par la page web.
 import json
 import os
 import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import qgis.utils
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsSettings
@@ -146,7 +146,7 @@ def installation() -> None:
     try:
         # Onglets : toutes, installées, non installées, à mettre à jour, nouvelles, invalides, ZIP
         iface.pluginManagerInterface().showPluginManager(6)
-    except Exception:  # noqa: BLE001 (capture facultative)
+    except Exception:
         rapport["notes"].append("Gestionnaire d'extensions non capturé : " + traceback.format_exc(limit=1))  # type: ignore[union-attr]
 
 
@@ -301,7 +301,7 @@ def terminer() -> None:
 def garder(fonction: Callable[[], None]) -> None:
     try:
         fonction()
-    except Exception:  # noqa: BLE001 (tout échec doit apparaître dans le rapport)
+    except Exception:
         rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
         terminer()
 
@@ -316,7 +316,7 @@ def suivante(index: int = 0) -> None:
     def executer() -> None:
         try:
             fonction()
-        except Exception:  # noqa: BLE001
+        except Exception:
             rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
             terminer()
             return

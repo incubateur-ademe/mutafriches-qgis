@@ -5,7 +5,7 @@
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Union
+from typing import Any
 
 from .referentiel import (
     CRITERES,
@@ -23,23 +23,24 @@ from .referentiel import (
     libelle,
 )
 
-Json = dict[str, object]
+# Réponse JSON de l'API : structure libre, vérifiée à l'usage
+Json = dict[str, Any]
 
 # Miroir de deriverRaccordementEau (shared-types) : du bâti de plus de 20 m² implique un raccordement
 SEUIL_BATI_RACCORDEMENT_EAU_M2 = 20
 
 
-def deriver_raccordement_eau(surface_bati: Optional[float]) -> str:
+def deriver_raccordement_eau(surface_bati: float | None) -> str:
     if surface_bati is None:
         return NE_SAIT_PAS
     return "oui" if surface_bati > SEUIL_BATI_RACCORDEMENT_EAU_M2 else "non"
 
 
-def _nombre(valeur: object) -> Optional[float]:
+def _nombre(valeur: object) -> float | None:
     return float(valeur) if isinstance(valeur, (int, float)) and not isinstance(valeur, bool) else None
 
 
-def _booleen(valeur: object) -> Optional[bool]:
+def _booleen(valeur: object) -> bool | None:
     return valeur if isinstance(valeur, bool) else None
 
 
@@ -85,8 +86,8 @@ class LigneRecap:
     libelle: str
     valeur: str
     saisie: str  # « Automatique » ou « Manuelle »
-    source: Optional[str] = None
-    mention: Optional[str] = None
+    source: str | None = None
+    mention: str | None = None
     informatif: bool = False
 
 
@@ -167,7 +168,7 @@ def construire_detail_usage(
     details: dict[str, Json] = {}
     if isinstance(calcul, dict):
         for cle in ("detailsAvantages", "detailsContraintes", "detailsCriteresVides"):
-            for detail in calcul.get(cle, []):  # type: ignore[union-attr]
+            for detail in calcul.get(cle, []):
                 details[str(detail["critere"])] = detail
     excluants = resultat.get("criteresExcluants") or []
     sections: dict[str, list[LigneDetail]] = {cle: [] for cle in SECTIONS}
@@ -175,16 +176,12 @@ def construire_detail_usage(
         detail = details.get(critere.cle)
         if detail is None:
             continue
-        impact = (
-            IMPACT_BLOQUANT
-            if critere.cle in excluants  # type: ignore[operator]
-            else impact_critere(float(detail["scoreBrut"]))  # type: ignore[arg-type]
-        )
+        impact = IMPACT_BLOQUANT if critere.cle in excluants else impact_critere(float(detail["scoreBrut"]))
         sections[critere.section].append(
             LigneDetail(
                 critere.libelle,
                 valeur_recapitulatif(critere.cle, enrichissement, complementaires),
-                float(detail["poids"]),  # type: ignore[arg-type]
+                float(detail["poids"]),
                 impact,
             )
         )
@@ -193,7 +190,7 @@ def construire_detail_usage(
 
 # --- Valeurs affichées dans les étapes de qualification (transformEnrichmentToUiData) -------
 
-Affichage = Union[str, list[str]]
+Affichage = str | list[str]
 
 
 def _distance_ou(valeur: object, message_aucun: str) -> str:

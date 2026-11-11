@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from _qgis import RACINE  # noqa: F401  (initialise QGIS)
+from _qgis import RACINE
 from qgis.core import QgsCategorizedSymbolRenderer, QgsProject
 
 from mutafriches.carto.couches import NOM_COUCHE_MUTABILITE, champs_mutabilite, creer_couches
