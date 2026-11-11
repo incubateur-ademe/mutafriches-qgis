@@ -39,13 +39,23 @@ class TestCnig(unittest.TestCase):
         self.assertEqual(erreurs[9], ["geompoint vide"])
         self.assertEqual(erreurs[10], ["unite_fonciere_refcad vide"])
 
-    def test_modele_fictif_valide_mais_hors_table(self) -> None:
+    def test_modele_fictif_refuse_tel_quel(self) -> None:
         lecture = lire_cnig(FICHIER_MODELE_CNIG)
+        self.assertEqual(len(lecture.colonnes), 51)
+        self.assertEqual((len(lecture.sites_ok), len(lecture.sites_ko)), (0, 3))
+        self.assertFalse(lecture.valide)
+        self.assertTrue(all("fichier exemple" in s.erreurs[0] for s in lecture.sites_ko))
+
+    def test_modele_rempli_accepte(self) -> None:
+        # Un utilisateur qui remplace un site d'exemple par le sien voit sa ligne passer
+        chemin = Path(RACINE) / "dist" / "test-modele-rempli.csv"
+        chemin.parent.mkdir(exist_ok=True)
+        contenu = FICHIER_MODELE_CNIG.read_text(encoding="utf-8-sig")
+        contenu = contenu.replace("99999000ZZ0010", "77305000AB0160").replace(",99999,", ",77305,", 2)
+        chemin.write_text(contenu, encoding="utf-8")
+        lecture = lire_cnig(chemin)
         self.assertTrue(lecture.valide)
-        self.assertEqual(len(lecture.sites_ok), 3)
-        self.assertTrue(all(s.comm_insee == "99999" for s in lecture.sites))
-        sites, _ = charger_table()
-        self.assertEqual(apparier(sites, {s.site_id: s.parcelles for s in lecture.sites}), [])
+        self.assertEqual([s.parcelles for s in lecture.sites_ok], [["77305000AB0160"]])
 
     def test_erreurs_ligne_a_ligne(self) -> None:
         chemin = Path(RACINE) / "dist" / "test-cnig.csv"

@@ -66,6 +66,9 @@ EXTENSIONS = (".csv", ".geojson", ".json")
 FORMAT_IDU = re.compile(r"^(?:\d{5}|2[AB]\d{3})[0-9A-Z]{3}[0-9A-Z]{2}\d{4}$")
 FORMAT_INSEE = re.compile(r"^(?:\d{5}|2[AB]\d{3})$")
 SEPARATEUR_VALEURS = "|"
+# Commune fictive du fichier exemple (outils/figer_attributaire.py) : jamais une vraie commune
+INSEE_EXEMPLE = "99999"
+MESSAGE_SITE_EXEMPLE = "site fictif du fichier exemple : remplacez-le par l'un de vos sites"
 COLONNES_SAISIE = ("bati_etat", "bati_patrimoine", "bati_pollution", "sol_pollution_existe")
 # Miroir de CHAMPS_COMPLEMENTAIRES_REQUIS (shared-types) : les 9 critères manuels, tous obligatoires
 CHAMPS_COMPLEMENTAIRES = (
@@ -243,6 +246,9 @@ def lire_cnig(chemin: Path) -> LectureCnig:
                 site.erreurs.append(f"parcelle « {mal_formees[0]} » mal formée (14 caractères, ex. 77305000AB0160)")
         if not ligne.get("geompoint"):
             site.erreurs.append("geompoint vide")
+        # Le fichier exemple n'est qu'un modèle : ses sites fictifs n'existent pas au cadastre
+        if insee == INSEE_EXEMPLE or any(p.startswith(INSEE_EXEMPLE) for p in parcelles):
+            site.erreurs = [MESSAGE_SITE_EXEMPLE]
         lecture.sites.append(site)
     return lecture
 

@@ -214,6 +214,11 @@ AIDE_ERREUR_API = (
     "(contact@mutafriches.beta.gouv.fr). En attendant, le mode démonstration montre le parcours sur "
     "des données figées."
 )
+AIDE_AUCUN_SITE = (
+    "Vérifiez les identifiants de parcelles de votre fichier (14 caractères, parcelles existantes), puis "
+    "relancez l'envoi. Si l'erreur persiste pour des parcelles valides, écrivez à "
+    "contact@mutafriches.beta.gouv.fr."
+)
 MESSAGE_ANALYSE_LOT = (
     "Pour chaque site, nous recueillons des informations localisées depuis plus de dix bases de "
     "données nationales, puis calculons sa mutabilité pour sept usages."

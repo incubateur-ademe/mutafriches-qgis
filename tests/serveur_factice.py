@@ -19,6 +19,8 @@ ORIGINE_AUTORISEE = "https://qgis.mutafriches.beta.gouv.fr"
 USAGES = ("residentiel", "equipements", "culture", "tertiaire", "industrie", "renaturation", "photovoltaique")
 # Parcelle dont l'enrichissement échoue, pour tester un échec site par site
 PARCELLE_EN_ECHEC = "77305000ZZ9999"
+# Parcelle absente du cadastre : l'API réelle répond 500 « Erreur lors de l'enrichissement »
+PARCELLE_INCONNUE = "77305000ZZ5000"
 # Parcelle dont la réponse dépasse le délai du client (toujours, ou seulement au premier appel)
 PARCELLE_TROP_LENTE = "77305000ZZ8888"
 PARCELLE_LENTE_UNE_FOIS = "77305000ZZ7777"
@@ -43,6 +45,8 @@ def enrichissement(identifiants: list[str]) -> tuple[int, dict]:
         return 400, {"statusCode": 400, "message": "Réponse tardive"}
     if PARCELLE_LENTE_UNE_FOIS in identifiants:
         identifiants = sorted(next(iter(SITES)).split(","))
+    if PARCELLE_INCONNUE in identifiants:
+        return 500, {"statusCode": 500, "message": "Erreur lors de l'enrichissement"}
     if PARCELLE_EN_ECHEC in identifiants:
         return 400, {"statusCode": 400, "message": "Parcelle introuvable au cadastre"}
     entite = SITES.get(",".join(sorted(identifiants)))
