@@ -201,6 +201,12 @@ AIDE_EXEMPLE_CNIG = (
 )
 BOUTON_MODELE_CNIG = "Télécharger un fichier exemple"
 AIDE_ERREUR_CNIG = "Les lignes en erreur sont écartées de l'envoi. Corrigez le fichier puis choisissez-le à nouveau. Standard : schema.data.gouv.fr (cnigfr/schema-friches)."
+SOUS_TITRE_ANALYSE_REELLE = "Comptez deux à cinq secondes par site, davantage pour un site de nombreuses parcelles."
+AIDE_ERREUR_API = (
+    "L'extension appelle l'API Mutafriches avec une origine dédiée, à faire autoriser par l'équipe "
+    "(contact@mutafriches.beta.gouv.fr). En attendant, le mode démonstration montre le parcours sur "
+    "des données figées."
+)
 MESSAGE_ANALYSE_LOT = (
     "Pour chaque site, nous recueillons des informations localisées depuis plus de dix bases de "
     "données nationales, puis calculons sa mutabilité pour sept usages."

@@ -7,6 +7,7 @@ from qgis.PyQt.QtCore import QPoint, Qt, QTimer
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
+from ..core.client_api import DEMONSTRATION, STAGING, url_personnalisee
 from . import style
 from .pages import Page
 from .parcours import Etape, Parcours
@@ -29,11 +30,11 @@ class DockMutafriches(QgsDockWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        if True:  # Prototype : résultats figés, jamais calculés en direct
-            bandeau = QLabel("Mode démonstration — prototype sur données figées")
-            bandeau.setObjectName("mfDemo")
-            bandeau.setAccessibleName("Mode démonstration, données fictives")
-            layout.addWidget(bandeau)
+        # Bandeau permanent en démonstration, masqué quand les résultats viennent de l'API
+        self.bandeau = QLabel("Mode démonstration — données figées")
+        self.bandeau.setObjectName("mfDemo")
+        self.bandeau.setAccessibleName("Mode démonstration, données figées")
+        layout.addWidget(self.bandeau)
 
         entete = QWidget()
         entete.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
@@ -75,7 +76,28 @@ class DockMutafriches(QgsDockWidget):
         y = widget.mapTo(self.defilement.widget(), QPoint(0, 0)).y()
         self.defilement.verticalScrollBar().setValue(max(0, y - 12))
 
+    def _bandeau(self) -> None:
+        """Rien en production ; un rappel permanent pour tout autre environnement."""
+        environnement = self.parcours.environnement
+        personnalisee = url_personnalisee() if self.parcours.reel else ""
+        if environnement == DEMONSTRATION:
+            texte, nom = "Mode démonstration — données figées", "mfDemo"
+        elif personnalisee:
+            texte, nom = f"API personnalisée — {personnalisee}", "mfStaging"
+        elif environnement == STAGING:
+            texte, nom = "Environnement de test (staging) — pas la production", "mfStaging"
+        else:
+            texte, nom = "", "mfDemo"
+        self.bandeau.setText(texte)
+        self.bandeau.setAccessibleName(texte)
+        if self.bandeau.objectName() != nom:
+            self.bandeau.setObjectName(nom)
+            self.bandeau.style().unpolish(self.bandeau)
+            self.bandeau.style().polish(self.bandeau)
+        self.bandeau.setVisible(bool(texte))
+
     def rafraichir(self) -> None:
+        self._bandeau()
         etape = self.parcours.etape
         for numero, page in self.pages.items():
             visible = numero == etape

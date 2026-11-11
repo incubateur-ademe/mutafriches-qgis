@@ -175,18 +175,30 @@ def exemple() -> None:
 
 
 @etape(800)
-def envoyer() -> None:
+def origine_refusee() -> None:
     capture("05-fichier-valide")
+    controler("mode réel par défaut sur l'API locale, signalée au bandeau", parcours().reel and "API personnalisée" in dock().bandeau.text())
+    QgsSettings().setValue("mutafriches/api/origine", "https://autre.exemple.fr")
     cliquer("Envoyer mes 28 sites")
 
 
-@etape(600)
+@etape(2500)
+def acces_refuse() -> None:
+    erreur = parcours().erreur_api
+    controler("accès refusé signalé, retour à l'import", erreur is not None and "Accès refusé" in erreur.message and parcours().etape == 1, erreur)
+    capture("05b-acces-refuse")
+    QgsSettings().remove("mutafriches/api/origine")
+    cliquer("Envoyer mes 28 sites")
+
+
+@etape(900)
 def attente() -> None:
-    controler("analyse en cours affichée", parcours().analyse_en_cours)
+    traites, total = parcours().avancement
+    controler("analyse réelle en cours avec avancement", parcours().analyse_en_cours and total == 28 and 0 < traites < 28, (traites, total))
     capture("06-analyse-en-cours")
 
 
-@etape(2600)
+@etape(9000)
 def resultats() -> None:
     p = parcours()
     controler("résultats affichés", p.etape == 2 and p.synthese is not None and p.synthese.nombre_sites == 28)
@@ -264,7 +276,7 @@ def envoyer_fichier_erreurs() -> None:
     cliquer("Envoyer mes 4 sites")
 
 
-@etape(3200)
+@etape(4000)
 def resultats_avec_alertes() -> None:
     p = parcours()
     controler("4 sites analysés, 6 lignes écartées", p.etape == 2 and p.synthese.nombre_sites == 4 and len(p.lignes_ecartees) == 6)
@@ -277,6 +289,54 @@ def capture_alertes() -> None:
     barre = dock().defilement.verticalScrollBar()
     barre.setValue(barre.maximum())
     capture("10b-sites-a-reprendre")
+    cliquer("Analyser un autre inventaire")
+
+
+@etape()
+def mode_demonstration() -> None:
+    from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE
+
+    cliquer("Passer en mode démonstration")
+    controler("mode démonstration : bandeau affiché", not parcours().reel and "démonstration" in dock().bandeau.text())
+    parcours().choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
+    cliquer("Envoyer mes 28 sites")
+
+
+@etape(3500)
+def resultats_demonstration() -> None:
+    p = parcours()
+    controler("démonstration : 28 sites de la table figée", p.etape == 2 and p.synthese.nombre_sites == 28 and "table figée" in p.synthese.provenance, p.synthese.provenance if p.synthese else "")
+    capture("11-mode-demonstration")
+
+
+@etape()
+def staging() -> None:
+    from mutafriches.core.client_api import URLS, url_api
+
+    p = parcours()
+    couches = len(QgsProject.instance().mapLayers())
+    controler("staging caché sans mode développeur", not dock().pages[1].environnements.isVisible() or p.etape != 1)
+    QgsSettings().setValue("mutafriches/dev", "true")
+    # Sans adresse personnalisée, le staging pointe sur son URL publique
+    personnalisee = QgsSettings().value("mutafriches/api/url")
+    QgsSettings().remove("mutafriches/api/url")
+    liste = dock().pages[1].environnements
+    liste.setCurrentIndex(liste.findData("staging"))
+    controler("bascule staging : retour à l'import, couches de résultats retirées", p.environnement == "staging" and p.etape == 1 and p.synthese is None and len(QgsProject.instance().mapLayers()) == couches - 2, (p.environnement, p.etape, len(QgsProject.instance().mapLayers()), couches))
+    controler("adresse et bandeau de staging", url_api("staging") == URLS["staging"] and "staging" in dock().bandeau.text() and dock().bandeau.isVisible(), dock().bandeau.text())
+    controler("sélecteur visible en mode développeur", liste.isVisible())
+    contexte["url"] = personnalisee
+
+
+@etape(600)
+def capture_staging() -> None:
+    capture("12-environnement-staging")
+    liste = dock().pages[1].environnements
+    liste.setCurrentIndex(liste.findData("production"))
+    controler("retour en production : bandeau masqué", parcours().environnement == "production" and not dock().bandeau.isVisible())
+    QgsSettings().setValue("mutafriches/api/url", contexte["url"])
+    QgsSettings().remove("mutafriches/dev")
+    QgsSettings().remove("mutafriches/api/environnement")
     QgsSettings().remove("mutafriches/utilisateur")
 
 

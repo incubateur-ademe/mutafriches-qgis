@@ -18,6 +18,8 @@ ERREUR = "#ce0500"
 ERREUR_FOND = "#ffe9e9"
 DEMO_FOND = "#fef7da"
 DEMO_TEXTE = "#716043"
+STAGING_FOND = "#fee7fc"
+STAGING_TEXTE = "#6e445a"
 
 # Couleurs des badges, d'après les variantes DSFR utilisées par l'application web
 BADGES = {
@@ -66,6 +68,10 @@ def feuille_de_style() -> str:
 QLabel#mfDemo {{
   background: {DEMO_FOND}; color: {DEMO_TEXTE}; font-weight: bold; font-size: 12px;
   padding: 6px 12px; border-bottom: 1px solid #e9d99f;
+}}
+QLabel#mfStaging {{
+  background: {STAGING_FOND}; color: {STAGING_TEXTE}; font-weight: bold; font-size: 12px;
+  padding: 6px 12px; border-bottom: 1px solid {STAGING_TEXTE};
 }}
 QLabel#mfTitre {{ color: {BLEU_FRANCE}; font-size: 20px; font-weight: bold; }}
 QLabel#mfSousTitre {{ color: {BLEU_FRANCE}; font-size: 14px; }}

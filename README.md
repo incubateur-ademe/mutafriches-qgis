@@ -8,8 +8,9 @@ Prototype V0 (ADR-0002) : l'utilisateur se présente, envoie son inventaire de s
 qualification, une carte symbolisée par usage et un tableau de bord territorial dans le
 panneau. Objectif : captures d'écran.
 
-> **Données figées.** Les résultats sont ceux de la table attributaire publique de
-> Montereau-Fault-Yonne (77305), gelée dans le plugin : aucun appel à l'API n'est effectué.
+> **Deux modes.** En mode réel (défaut, ADR-0003), chaque site est enrichi puis évalué par l'API
+> Mutafriches existante ; l'origine de l'extension doit y être autorisée. En mode démonstration,
+> les résultats sont ceux de la table attributaire de Montereau-Fault-Yonne gelée dans le plugin.
 
 Seule version testée : **QGIS 3.44.14 sous macOS (Apple Silicon)**.
 
@@ -46,6 +47,39 @@ précédente est remplacée).
 Un fichier CNIG d'une autre commune est accepté mais ses sites ne sont pas retrouvés dans la
 table figée : le panneau le signale et affiche les résultats de Montereau.
 
+### Environnements : production, staging, démonstration
+
+| Environnement | API | Bandeau |
+|---|---|---|
+| `production` (défaut) | `https://mutafriches.beta.gouv.fr` | aucun |
+| `staging` | `https://mutafriches.incubateur.ademe.dev` | « Environnement de test (staging) » |
+| `demonstration` | aucune, table figée de Montereau | « Mode démonstration » |
+
+Les utilisateurs ne voient qu'un lien pour passer de la production à la démonstration. Le
+sélecteur à trois valeurs, staging compris, n'apparaît qu'en **mode développeur** : lancer QGIS
+avec `MUTAFRICHES_DEV=1`, ou poser le réglage `mutafriches/dev = true` (Préférences, Avancé).
+
+```bash
+MUTAFRICHES_DEV=1 /Applications/QGIS.app/Contents/MacOS/QGIS
+```
+
+Changer d'environnement vide les résultats et retire les deux couches Mutafriches du projet.
+Le choix est mémorisé (`mutafriches/api/environnement`).
+
+L'extension pose l'en-tête `Origin: https://qgis.mutafriches.beta.gouv.fr`. Cette origine doit
+être déclarée dans `ALLOWED_INTEGRATOR_ORIGINS` **sur chaque environnement** ; sinon l'envoi
+échoue avec « Accès refusé » et le panneau propose la démonstration. Autres réglages :
+`mutafriches/api/origine`, et `mutafriches/api/url` pour une adresse libre (serveur local), qui
+prend le pas sur l'environnement et s'affiche au bandeau. Un site prend deux à cinq secondes ;
+les sites en échec sont listés dans « Sites nécessitant votre attention ». Structure et mail
+restent dans le profil QGIS, rien n'est transmis.
+
+Un site dont la réponse dépasse le délai réseau de QGIS (60 s par défaut) est retenté une fois,
+puis listé en échec sans interrompre les suivants.
+
+Pour jouer le mode réel sans appeler Mutafriches : `python3 tests/serveur_factice.py 8799`, puis
+`mutafriches/api/url = http://127.0.0.1:8799`.
+
 ### Revoir l'accueil
 
 L'accueil (structure, mail, consentement) n'est demandé qu'une fois : il est mémorisé dans le
@@ -58,6 +92,14 @@ profil QGIS. Pour le revoir, le lien **Modifier** en bas de la page d'import, ou
 ## Captures
 
 `./scripts/e2e.sh` écrit les captures de la fenêtre QGIS dans `captures/` (local, ignoré par git).
+
+### Captures du tutoriel web
+
+`./scripts/captures-tutoriel.sh` joue le parcours nominal dans QGIS contre l'API de staging et
+écrit 13 captures WebP (1600 px) dans `../mutafriches/apps/ui/public/images/tutoriel-qgis/`,
+lues par la page `/integrer-mutafriches/extension-qgis` de Mutafriches. Chaque passage analyse
+réellement 32 sites sur le staging. `MF_TUTORIEL_API` change l'API visée, `MF_TUTORIEL_ETAPES=2`
+ne reprend que la capture d'installation.
 
 ### Captures en mode clair (macOS)
 

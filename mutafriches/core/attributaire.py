@@ -122,6 +122,8 @@ class Synthese:
     sites_a_qualifier: list[SiteAttributaire] = field(default_factory=list)
     version_algorithme: str = ""
     date_table: str = ""
+    # Provenance affichée sous le titre (table figée ou API)
+    provenance: str = ""
 
 
 def profil_ecart(ecart: float) -> tuple[str, str]:
@@ -173,6 +175,37 @@ def charger_table(fichier: Path = FICHIER_ATTRIBUTAIRE) -> tuple[list[SiteAttrib
     return sites, meta
 
 
+def site_depuis_api(
+    site_id: str, nom: str, parcelles: list[str], enrichissement: Json, mutabilite: Json, complementaires: dict[str, str]
+) -> SiteAttributaire:
+    """Ligne attributaire d'un site analysé par l'API (miroir de resumerPourAttributaire)."""
+    resultats = [r for r in mutabilite.get("resultats", []) if isinstance(r, dict)]  # type: ignore[union-attr]
+    resultats.sort(key=lambda r: int(r.get("rang", 99)))
+    indices = {str(r["usage"]): float(r["indiceMutabilite"]) for r in resultats if r.get("usage") in USAGES}
+    exclus = [str(r["usage"]) for r in resultats if r.get("exclu")]
+    # Premier usage du classement ; un usage exclu n'y figure que si tous le sont
+    retenus = [r for r in resultats if not r.get("exclu")] or resultats
+    fiabilite = mutabilite.get("fiabilite") or {}
+    saisis = {cle: valeur for cle, valeur in complementaires.items() if valeur != "ne-sait-pas"}
+    proprietes: Json = {**enrichissement, **complementaires, "saisie_declarative": bool(saisis)}
+    return SiteAttributaire(
+        cle=",".join(sorted(parcelles)),
+        nom=nom,
+        parcelles=sorted(parcelles),
+        commune=str(enrichissement.get("commune") or ""),
+        code_insee=str(enrichissement.get("codeInsee") or ""),
+        indices=indices,
+        usage_prioritaire=str(retenus[0]["usage"]) if retenus else None,
+        usages_exclus=exclus,
+        fiabilite=float(fiabilite.get("note", 0.0)),  # type: ignore[union-attr, arg-type]
+        fiabilite_niveau=str(fiabilite.get("text", "")),  # type: ignore[union-attr]
+        saisie_declarative=bool(saisis),
+        proprietes=proprietes,
+        geometrie=enrichissement.get("geometrieSite") or enrichissement.get("geometrie"),  # type: ignore[arg-type]
+        site_id=site_id,
+    )
+
+
 def apparier(sites: list[SiteAttributaire], parcelles_par_site_id: dict[str, list[str]]) -> list[SiteAttributaire]:
     """Sites de la table dont les parcelles sont exactement celles d'un site du fichier envoyé."""
     par_cle = {",".join(sorted(parcelles)): site_id for site_id, parcelles in parcelles_par_site_id.items()}
@@ -183,6 +216,11 @@ def apparier(sites: list[SiteAttributaire], parcelles_par_site_id: dict[str, lis
             site.site_id = site_id
             apparies.append(site)
     return apparies
+
+
+def _dominant(valeurs: list[str]) -> str:
+    presentes = [v for v in valeurs if v]
+    return Counter(presentes).most_common(1)[0][0] if presentes else ""
 
 
 def synthese(sites: list[SiteAttributaire], meta: Json) -> Synthese:
@@ -197,8 +235,8 @@ def synthese(sites: list[SiteAttributaire], meta: Json) -> Synthese:
     forte = sorted((s for s in sites if s.indice_max >= 70), key=lambda s: -s.indice_max)
     a_qualifier = sorted((s for s in sites if not s.saisie_declarative), key=lambda s: s.fiabilite)
     return Synthese(
-        commune=sites[0].commune if sites else "",
-        code_insee=sites[0].code_insee if sites else "",
+        commune=_dominant([s.commune for s in sites]),
+        code_insee=_dominant([s.code_insee for s in sites]),
         nombre_sites=len(sites),
         par_usage={u: usages.get(u, 0) for u in ORDRE_USAGES},
         par_fiabilite={n: fiabilites.get(n, 0) for n in NIVEAUX_FIABILITE},
@@ -210,4 +248,8 @@ def synthese(sites: list[SiteAttributaire], meta: Json) -> Synthese:
         sites_a_qualifier=a_qualifier,
         version_algorithme=str(meta.get("versionAlgorithme", "")),
         date_table=str(meta.get("figeLe", "")),
+        provenance=str(
+            meta.get("provenance")
+            or f"Algorithme {meta.get('versionAlgorithme', '')} · table figée le {meta.get('figeLe', '')}"
+        ),
     )
