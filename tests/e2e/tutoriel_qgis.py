@@ -58,7 +58,11 @@ def capture(nom: str) -> None:
 def cliquer(libelle: str) -> None:
     QApplication.processEvents()
     bouton = next(
-        (b for b in dock().findChildren(QPushButton) if b.isVisible() and b.isEnabled() and b.text().strip().startswith(libelle)),
+        (
+            b
+            for b in dock().findChildren(QPushButton)
+            if b.isVisible() and b.isEnabled() and b.text().strip().startswith(libelle)
+        ),
         None,
     )
     if bouton is None:
@@ -76,11 +80,20 @@ def cliquer_accessible(nom: str) -> None:
 
 def table_ancree(fragment: str) -> QDockWidget | None:
     QApplication.processEvents()
-    ancre = next((d for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible() and fragment in d.windowTitle()), None)
+    ancre = next(
+        (d for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible() and fragment in d.windowTitle()), None
+    )
     if ancre is not None:
         return ancre
     # Table ouverte en fenêtre malgré le réglage du profil : on l'ancre en bas pour la capture
-    fenetre = next((w for w in QApplication.topLevelWidgets() if w.isVisible() and w is not iface.mainWindow() and fragment in w.windowTitle()), None)
+    fenetre = next(
+        (
+            w
+            for w in QApplication.topLevelWidgets()
+            if w.isVisible() and w is not iface.mainWindow() and fragment in w.windowTitle()
+        ),
+        None,
+    )
     if fenetre is None:
         return None
     ancre = QDockWidget(fenetre.windowTitle(), iface.mainWindow())
@@ -139,7 +152,11 @@ def installation() -> None:
 
 @etape(1500)
 def ouvrir() -> None:
-    vers_carte = QgsCoordinateTransform(QgsCoordinateReferenceSystem("EPSG:4326"), iface.mapCanvas().mapSettings().destinationCrs(), QgsProject.instance())
+    vers_carte = QgsCoordinateTransform(
+        QgsCoordinateReferenceSystem("EPSG:4326"),
+        iface.mapCanvas().mapSettings().destinationCrs(),
+        QgsProject.instance(),
+    )
     iface.mapCanvas().setExtent(vers_carte.transformBoundingBox(QgsRectangle(2.93, 48.375, 2.98, 48.40)))
     iface.mapCanvas().refresh()
     plugin().action.trigger()

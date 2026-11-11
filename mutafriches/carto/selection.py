@@ -92,9 +92,7 @@ def _composantes(geometries: list[QgsGeometry]) -> int:
             if i in vues:
                 continue
             vues.add(i)
-            pile.extend(
-                j for j in range(len(geometries)) if j not in vues and elargies[i].intersects(geometries[j])
-            )
+            pile.extend(j for j in range(len(geometries)) if j not in vues and elargies[i].intersects(geometries[j]))
     return composantes
 
 
@@ -120,14 +118,10 @@ def analyser(couche: QgsVectorLayer, entites: list[QgsFeature]) -> AnalysePerime
     if len(elements) > MAX_PARCELLES:
         analyse.problemes.append(f"Un site compte au plus {MAX_PARCELLES} parcelles.")
     if len(elements) > 1 and analyse.surface_m2 > SURFACE_MAX_M2:
-        analyse.problemes.append(
-            f"Un site de plusieurs parcelles ne dépasse pas {formater_hectares(SURFACE_MAX_M2)}."
-        )
+        analyse.problemes.append(f"Un site de plusieurs parcelles ne dépasse pas {formater_hectares(SURFACE_MAX_M2)}.")
     if len(elements) > 1 and _composantes(geometries) > 1:
         analyse.contigu = False
-        analyse.problemes.append(
-            "Les parcelles ne sont pas toutes contiguës : un site doit former un seul ensemble."
-        )
+        analyse.problemes.append("Les parcelles ne sont pas toutes contiguës : un site doit former un seul ensemble.")
     return analyse
 
 

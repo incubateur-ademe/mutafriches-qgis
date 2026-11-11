@@ -8,17 +8,57 @@ from pathlib import Path
 
 # Miroir de COLONNES_FRICHE_CNIG (packages/shared-types/src/cnig), TableSchema v1.0.6
 COLONNES_CNIG: tuple[str, ...] = (
-    "site_id", "site_nom", "site_type", "site_adresse", "site_identif_date", "site_actu_date",
-    "site_url", "site_ademe_url", "site_securite", "site_occupation", "site_statut",
-    "site_projet_url", "site_reconv_annee", "site_reconv_type", "activite_libelle",
-    "activite_code", "activite_fin_annee", "comm_nom", "comm_insee", "bati_type", "bati_nombre",
-    "bati_surface", "bati_pollution", "bati_vacance", "bati_patrimoine", "bati_etat",
-    "local_ancien_annee", "local_recent_annee", "proprio_type", "proprio_personne", "proprio_nom",
-    "sol_pollution_annee", "sol_pollution_existe", "sol_pollution_origine",
-    "sol_pollution_commentaire", "sol_depollution_fiche", "unite_fonciere_surface",
-    "unite_fonciere_refcad", "urba_zone_type", "urba_zone_lib", "urba_zone_formdomi", "urba_zaer",
-    "urba_doc_type", "desserte_distance", "desserte_commentaire", "source_nom", "source_url",
-    "source_producteur", "source_contact", "geompoint", "geomsurf",
+    "site_id",
+    "site_nom",
+    "site_type",
+    "site_adresse",
+    "site_identif_date",
+    "site_actu_date",
+    "site_url",
+    "site_ademe_url",
+    "site_securite",
+    "site_occupation",
+    "site_statut",
+    "site_projet_url",
+    "site_reconv_annee",
+    "site_reconv_type",
+    "activite_libelle",
+    "activite_code",
+    "activite_fin_annee",
+    "comm_nom",
+    "comm_insee",
+    "bati_type",
+    "bati_nombre",
+    "bati_surface",
+    "bati_pollution",
+    "bati_vacance",
+    "bati_patrimoine",
+    "bati_etat",
+    "local_ancien_annee",
+    "local_recent_annee",
+    "proprio_type",
+    "proprio_personne",
+    "proprio_nom",
+    "sol_pollution_annee",
+    "sol_pollution_existe",
+    "sol_pollution_origine",
+    "sol_pollution_commentaire",
+    "sol_depollution_fiche",
+    "unite_fonciere_surface",
+    "unite_fonciere_refcad",
+    "urba_zone_type",
+    "urba_zone_lib",
+    "urba_zone_formdomi",
+    "urba_zaer",
+    "urba_doc_type",
+    "desserte_distance",
+    "desserte_commentaire",
+    "source_nom",
+    "source_url",
+    "source_producteur",
+    "source_contact",
+    "geompoint",
+    "geomsurf",
 )
 # Colonnes dont le standard impose le remplissage (§3.3) et dont le prototype a besoin
 COLONNES_OBLIGATOIRES: tuple[str, ...] = ("site_id", "site_nom", "comm_insee", "unite_fonciere_refcad", "geompoint")
@@ -146,7 +186,9 @@ def lire_cnig(chemin: Path) -> LectureCnig:
         lecture.problemes.append(Probleme(0, "Fichier introuvable."))
         return lecture
     if chemin.suffix.lower() not in EXTENSIONS:
-        lecture.problemes.append(Probleme(0, "Format non pris en charge : CSV ou GeoJSON attendu (standard CNIG Friches)."))
+        lecture.problemes.append(
+            Probleme(0, "Format non pris en charge : CSV ou GeoJSON attendu (standard CNIG Friches).")
+        )
         return lecture
     try:
         colonnes, lignes = _lignes_csv(chemin) if chemin.suffix.lower() == ".csv" else _lignes_geojson(chemin)
@@ -160,7 +202,16 @@ def lire_cnig(chemin: Path) -> LectureCnig:
         return lecture
     inconnues = [c for c in colonnes if c not in COLONNES_CNIG and not c.startswith("mf_")]
     if inconnues:
-        lecture.problemes.append(Probleme(0, "Colonnes hors standard ignorées : " + ", ".join(inconnues[:6]) + ("…" if len(inconnues) > 6 else "") + ".", False))
+        lecture.problemes.append(
+            Probleme(
+                0,
+                "Colonnes hors standard ignorées : "
+                + ", ".join(inconnues[:6])
+                + ("…" if len(inconnues) > 6 else "")
+                + ".",
+                False,
+            )
+        )
     if not lignes:
         lecture.problemes.append(Probleme(0, "Le fichier ne contient aucun site."))
         return lecture

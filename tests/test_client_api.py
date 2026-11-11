@@ -50,7 +50,9 @@ class TestClientApi(unittest.TestCase):
         self.assertEqual(etapes[0], (0, 5))
         self.assertEqual(etapes[-1], (5, 5))
         r = resultats[0]
-        site = site_depuis_api(r.site.site_id, r.site.site_nom, r.site.parcelles, r.enrichissement, r.mutabilite, r.complementaires)
+        site = site_depuis_api(
+            r.site.site_id, r.site.site_nom, r.site.parcelles, r.enrichissement, r.mutabilite, r.complementaires
+        )
         self.assertEqual(site.code_insee, "77305")
         self.assertEqual(len(site.indices), 7)
         self.assertEqual(site.indice_max, max(v for u, v in site.indices.items() if u not in site.usages_exclus))
@@ -139,7 +141,9 @@ class TestComplementairesCnig(unittest.TestCase):
 
     def test_valeurs_sans_ambiguite_seulement(self) -> None:
         reponses = complementaires_depuis_cnig(
-            self.site(bati_etat="Dégradation moyenne", bati_patrimoine="aucun", sol_pollution_existe="pollution traitée")
+            self.site(
+                bati_etat="Dégradation moyenne", bati_patrimoine="aucun", sol_pollution_existe="pollution traitée"
+            )
         )
         self.assertEqual(reponses["etatBatiInfrastructure"], "degradation-moyenne")
         self.assertEqual(reponses["valeurArchitecturaleHistorique"], "ne-sait-pas")
@@ -151,7 +155,9 @@ class TestComplementairesCnig(unittest.TestCase):
         self.assertEqual(reponses["valeurArchitecturaleHistorique"], "pas-de-bati")
 
     def test_amiante(self) -> None:
-        reponses = complementaires_depuis_cnig(self.site(sol_pollution_existe="pollution avérée", bati_pollution="amiante"))
+        reponses = complementaires_depuis_cnig(
+            self.site(sol_pollution_existe="pollution avérée", bati_pollution="amiante")
+        )
         self.assertEqual(reponses["presencePollution"], "oui-amiante")
         reponses = complementaires_depuis_cnig(self.site(sol_pollution_existe="pollution avérée"))
         self.assertEqual(reponses["presencePollution"], "ne-sait-pas")

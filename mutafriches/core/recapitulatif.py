@@ -57,11 +57,22 @@ def valeur_recapitulatif(cle: str, e: Json, c: dict[str, str]) -> str:
     valeur = e.get(cle)
     if cle in ("surfaceSite", "surfaceBati"):
         return formater_surface(_nombre(valeur))
-    if cle in ("distanceRaccordementElectrique", "distanceReseauChaleur", "distanceTransportCommun", "distanceAutoroute"):
+    if cle in (
+        "distanceRaccordementElectrique",
+        "distanceReseauChaleur",
+        "distanceTransportCommun",
+        "distanceAutoroute",
+    ):
         return formater_distance(_nombre(valeur))
     if cle == "tauxLogementsVacants":
         return formater_pourcentage(_nombre(valeur))
-    if cle in ("siteEnCentreVille", "proximiteCommercesServices", "presenceRisquesTechnologiques", "siteEnQpv", "saturationReseauEnr"):
+    if cle in (
+        "siteEnCentreVille",
+        "proximiteCommercesServices",
+        "presenceRisquesTechnologiques",
+        "siteEnQpv",
+        "saturationReseauEnr",
+    ):
         return formater_booleen(_booleen(valeur))
     if cle in LIBELLES_RECAP_ENRICHIS:
         return libelle(LIBELLES_RECAP_ENRICHIS[cle], valeur)
@@ -216,7 +227,9 @@ def valeur_etape(cle: str, e: Json, c: dict[str, str]) -> Affichage:
         return str(e.get("commune") or "")
     if cle == "parcelles":
         ids = e.get("identifiantsParcelles")
-        return [str(i) for i in ids] if isinstance(ids, list) and len(ids) > 1 else str(e.get("identifiantParcelle") or "")
+        return (
+            [str(i) for i in ids] if isinstance(ids, list) and len(ids) > 1 else str(e.get("identifiantParcelle") or "")
+        )
     if cle in ("surfaceSite", "surfaceBati"):
         nombre = _nombre(e.get(cle))
         return formater_surface(nombre) if nombre is not None else ""
@@ -229,13 +242,23 @@ def valeur_etape(cle: str, e: Json, c: dict[str, str]) -> Affichage:
     if cle == "distanceAutoroute":
         return _distance_ou(e.get(cle, ""), "Aucun accès autoroutier à moins de 50 km")
     if cle == "raccordementEau":
-        return {"oui": "Oui", "non": "Non"}.get(deriver_raccordement_eau(_nombre(e.get("surfaceBati"))), "Non déterminé")
+        return {"oui": "Oui", "non": "Non"}.get(
+            deriver_raccordement_eau(_nombre(e.get("surfaceBati"))), "Non déterminé"
+        )
     if cle == "ilotChaleurUrbain":
         valeur = e.get(cle)
-        return {"oui": "Oui (+ de 5,5 °C)", "non": "Non — aucun îlot de chaleur identifié", "non-couvert": "Commune non couverte"}.get(
-            str(valeur), DONNEE_NON_ACCESSIBLE
-        )
-    if cle in ("siteEnCentreVille", "proximiteCommercesServices", "presenceRisquesTechnologiques", "siteEnQpv", "saturationReseauEnr"):
+        return {
+            "oui": "Oui (+ de 5,5 °C)",
+            "non": "Non — aucun îlot de chaleur identifié",
+            "non-couvert": "Commune non couverte",
+        }.get(str(valeur), DONNEE_NON_ACCESSIBLE)
+    if cle in (
+        "siteEnCentreVille",
+        "proximiteCommercesServices",
+        "presenceRisquesTechnologiques",
+        "siteEnQpv",
+        "saturationReseauEnr",
+    ):
         return _oui_non(e.get(cle))
     if cle == "tauxLogementsVacants":
         nombre = _nombre(e.get(cle))

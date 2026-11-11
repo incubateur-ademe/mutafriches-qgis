@@ -46,7 +46,9 @@ class Anneau(QWidget):
         interieur = zone.adjusted(epaisseur, epaisseur, -epaisseur, -epaisseur)
         if self.sous_titre:
             haut = QRectF(interieur.x(), interieur.y(), interieur.width(), interieur.height() * 0.58)
-            bas = QRectF(interieur.x(), interieur.y() + interieur.height() * 0.5, interieur.width(), interieur.height() * 0.4)
+            bas = QRectF(
+                interieur.x(), interieur.y() + interieur.height() * 0.5, interieur.width(), interieur.height() * 0.4
+            )
             peintre.drawText(haut, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom, self.centre)
             police.setBold(False)
             police.setPointSize(max(9, self.width() // 12))

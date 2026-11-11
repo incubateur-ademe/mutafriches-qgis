@@ -80,7 +80,9 @@ def _wkt(geojson: dict) -> str:
     if geojson["type"] == "Polygon":
         return "POLYGON(" + ",".join(anneau(a) for a in geojson["coordinates"]) + ")"
     if geojson["type"] == "MultiPolygon":
-        return "MULTIPOLYGON(" + ",".join("(" + ",".join(anneau(a) for a in p) + ")" for p in geojson["coordinates"]) + ")"
+        return (
+            "MULTIPOLYGON(" + ",".join("(" + ",".join(anneau(a) for a in p) + ")" for p in geojson["coordinates"]) + ")"
+        )
     if geojson["type"] == "Point":
         x, y = geojson["coordinates"][:2]
         return f"POINT({x} {y})"
@@ -88,6 +90,7 @@ def _wkt(geojson: dict) -> str:
 
 
 # --- Table mutabilité ------------------------------------------------------------------------
+
 
 def champs_mutabilite() -> list[QgsField]:
     # Colonnes dans l'ordre demandé ; noms calqués sur l'extension CNIG de l'export Mutafriches
@@ -138,12 +141,22 @@ def _entite_mutabilite(site: SiteAttributaire, champs: list[QgsField]) -> QgsFea
 
 # --- Table qualification ---------------------------------------------------------------------
 
+
 def champs_qualification() -> list[QgsField]:
-    champs = [_champ("site_id"), _champ("site_nom"), _champ("nb_parcelles", QMetaType.Type.Int), _champ("unite_fonciere_refcad")]
+    champs = [
+        _champ("site_id"),
+        _champ("site_nom"),
+        _champ("nb_parcelles", QMetaType.Type.Int),
+        _champ("unite_fonciere_refcad"),
+    ]
     champs += [_champ(colonne) for _, colonne in CRITERES_QUALIFICATION_AUTO]
     champs += [_champ("saisie_declarative"), _champ("date_saisie")]
     champs += [_champ(colonne) for _, colonne in CRITERES_QUALIFICATION_SAISIS]
-    champs += [_champ("mf_fiabilite", QMetaType.Type.Double), _champ("mf_fiabilite_niveau"), _champ("donnees_manquantes")]
+    champs += [
+        _champ("mf_fiabilite", QMetaType.Type.Double),
+        _champ("mf_fiabilite_niveau"),
+        _champ("donnees_manquantes"),
+    ]
     return champs
 
 
@@ -176,10 +189,9 @@ def _fields(champs: list[QgsField]):  # type: ignore[no-untyped-def]
 
 # --- Symbologie et étiquettes ----------------------------------------------------------------
 
+
 def _symbole(couleur: str) -> QgsFillSymbol:
-    return QgsFillSymbol.createSimple(
-        {"color": _rgba(couleur, 110), "outline_color": couleur, "outline_width": "0.6"}
-    )
+    return QgsFillSymbol.createSimple({"color": _rgba(couleur, 110), "outline_color": couleur, "outline_width": "0.6"})
 
 
 def _rgba(hexa: str, alpha: int) -> str:
@@ -189,8 +201,7 @@ def _rgba(hexa: str, alpha: int) -> str:
 
 def appliquer_symbologie(couche: QgsVectorLayer) -> None:
     categories = [
-        QgsRendererCategory(usage, _symbole(COULEURS_USAGES[usage]), libelle_usage(usage))
-        for usage in ORDRE_USAGES
+        QgsRendererCategory(usage, _symbole(COULEURS_USAGES[usage]), libelle_usage(usage)) for usage in ORDRE_USAGES
     ]
     categories.append(QgsRendererCategory(None, _symbole(COULEUR_SANS_USAGE), "Aucun usage retenu"))
     couche.setRenderer(QgsCategorizedSymbolRenderer("mf_usage_prioritaire", categories))
@@ -222,7 +233,11 @@ def appliquer_symbologie(couche: QgsVectorLayer) -> None:
     format_texte.setBuffer(halo)
     parametres.setFormat(format_texte)
     # Fond de l'étiquette à la couleur de l'usage : même lecture que le remplissage
-    cas = "CASE " + " ".join(f"WHEN \"mf_usage_prioritaire\" = '{u}' THEN '{c}'" for u, c in COULEURS_USAGES.items()) + f" ELSE '{COULEUR_SANS_USAGE}' END"
+    cas = (
+        "CASE "
+        + " ".join(f"WHEN \"mf_usage_prioritaire\" = '{u}' THEN '{c}'" for u, c in COULEURS_USAGES.items())
+        + f" ELSE '{COULEUR_SANS_USAGE}' END"
+    )
     proprietes = parametres.dataDefinedProperties()
     proprietes.setProperty(QgsPalLayerSettings.Property.ShapeFillColor, QgsProperty.fromExpression(cas))
     parametres.setDataDefinedProperties(proprietes)
@@ -239,6 +254,7 @@ def appliquer_symbologie_qualification(couche: QgsVectorLayer) -> None:
 
 
 # --- Création dans le projet -----------------------------------------------------------------
+
 
 def _remplacer(nom: str) -> None:
     projet = QgsProject.instance()
