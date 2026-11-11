@@ -1,10 +1,10 @@
 """Écran des résultats et fenêtres de détail, calqués sur la page web /resultats."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.PyQt.QtGui import QMouseEvent, QPixmap
+from qgis.PyQt.QtGui import QKeyEvent, QMouseEvent, QPixmap
 from qgis.PyQt.QtWidgets import (
     QDialog,
     QFrame,
@@ -32,7 +32,8 @@ from .parcours import Etape, Parcours
 from .widgets import BoutonAide, Encadre, FlowLayout, badge, bouton, texte, vider
 
 DOSSIER_IMAGES = Path(__file__).resolve().parent.parent / "icons" / "usages"
-Json = dict[str, object]
+# Réponse JSON de l'API : structure libre, vérifiée à l'usage
+Json = dict[str, Any]
 
 
 def image_usage(usage: str, taille: int) -> QLabel:
@@ -108,7 +109,7 @@ def tableau(colonnes: list[str], largeurs: list[int]) -> QGridLayout:
     grille = QGridLayout()
     grille.setHorizontalSpacing(10)
     grille.setVerticalSpacing(6)
-    for i, (colonne, largeur) in enumerate(zip(colonnes, largeurs)):
+    for i, (colonne, largeur) in enumerate(zip(colonnes, largeurs, strict=True)):
         entete = texte(colonne)
         entete.setStyleSheet("font-weight: bold;")
         grille.addWidget(entete, 0, i)
@@ -317,7 +318,7 @@ class LigneTableau(QFrame):
         if evenement.button() == Qt.MouseButton.LeftButton:
             self.detail.emit(self.usage)
 
-    def keyPressEvent(self, evenement) -> None:  # type: ignore[no-untyped-def]
+    def keyPressEvent(self, evenement: QKeyEvent) -> None:
         if evenement.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
             self.detail.emit(self.usage)
         else:
@@ -350,7 +351,7 @@ class PageResultats(Page):
         )
         return reponses
 
-    def _resultat(self, usage: str) -> Optional[Json]:
+    def _resultat(self, usage: str) -> Json | None:
         site = self.parcours.site
         resultats = site.evaluation["resultats"] if site and site.evaluation else []
         return next((r for r in resultats if r["usage"] == usage), None)  # type: ignore[union-attr]

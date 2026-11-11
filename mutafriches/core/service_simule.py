@@ -2,9 +2,9 @@
 
 import json
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Optional
 
 from qgis.PyQt.QtCore import QTimer
 
@@ -15,7 +15,7 @@ DOSSIER_SCENARIOS = Path(__file__).resolve().parent.parent / "demo" / "scenarios
 FICHIER_GENERIQUE = DOSSIER_SCENARIOS.parent / "generique.json"
 
 # Surface (m²) de la sélection, mesurée sur la couche QGIS ; None si inconnue
-Mesureur = Callable[[list[str]], Optional[float]]
+Mesureur = Callable[[list[str]], float | None]
 # Part bâtie fictive du profil générique : un point de la grille figée y correspond exactement
 PART_BATIE_FICTIVE = 0.2
 
@@ -56,8 +56,8 @@ def charger_scenarios(dossier: Path = DOSSIER_SCENARIOS) -> list[Scenario]:
 
 
 class TacheSimulee:
-    def __init__(self, delai_ms: Optional[int], action: Callable[[], None]) -> None:
-        self._timer: Optional[QTimer] = None
+    def __init__(self, delai_ms: int | None, action: Callable[[], None]) -> None:
+        self._timer: QTimer | None = None
         if delai_ms is None:
             action()
             return
@@ -76,17 +76,17 @@ class ServiceSimule:
 
     def __init__(
         self,
-        scenarios: Optional[list[Scenario]] = None,
-        delai_enrichissement_ms: Optional[int] = 1400,
-        delai_evaluation_ms: Optional[int] = 900,
-        mesurer: Optional[Mesureur] = None,
+        scenarios: list[Scenario] | None = None,
+        delai_enrichissement_ms: int | None = 1400,
+        delai_evaluation_ms: int | None = 900,
+        mesurer: Mesureur | None = None,
     ) -> None:
         self.scenarios = scenarios if scenarios is not None else charger_scenarios()
         self.delai_enrichissement_ms = delai_enrichissement_ms
         self.delai_evaluation_ms = delai_evaluation_ms
         self.mesurer = mesurer
         self._tentatives: dict[str, int] = {}
-        self._generique: Optional[Json] = None
+        self._generique: Json | None = None
 
     @property
     def generique(self) -> Json:
@@ -101,9 +101,9 @@ class ServiceSimule:
     def variantes_generiques(self) -> list[Json]:
         points = self.generique["points"]
         assert isinstance(points, list)
-        return points[0]["evaluations"]  # type: ignore[no-any-return]
+        return points[0]["evaluations"]
 
-    def _enrichissement_generique(self, identifiants: list[str]) -> Optional[Json]:
+    def _enrichissement_generique(self, identifiants: list[str]) -> Json | None:
         surface_site = self.mesurer(identifiants) if self.mesurer else None
         if surface_site is None:
             return None
@@ -131,7 +131,7 @@ class ServiceSimule:
     def reinitialiser(self) -> None:
         self._tentatives.clear()
 
-    def scenario_pour(self, identifiants: list[str]) -> Optional[Scenario]:
+    def scenario_pour(self, identifiants: list[str]) -> Scenario | None:
         cible = sorted(identifiants)
         return next((s for s in self.scenarios if s.parcelles == cible), None)
 
@@ -180,13 +180,13 @@ class ServiceSimule:
     ) -> TacheSimulee:
         def repondre() -> None:
             ids = enrichissement.get("identifiantsParcelles") or [enrichissement.get("identifiantParcelle")]
-            scenario = self.scenario_pour([str(i) for i in ids])  # type: ignore[union-attr]
+            scenario = self.scenario_pour([str(i) for i in ids])
             note = None
             if scenario is not None:
                 evaluations = scenario.evaluations
             else:
-                point = choisir_point(self.generique["points"], enrichissement)  # type: ignore[arg-type]
-                evaluations = point["evaluations"]  # type: ignore[assignment]
+                point = choisir_point(self.generique["points"], enrichissement)
+                evaluations = point["evaluations"]
                 note = (
                     "Profil générique (données fictives) : indices figés pour "
                     f"un site d'environ {formater_surface(float(point['surfaceSite']))} dont "
@@ -221,14 +221,14 @@ def choisir_variante(evaluations: list[Json], reponses: dict[str, str]) -> tuple
 
 def choisir_point(points: list[Json], enrichissement: Json) -> Json:
     """Point de grille le plus proche : surface du site (échelle log), puis part bâtie."""
-    surface = max(float(enrichissement.get("surfaceSite") or 1), 1.0)  # type: ignore[arg-type]
-    part = float(enrichissement.get("surfaceBati") or 0) / surface  # type: ignore[arg-type]
+    surface = max(float(enrichissement.get("surfaceSite") or 1), 1.0)
+    part = float(enrichissement.get("surfaceBati") or 0) / surface
 
     def distance(point: Json) -> tuple[float, float]:
-        site = float(point["surfaceSite"])  # type: ignore[arg-type]
+        site = float(point["surfaceSite"])
         return (
             round(abs(math.log(site / surface)), 6),
-            abs(float(point["surfaceBati"]) / site - part),  # type: ignore[arg-type]
+            abs(float(point["surfaceBati"]) / site - part),
         )
 
     return min(points, key=distance)

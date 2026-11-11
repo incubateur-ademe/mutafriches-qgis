@@ -44,6 +44,8 @@ ignore = [
 # Scénarios joués dans QGIS et scripts de génération : annotations non exigées
 "tests/**" = ["ANN", "B011"]
 "outils/**" = ["ANN"]
+# Ancien parcours site à site, plus joué depuis l'ADR-0002 : conservé tel quel
+"tests/e2e/parcours_qgis.py" = ["E741"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["mutafriches"]
@@ -62,3 +64,9 @@ no_implicit_optional = true
 [[tool.mypy.overrides]]
 module = ["qgis", "qgis.*"]
 ignore_missing_imports = true
+
+# Détail d'un site : page hors panneau depuis l'ADR-0002, encore écrite pour l'ancien parcours.
+# À retirer de cette liste quand elle sera rebranchée.
+[[tool.mypy.overrides]]
+module = ["mutafriches.ui.resultats"]
+ignore_errors = true

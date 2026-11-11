@@ -2,7 +2,6 @@
 
 import re
 from dataclasses import dataclass, field
-from typing import Optional
 
 from qgis.core import (
     QgsCoordinateReferenceSystem,
@@ -37,13 +36,13 @@ CHAMPS_IDENTIFIANT = ("idu", "id", "IDU", "ID", "id_parcelle", "geo_parcelle")
 FORMAT_IDU = re.compile(r"^(?:\d{5}|2[AB]\d{3})[0-9A-Z]{3}[0-9A-Z]{2}\d{4}$")
 
 
-def couche_polygones(couche: Optional[QgsMapLayer]) -> Optional[QgsVectorLayer]:
+def couche_polygones(couche: QgsMapLayer | None) -> QgsVectorLayer | None:
     if isinstance(couche, QgsVectorLayer) and couche.geometryType() == QgsWkbTypes.GeometryType.PolygonGeometry:
         return couche
     return None
 
 
-def champ_identifiant(couche: QgsVectorLayer) -> Optional[str]:
+def champ_identifiant(couche: QgsVectorLayer) -> str | None:
     """Premier champ dont les valeurs ressemblent à un identifiant cadastral (14 caractères)."""
     noms = couche.fields().names()
     entite = next(couche.getFeatures(QgsFeatureRequest().setLimit(1)), None)
@@ -63,7 +62,7 @@ def libelle_parcelle(idu: str) -> str:
 class AnalysePerimetre:
     parcelles: list[ParcelleSite] = field(default_factory=list)
     # Union des parcelles, en Lambert 93
-    geometrie: Optional[QgsGeometry] = None
+    geometrie: QgsGeometry | None = None
     contigu: bool = True
     problemes: list[str] = field(default_factory=list)
     # Identifiant de parcelle vers identifiant d'entité, pour retirer une parcelle de la sélection
@@ -130,7 +129,7 @@ class OutilParcelles(QgsMapTool):
 
     def __init__(self, canvas: QgsMapCanvas) -> None:
         super().__init__(canvas)
-        self.couche: Optional[QgsVectorLayer] = None
+        self.couche: QgsVectorLayer | None = None
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def canvasReleaseEvent(self, evenement: QgsMapMouseEvent) -> None:

@@ -1,7 +1,6 @@
 """Champs, valeurs et libellés. Miroir de packages/shared-types et de apps/ui (Mutafriches)."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 NE_SAIT_PAS = "ne-sait-pas"
 VALEUR_NON_DISPONIBLE = "Non disponible"
@@ -215,7 +214,7 @@ class Critere:
     libelle: str
     section: str
     automatique: bool
-    source: Optional[str] = None
+    source: str | None = None
 
 
 # Miroir de CRITERES_METADATA (ordre, libellé, saisie) et SOURCE_LABELS (packages/shared-types)
@@ -394,7 +393,7 @@ def _nombre(valeur: float, decimales: int = 0) -> str:
     return texte
 
 
-def formater_surface(m2: Optional[float]) -> str:
+def formater_surface(m2: float | None) -> str:
     return VALEUR_NON_DISPONIBLE if m2 is None else f"{_nombre(round(m2))} m²"
 
 
@@ -402,7 +401,7 @@ def formater_hectares(m2: float) -> str:
     return f"{_nombre(m2 / 10000, 2)} ha"
 
 
-def formater_distance(metres: Optional[float]) -> str:
+def formater_distance(metres: float | None) -> str:
     if metres is None:
         return VALEUR_NON_DISPONIBLE
     if metres >= 1000:
@@ -410,11 +409,11 @@ def formater_distance(metres: Optional[float]) -> str:
     return f"{_nombre(round(metres))} m"
 
 
-def formater_pourcentage(valeur: Optional[float]) -> str:
+def formater_pourcentage(valeur: float | None) -> str:
     return VALEUR_NON_DISPONIBLE if valeur is None else f"{_nombre(valeur, 2)} %"
 
 
-def formater_booleen(valeur: Optional[bool]) -> str:
+def formater_booleen(valeur: bool | None) -> str:
     if valeur is None:
         return VALEUR_NON_DISPONIBLE
     return "Oui" if valeur else "Non"

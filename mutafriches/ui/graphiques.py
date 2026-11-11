@@ -1,7 +1,7 @@
 """Graphiques natifs du panneau (QPainter) : QtCharts n'est pas embarqué par QGIS."""
 
 from qgis.PyQt.QtCore import QRectF, Qt
-from qgis.PyQt.QtGui import QColor, QFont, QPainter, QPen
+from qgis.PyQt.QtGui import QColor, QFont, QPainter, QPaintEvent, QPen
 from qgis.PyQt.QtWidgets import QGridLayout, QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget
 
 from . import style
@@ -20,9 +20,11 @@ class Anneau(QWidget):
         self.sous_titre = sous_titre
         self.setFixedSize(diametre, diametre)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setAccessibleName(f"{centre} {sous_titre} : " + ", ".join(f"{l} {v}" for l, v, _ in self.serie))
+        self.setAccessibleName(
+            f"{centre} {sous_titre} : " + ", ".join(f"{libelle} {valeur}" for libelle, valeur, _ in self.serie)
+        )
 
-    def paintEvent(self, evenement) -> None:  # type: ignore[no-untyped-def]
+    def paintEvent(self, evenement: QPaintEvent) -> None:
         peintre = QPainter(self)
         peintre.setRenderHint(QPainter.RenderHint.Antialiasing)
         epaisseur = max(12, self.width() // 7)

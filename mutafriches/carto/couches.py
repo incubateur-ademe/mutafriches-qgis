@@ -1,21 +1,22 @@
 """Couches de résultats du prototype : mutabilité et qualification, symbologie et étiquettes."""
 
 import json
-from typing import Optional
 
 from qgis.core import (
     QgsCategorizedSymbolRenderer,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsDataSourceUri,
-    QgsRasterLayer,
     QgsFeature,
     QgsField,
+    QgsFields,
     QgsFillSymbol,
     QgsGeometry,
     QgsPalLayerSettings,
     QgsProject,
     QgsProperty,
+    QgsRasterLayer,
+    QgsRectangle,
     QgsRendererCategory,
     QgsTextBackgroundSettings,
     QgsTextBufferSettings,
@@ -35,7 +36,6 @@ from ..core.attributaire import (
     libelle_usage,
 )
 from ..core.recapitulatif import valeur_etape
-from ..core.referentiel import USAGES
 
 NOM_COUCHE_MUTABILITE = "Mutafriches — Mutabilité"
 NOM_COUCHE_QUALIFICATION = "Mutafriches — Qualification"
@@ -168,7 +168,7 @@ def _entite_qualification(site: SiteAttributaire, champs: list[QgsField]) -> Qgs
     saisies = {cle: p.get(cle) for cle, _ in CRITERES_QUALIFICATION_SAISIS}
     valeurs: list[object] = [site.site_id or site.cle, site.nom, len(site.parcelles), "|".join(site.parcelles)]
     for cle, _ in CRITERES_QUALIFICATION_AUTO:
-        valeur = valeur_etape(cle, p, {})  # type: ignore[arg-type]
+        valeur = valeur_etape(cle, p, {})
         valeurs.append(", ".join(valeur) if isinstance(valeur, list) else (valeur or ""))
     valeurs += ["oui" if site.saisie_declarative else "non", str(p.get("date_saisie") or "")[:10]]
     valeurs += [libelle_saisie(cle, saisies.get(cle)) for cle, _ in CRITERES_QUALIFICATION_SAISIS]
@@ -178,9 +178,7 @@ def _entite_qualification(site: SiteAttributaire, champs: list[QgsField]) -> Qgs
     return entite
 
 
-def _fields(champs: list[QgsField]):  # type: ignore[no-untyped-def]
-    from qgis.core import QgsFields
-
+def _fields(champs: list[QgsField]) -> QgsFields:
     fields = QgsFields()
     for champ in champs:
         fields.append(champ)
@@ -310,13 +308,13 @@ def creer_couches(sites: list[SiteAttributaire], suffixe: str) -> tuple[QgsVecto
     return mutabilite, qualification
 
 
-def emprise_carte(couche: QgsVectorLayer, destination: QgsCoordinateReferenceSystem):  # type: ignore[no-untyped-def]
+def emprise_carte(couche: QgsVectorLayer, destination: QgsCoordinateReferenceSystem) -> QgsRectangle:
     transformation = QgsCoordinateTransform(couche.crs(), destination, QgsProject.instance())
     emprise = transformation.transformBoundingBox(couche.extent())
     emprise.grow(max(emprise.width(), emprise.height()) * 0.08)
     return emprise
 
 
-def couche_existante(nom: str) -> Optional[QgsVectorLayer]:
+def couche_existante(nom: str) -> QgsVectorLayer | None:
     couche = next(iter(QgsProject.instance().mapLayersByName(nom)), None)
     return couche if isinstance(couche, QgsVectorLayer) else None

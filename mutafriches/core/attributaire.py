@@ -4,11 +4,12 @@ import json
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from .referentiel import CHAMPS_PAR_CLE, USAGES, badge_potentiel
 
-Json = dict[str, object]
+# Réponse JSON de l'API : structure libre, vérifiée à l'usage
+Json = dict[str, Any]
 
 DOSSIER_MONTEREAU = Path(__file__).resolve().parent.parent / "demo" / "montereau"
 FICHIER_ATTRIBUTAIRE = DOSSIER_MONTEREAU / "attributaire-77305.geojson"
@@ -78,13 +79,13 @@ class SiteAttributaire:
     commune: str
     code_insee: str
     indices: dict[str, float]
-    usage_prioritaire: Optional[str]
+    usage_prioritaire: str | None
     usages_exclus: list[str]
     fiabilite: float
     fiabilite_niveau: str
     saisie_declarative: bool
     proprietes: Json
-    geometrie: Optional[Json]
+    geometrie: Json | None
     # Renseigné quand le site vient du fichier CNIG envoyé par l'utilisateur
     site_id: str = ""
 
@@ -133,7 +134,7 @@ def profil_ecart(ecart: float) -> tuple[str, str]:
     return PROFILS_ECART[-1][1], PROFILS_ECART[-1][2]
 
 
-def libelle_usage(usage: Optional[str]) -> str:
+def libelle_usage(usage: str | None) -> str:
     return USAGES.get(usage or "", usage or "")
 
 
@@ -184,7 +185,7 @@ def site_depuis_api(
     complementaires: dict[str, str],
 ) -> SiteAttributaire:
     """Ligne attributaire d'un site analysé par l'API (miroir de resumerPourAttributaire)."""
-    resultats = [r for r in mutabilite.get("resultats", []) if isinstance(r, dict)]  # type: ignore[union-attr]
+    resultats = [r for r in mutabilite.get("resultats", []) if isinstance(r, dict)]
     resultats.sort(key=lambda r: int(r.get("rang", 99)))
     indices = {str(r["usage"]): float(r["indiceMutabilite"]) for r in resultats if r.get("usage") in USAGES}
     exclus = [str(r["usage"]) for r in resultats if r.get("exclu")]
@@ -202,11 +203,11 @@ def site_depuis_api(
         indices=indices,
         usage_prioritaire=str(retenus[0]["usage"]) if retenus else None,
         usages_exclus=exclus,
-        fiabilite=float(fiabilite.get("note", 0.0)),  # type: ignore[union-attr, arg-type]
-        fiabilite_niveau=str(fiabilite.get("text", "")),  # type: ignore[union-attr]
+        fiabilite=float(fiabilite.get("note", 0.0)),
+        fiabilite_niveau=str(fiabilite.get("text", "")),
         saisie_declarative=bool(saisis),
         proprietes=proprietes,
-        geometrie=enrichissement.get("geometrieSite") or enrichissement.get("geometrie"),  # type: ignore[arg-type]
+        geometrie=enrichissement.get("geometrieSite") or enrichissement.get("geometrie"),
         site_id=site_id,
     )
 

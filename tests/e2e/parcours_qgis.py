@@ -8,8 +8,8 @@ Les clics sur la carte et sur les boutons passent par de vrais événements Qt.
 import json
 import os
 import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import qgis.utils
 from qgis.core import (
@@ -112,7 +112,7 @@ def page(etape_: int):  # type: ignore[no-untyped-def]
     return dock().pages[etape_]
 
 
-def remplir(etape_: int, valeurs: Optional[dict[str, str]] = None) -> None:
+def remplir(etape_: int, valeurs: dict[str, str] | None = None) -> None:
     """Renseigne les champs de l'étape ; les champs non précisés reçoivent « Ne sait pas »."""
     valeurs = valeurs or {}
     # Champs masqués compris : un champ peut réapparaître en cours de remplissage (« Pas de bâti »)
@@ -132,7 +132,7 @@ def modal(action: Callable[[QWidget], None], delai_ms: int = 700) -> None:
         fenetre = QApplication.activeModalWidget()
         try:
             action(fenetre)
-        except Exception:  # noqa: BLE001
+        except Exception:
             rapport["erreurs"].append({"etape": "modal", "trace": traceback.format_exc()})  # type: ignore[union-attr]
             if fenetre is not None:
                 fenetre.close()
@@ -140,7 +140,7 @@ def modal(action: Callable[[QWidget], None], delai_ms: int = 700) -> None:
     QTimer.singleShot(delai_ms, agir)
 
 
-def traverser_etapes(etape_1: Optional[dict[str, str]] = None) -> None:
+def traverser_etapes(etape_1: dict[str, str] | None = None) -> None:
     remplir(1, etape_1)
     cliquer("Suivant")
     remplir(2)
@@ -344,7 +344,7 @@ else:
         exemple = QgsVectorLayer(str(FICHIER_PARCELLES), "source", "ogr")
         # Deux parcelles libres et contiguës, recopiées en WGS84 avec un champ « id » (format Etalab)
         reserves = {i for s in charger_scenarios() for i in s.parcelles}
-        paire: Optional[tuple[QgsFeature, QgsFeature]] = None
+        paire: tuple[QgsFeature, QgsFeature] | None = None
         for a in exemple.getFeatures():
             if a["idu"] in reserves or not 500 < a.geometry().area() < 3000:
                 continue
@@ -432,7 +432,7 @@ def suivante(index: int = 0) -> None:
     def executer() -> None:
         try:
             fonction()
-        except Exception:  # noqa: BLE001 (tout échec doit apparaître dans le rapport)
+        except Exception:
             rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
             capture(f"erreur-{fonction.__name__}")
             terminer()

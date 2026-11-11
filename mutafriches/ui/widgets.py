@@ -1,6 +1,6 @@
 """Composants réutilisables du panneau."""
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from qgis.PyQt.QtCore import QPoint, QRect, QSize, Qt
 from qgis.PyQt.QtGui import QCursor
@@ -10,10 +10,10 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QLayout,
     QLayoutItem,
-    QToolButton,
-    QToolTip,
     QPushButton,
     QSizePolicy,
+    QToolButton,
+    QToolTip,
     QVBoxLayout,
     QWidget,
 )
@@ -32,7 +32,7 @@ def texte(contenu: str, nom: str = "", selectionnable: bool = False) -> QLabel:
     return label
 
 
-def bouton(libelle: str, variante: str = "primaire", action: Optional[Callable[[], None]] = None) -> QPushButton:
+def bouton(libelle: str, variante: str = "primaire", action: Callable[[], None] | None = None) -> QPushButton:
     noms = {"primaire": "mfPrimaire", "secondaire": "mfSecondaire", "lien": "mfLien"}
     b = QPushButton(libelle)
     b.setObjectName(noms[variante])
@@ -126,7 +126,7 @@ class Stepper(QWidget):
 class FlowLayout(QLayout):
     """Disposition en flux : les éléments passent à la ligne (badges, étiquettes)."""
 
-    def __init__(self, parent: Optional[QWidget] = None, espacement: int = 6) -> None:
+    def __init__(self, parent: QWidget | None = None, espacement: int = 6) -> None:
         super().__init__(parent)
         self._elements: list[QLayoutItem] = []
         self._espacement = espacement
@@ -138,10 +138,10 @@ class FlowLayout(QLayout):
     def count(self) -> int:
         return len(self._elements)
 
-    def itemAt(self, index: int) -> Optional[QLayoutItem]:
+    def itemAt(self, index: int) -> QLayoutItem | None:
         return self._elements[index] if 0 <= index < len(self._elements) else None
 
-    def takeAt(self, index: int) -> Optional[QLayoutItem]:
+    def takeAt(self, index: int) -> QLayoutItem | None:
         return self._elements.pop(index) if 0 <= index < len(self._elements) else None
 
     def expandingDirections(self) -> Qt.Orientation:

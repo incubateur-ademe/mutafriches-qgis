@@ -6,8 +6,9 @@ appels, site par site, sous la limite de 100 requêtes par minute (ADR-0003).
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Any
 
 from qgis.core import QgsNetworkAccessManager, QgsSettings
 from qgis.PyQt.QtCore import QObject, QTimer, QUrl
@@ -15,7 +16,8 @@ from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 
 from .cnig import SiteCnig, complementaires_depuis_cnig
 
-Json = dict[str, object]
+# Réponse JSON de l'API : structure libre, vérifiée à l'usage
+Json = dict[str, Any]
 
 PRODUCTION = "production"
 STAGING = "staging"
@@ -88,8 +90,8 @@ def origine_api() -> str:
 class ResultatSite:
     site: SiteCnig
     complementaires: dict[str, str]
-    enrichissement: Optional[Json] = None
-    mutabilite: Optional[Json] = None
+    enrichissement: Json | None = None
+    mutabilite: Json | None = None
     erreur: str = ""
 
     @property
@@ -134,9 +136,9 @@ class AnalyseInventaire(QObject):
         self,
         sites: list[SiteCnig],
         progression: Callable[[int, int], None],
-        termine: Callable[[list[ResultatSite], Optional[ErreurApi]], None],
+        termine: Callable[[list[ResultatSite], ErreurApi | None], None],
         version_extension: str = "",
-        intervalle_ms: Optional[int] = None,
+        intervalle_ms: int | None = None,
         environnement: str = "",
     ) -> None:
         super().__init__()
@@ -148,7 +150,7 @@ class AnalyseInventaire(QObject):
         self.agent = f"mutafriches-qgis/{version_extension or 'dev'}"
         self.intervalle_ms = intervalle_api() if intervalle_ms is None else intervalle_ms
         self.resultats: list[ResultatSite] = []
-        self._reponse: Optional[QNetworkReply] = None
+        self._reponse: QNetworkReply | None = None
         self._annulee = False
         self._essais = 0
 
@@ -191,7 +193,7 @@ class AnalyseInventaire(QObject):
             lambda erreur: self._echec(resultat, erreur, lambda: self._calculer(resultat, enrichissement)),
         )
 
-    def _site_termine(self, resultat: ResultatSite, mutabilite: Optional[Json]) -> None:
+    def _site_termine(self, resultat: ResultatSite, mutabilite: Json | None) -> None:
         resultat.mutabilite = mutabilite
         self.resultats.append(resultat)
         self.progression(len(self.resultats), len(self.sites))

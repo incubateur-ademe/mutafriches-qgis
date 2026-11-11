@@ -107,7 +107,7 @@ class Gestionnaire(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(contenu)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         donnees = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0)) or 0) or b"{}")
         if self.headers.get("Origin") != ORIGINE_AUTORISEE:
             self._repondre(403, {"statusCode": 403, "message": "Origin required"})
