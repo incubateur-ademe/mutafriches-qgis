@@ -6,12 +6,14 @@ Extension QGIS de Mutafriches : qualifier un site composé d'une ou plusieurs pa
 cadastrales, puis consulter son potentiel de mutabilité pour sept usages et l'indice de
 fiabilité associé, directement dans QGIS.
 
-**Phase actuelle : prototype V0 pour captures d'écran (ADR-0002).** L'utilisateur se présente,
-envoie un inventaire au **standard CNIG Friches**, et reçoit deux couches attributaires
-(mutabilité, qualification), une carte symbolisée par usage et un tableau de bord territorial dans le
-panneau (anneaux et barres QPainter, pas de QtCharts dans QGIS). Lecture et contrôle du fichier sont réels ; les résultats sont
-la **table attributaire publique de Montereau-Fault-Yonne figée** dans le plugin. Aucun appel à
-l'API. Le parcours site à site (ADR-0001) reste dans le code, hors panneau.
+**Phase actuelle : mode réel sur l'API existante (ADR-0003), avec repli démonstration.**
+L'utilisateur se présente, envoie un inventaire au **standard CNIG Friches**, et reçoit deux
+couches attributaires (mutabilité, qualification), une carte symbolisée par usage et un tableau
+de bord territorial dans le panneau. En mode réel, chaque site est enrichi puis évalué par l'API
+(`POST /enrichissement`, `POST /evaluation/calculer`), site par site, avec l'origine
+conventionnelle de l'extension, en production ou en staging. En démonstration, les résultats
+sont la table attributaire de Montereau figée. Suite prévue : `docs/plan-implementation-reelle.md`. Le parcours site à
+site (ADR-0001) reste dans le code, hors panneau.
 
 Projet Beta.gouv / incubateur ADEME. Application web et API :
 `../mutafriches` (dépôt voisin, NestJS + React). Ses contrats (`packages/shared-types`) sont la
@@ -36,7 +38,8 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── referentiel.py       # Champs, valeurs, libellés, badges (miroir de shared-types et apps/ui)
 │   ├── recapitulatif.py     # Récapitulatif, détail d'usage, valeurs des étapes (miroir des builders web)
 │   ├── cnig.py              # Lecture et contrôle d'un fichier CNIG Friches (51 colonnes)
-│   ├── attributaire.py      # Table attributaire figée, appariement, synthèse territoriale
+│   ├── client_api.py        # Appels réels : enrichissement puis calcul, site par site, réglages
+│   ├── attributaire.py      # Ligne attributaire (API ou table figée), appariement, synthèse
 │   ├── modele.py            # Site analysé (parcours site à site, hors panneau)
 │   ├── service.py           # Interface du service (enrichir / évaluer), erreurs
 │   └── service_simule.py    # Implémentation simulée (réponses figées, délai, erreur)
@@ -46,7 +49,7 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
 │   ├── accueil.py           # Fenêtre d'accueil (structure, mail, consentement), QgsSettings
-│   ├── parcours.py          # État : fichier CNIG, analyse simulée, résultats figés
+│   ├── parcours.py          # État : fichier CNIG, analyse réelle ou démonstration, résultats
 │   ├── prototype.py         # Pages Accueil, Import et Résultats (tableau de bord territorial)
 │   ├── graphiques.py        # Anneaux, légendes et petits tableaux dessinés avec QPainter
 │   ├── contenus.py          # Wording
@@ -114,7 +117,7 @@ Une ligne, le **pourquoi** et jamais le quoi. Pas de docstrings longues sauf sé
 - Composants accessibles : libellés associés aux champs (`setBuddy`), `setAccessibleName`
   sur les boutons sans texte explicite, navigation clavier fonctionnelle.
 - Le panneau doit rester utilisable étroit (≈ 320 px) : défilement vertical, pas d'horizontal.
-- Bandeau permanent « Mode démonstration — données fictives » tant que le service est simulé.
+- Bandeau permanent « Mode démonstration » tant que les résultats ne viennent pas de l'API.
 
 ### 7. Séparation réel / simulé
 
@@ -220,6 +223,24 @@ jamais en `--force`.
   degrés carrés et une tolérance de contiguïté de plusieurs kilomètres.
 - Dans un test, ajouter une couche à un projet vide lui impose son SCR : fixer le SCR voulu
   après une première couche.
+
+### API réelle
+
+- L'API exige `Origin` en liste blanche même pour un client serveur : 403 « Origin required »
+  sinon. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
+- 100 requêtes par minute et par IP, deux requêtes par site : ne pas paralléliser.
+- Trois environnements (`core/client_api.py`) : production, staging, démonstration. Le staging
+  n'est visible qu'en mode développeur ; tout changement d'environnement doit vider les
+  résultats et retirer les couches (`canvas.refreshAllLayers()` ensuite, sinon la carte garde
+  le dernier rendu).
+- QGIS interrompt lui-même une requête de plus de 60 s (« Operation canceled ») : c'est un
+  échec du site, retenté une fois, jamais une erreur bloquante pour l'inventaire.
+- `scripts/captures-tutoriel.sh` écrit les captures du tutoriel web dans le dépôt voisin
+  Mutafriches, contre le staging réel ; ne pas les retoucher à la main.
+- `tests/serveur_factice.py` sert aux tests unitaires et à l'E2E ; ne jamais présenter un
+  passage contre lui comme un test contre la production.
+- `QgsSettings` écrit dans le profil courant : un test qui change `mutafriches/api/*` doit le
+  remettre en état.
 
 ### Couches mémoire et fermeture de QGIS
 
