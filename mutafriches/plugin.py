@@ -52,6 +52,8 @@ class MutafrichesPlugin:
     def _basculer(self, visible: bool) -> None:
         dock = self._assurer_panneau()
         dock.setUserVisible(visible)
+        if visible and self.parcours is not None:
+            self.parcours.preparer_carte()
 
     def _visibilite(self, visible: bool) -> None:
         if self.action is not None and self.dock is not None:

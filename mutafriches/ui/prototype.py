@@ -1,9 +1,10 @@
 """Pages du prototype : envoi des sites au format CNIG, puis résultats territoriaux."""
 
 from functools import partial
+from pathlib import Path
 
 from qgis.gui import QgsFileWidget
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import QStandardPaths, Qt
 from qgis.PyQt.QtGui import QResizeEvent
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -120,8 +121,13 @@ class PageImport(Page):
         self.pied_layout.addWidget(self.environnements)
 
     def _telecharger_modele(self) -> None:
+        # Dossier de départ explicite : sans lui la fenêtre s'ouvre à la racine du disque, en lecture seule
+        dossier = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation) or str(Path.home())
         chemin, _ = QFileDialog.getSaveFileName(
-            self.contenu, "Enregistrer le fichier exemple CNIG", "modele-friches-cnig.csv", "CSV (*.csv)"
+            self.contenu,
+            "Enregistrer le fichier exemple CNIG",
+            str(Path(dossier) / "modele-friches-cnig.csv"),
+            "CSV (*.csv)",
         )
         if chemin:
             self.parcours.enregistrer_modele(chemin)

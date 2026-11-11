@@ -262,6 +262,17 @@ jamais en `--force`.
 - `QgsSettings` écrit dans le profil courant : un test qui change `mutafriches/api/*` doit le
   remettre en état.
 
+### Fond de carte et cadrage
+
+- À l'ouverture du panneau sur un projet vide, le plugin ajoute le fond OSM et cadre la France.
+  La carte ne prend la projection du projet qu'au tour d'événements suivant : tout cadrage qui
+  suit un changement de SCR doit être différé (`QTimer.singleShot`), sinon il vise le monde.
+- `QFileDialog.getSaveFileName` avec un simple nom de fichier s'ouvre à la racine du disque,
+  en lecture seule sur macOS : toujours donner un dossier (`QStandardPaths`), et rattraper
+  `OSError` à l'écriture.
+- Les scripts de captures ne doivent rien préparer que le plugin ne fasse lui-même : une
+  capture qui montre un état inatteignable ment au lecteur du tutoriel.
+
 ### Couches mémoire et fermeture de QGIS
 
 - Les couches mémoire déclenchent une question à la fermeture : un script E2E doit

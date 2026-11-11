@@ -111,8 +111,6 @@ def dock_titre(fragment: str) -> QDockWidget | None:
 @etape(1500)
 def preparer() -> None:
     """Disposition des captures : carte au centre, couches à gauche, panneau à droite, tables en bas."""
-    from mutafriches.carto.couches import ajouter_fond_osm
-
     iface.mainWindow().resize(1600, 1000)
     QgsSettings().remove("mutafriches/utilisateur")
     QgsSettings().setValue("qgis/dockAttributeTable", True)
@@ -121,12 +119,20 @@ def preparer() -> None:
         if explorateur is not None:
             explorateur.hide()
     iface.messageBar().clearWidgets()
-    ajouter_fond_osm()
+    contexte["couches_avant"] = len(QgsProject.instance().mapLayers())
+    plugin().action.trigger()
 
 
 @etape(1500)
 def ouvrir_panneau() -> None:
-    # Cadrage après que le canevas a pris le SCR du projet (3857)
+    noms = [c.name() for c in QgsProject.instance().mapLayers().values()]
+    controler(
+        "fond de carte ajouté à l'ouverture sur un projet vide",
+        contexte["couches_avant"] == 0 and noms == ["Fond de carte OpenStreetMap"],
+        noms,
+    )
+    largeur = iface.mapCanvas().extent().width()
+    controler("carte cadrée sur la France", 1_000_000 < largeur < 4_000_000, largeur)
     vers_carte = QgsCoordinateTransform(
         QgsCoordinateReferenceSystem("EPSG:4326"),
         iface.mapCanvas().mapSettings().destinationCrs(),
@@ -134,7 +140,6 @@ def ouvrir_panneau() -> None:
     )
     iface.mapCanvas().setExtent(vers_carte.transformBoundingBox(QgsRectangle(2.93, 48.375, 2.98, 48.40)))
     iface.mapCanvas().refresh()
-    plugin().action.trigger()
 
 
 @etape(1500)
@@ -184,7 +189,10 @@ def fichier_avec_erreurs() -> None:
 def modele() -> None:
     capture("04-fichier-lignes-en-erreur")
     chemin = parcours().enregistrer_modele(str(SORTIE / "modele-friches-cnig.csv"))
-    controler("modèle CNIG copié", chemin.exists() and "99999" in chemin.read_text(encoding="utf-8"))
+    controler("modèle CNIG copié", chemin is not None and "99999" in chemin.read_text(encoding="utf-8"))
+    refuse = parcours().enregistrer_modele(str(SORTIE / "dossier-absent" / "modele.csv"))
+    controler("dossier inaccessible : message, pas d'exception", refuse is None)
+    iface.messageBar().clearWidgets()
 
 
 @etape()

@@ -12,7 +12,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import qgis.utils
-from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsSettings
+from qgis.core import QgsProject, QgsSettings
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtTest import QTest
@@ -116,8 +116,6 @@ def etape(delai_ms: int = 600) -> Callable[[Callable[[], None]], Callable[[], No
 
 @etape(1500)
 def preparer() -> None:
-    from mutafriches.carto.couches import ajouter_fond_osm
-
     # Taille fixe, même si QGIS s'ouvre maximisé ou en plein écran : sinon le texte des captures rétrécit
     fenetre = iface.mainWindow()
     fenetre.showNormal()
@@ -129,7 +127,6 @@ def preparer() -> None:
         if explorateur is not None:
             explorateur.hide()
     iface.messageBar().clearWidgets()
-    ajouter_fond_osm()
 
 
 @etape(1500)
@@ -158,13 +155,7 @@ def installation() -> None:
 
 @etape(1500)
 def ouvrir() -> None:
-    vers_carte = QgsCoordinateTransform(
-        QgsCoordinateReferenceSystem("EPSG:4326"),
-        iface.mapCanvas().mapSettings().destinationCrs(),
-        QgsProject.instance(),
-    )
-    iface.mapCanvas().setExtent(vers_carte.transformBoundingBox(QgsRectangle(2.93, 48.375, 2.98, 48.40)))
-    iface.mapCanvas().refresh()
+    # Aucun cadrage forcé : les captures montrent ce que voit l'utilisateur à l'ouverture
     plugin().action.trigger()
 
 
