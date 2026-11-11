@@ -7,8 +7,8 @@ Les clics passent par de vrais événements Qt ; le navigateur n'est pas ouvert 
 import json
 import os
 import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import qgis.utils
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsSettings
@@ -52,7 +52,11 @@ def dock() -> QWidget:
 def boutons(libelle: str, racine: QWidget | None = None) -> list[QPushButton]:
     # Les widgets ajoutés par un rafraîchissement ne sont visibles qu'après traitement des événements
     QApplication.processEvents()
-    return [b for b in (racine or dock()).findChildren(QPushButton) if b.isVisible() and b.text().strip().startswith(libelle)]
+    return [
+        b
+        for b in (racine or dock()).findChildren(QPushButton)
+        if b.isVisible() and b.text().strip().startswith(libelle)
+    ]
 
 
 def cliquer_accessible(nom: str) -> None:
@@ -80,11 +84,20 @@ def etape(delai_ms: int = 300) -> Callable[[Callable[[], None]], Callable[[], No
 
 def dock_titre(fragment: str) -> QDockWidget | None:
     QApplication.processEvents()
-    ancre = next((d for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible() and fragment in d.windowTitle()), None)
+    ancre = next(
+        (d for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible() and fragment in d.windowTitle()), None
+    )
     if ancre is not None:
         return ancre
     # Table ouverte en fenêtre malgré le réglage : on l'ancre en bas pour la capture
-    fenetre = next((w for w in QApplication.topLevelWidgets() if w.isVisible() and w is not iface.mainWindow() and fragment in w.windowTitle()), None)
+    fenetre = next(
+        (
+            w
+            for w in QApplication.topLevelWidgets()
+            if w.isVisible() and w is not iface.mainWindow() and fragment in w.windowTitle()
+        ),
+        None,
+    )
     if fenetre is None:
         return None
     ancre = QDockWidget(fenetre.windowTitle(), iface.mainWindow())
@@ -114,7 +127,11 @@ def preparer() -> None:
 @etape(1500)
 def ouvrir_panneau() -> None:
     # Cadrage après que le canevas a pris le SCR du projet (3857)
-    vers_carte = QgsCoordinateTransform(QgsCoordinateReferenceSystem("EPSG:4326"), iface.mapCanvas().mapSettings().destinationCrs(), QgsProject.instance())
+    vers_carte = QgsCoordinateTransform(
+        QgsCoordinateReferenceSystem("EPSG:4326"),
+        iface.mapCanvas().mapSettings().destinationCrs(),
+        QgsProject.instance(),
+    )
     iface.mapCanvas().setExtent(vers_carte.transformBoundingBox(QgsRectangle(2.93, 48.375, 2.98, 48.40)))
     iface.mapCanvas().refresh()
     plugin().action.trigger()
@@ -143,7 +160,10 @@ def accueil() -> None:
 
 @etape(800)
 def panneau_vide() -> None:
-    controler("utilisateur enregistré", parcours().etape == 1 and parcours().utilisateur.structure == "CC du Pays de Montereau")
+    controler(
+        "utilisateur enregistré",
+        parcours().etape == 1 and parcours().utilisateur.structure == "CC du Pays de Montereau",
+    )
     controler("bouton Envoyer inactif", not any(b.isEnabled() for b in boutons("Envoyer")))
     capture("03-import-vide")
 
@@ -154,7 +174,10 @@ def fichier_avec_erreurs() -> None:
 
     parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
     lecture = parcours().lecture
-    controler("lignes en erreur écartées, fichier envoyable", lecture is not None and lecture.valide and len(lecture.sites_ko) == 6)
+    controler(
+        "lignes en erreur écartées, fichier envoyable",
+        lecture is not None and lecture.valide and len(lecture.sites_ko) == 6,
+    )
 
 
 @etape(800)
@@ -177,7 +200,10 @@ def exemple() -> None:
 @etape(800)
 def origine_refusee() -> None:
     capture("05-fichier-valide")
-    controler("mode réel par défaut sur l'API locale, signalée au bandeau", parcours().reel and "API personnalisée" in dock().bandeau.text())
+    controler(
+        "mode réel par défaut sur l'API locale, signalée au bandeau",
+        parcours().reel and "API personnalisée" in dock().bandeau.text(),
+    )
     QgsSettings().setValue("mutafriches/api/origine", "https://autre.exemple.fr")
     cliquer("Envoyer mes 28 sites")
 
@@ -185,7 +211,11 @@ def origine_refusee() -> None:
 @etape(2500)
 def acces_refuse() -> None:
     erreur = parcours().erreur_api
-    controler("accès refusé signalé, retour à l'import", erreur is not None and "Accès refusé" in erreur.message and parcours().etape == 1, erreur)
+    controler(
+        "accès refusé signalé, retour à l'import",
+        erreur is not None and "Accès refusé" in erreur.message and parcours().etape == 1,
+        erreur,
+    )
     capture("05b-acces-refuse")
     QgsSettings().remove("mutafriches/api/origine")
     cliquer("Envoyer mes 28 sites")
@@ -194,7 +224,11 @@ def acces_refuse() -> None:
 @etape(900)
 def attente() -> None:
     traites, total = parcours().avancement
-    controler("analyse réelle en cours avec avancement", parcours().analyse_en_cours and total == 28 and 0 < traites < 28, (traites, total))
+    controler(
+        "analyse réelle en cours avec avancement",
+        parcours().analyse_en_cours and total == 28 and 0 < traites < 28,
+        (traites, total),
+    )
     capture("06-analyse-en-cours")
 
 
@@ -203,7 +237,9 @@ def resultats() -> None:
     p = parcours()
     controler("résultats affichés", p.etape == 2 and p.synthese is not None and p.synthese.nombre_sites == 28)
     noms = [c.name() for c in QgsProject.instance().mapLayers().values()]
-    controler("deux couches créées", any("Mutabilité" in n for n in noms) and any("Qualification" in n for n in noms), noms)
+    controler(
+        "deux couches créées", any("Mutabilité" in n for n in noms) and any("Qualification" in n for n in noms), noms
+    )
     controler("étiquettes activées", p.couche_mutabilite.labelsEnabled())
 
 
@@ -227,7 +263,11 @@ def site_sur_la_carte() -> None:
     avant = iface.mapCanvas().scale()
     cliquer_accessible(f"Voir sur la carte : {premier.nom}")
     couche = parcours().couche_mutabilite
-    controler("site sélectionné sur la carte", couche.selectedFeatureCount() == 1 and iface.mapCanvas().scale() < avant, (couche.selectedFeatureCount(), avant, iface.mapCanvas().scale()))
+    controler(
+        "site sélectionné sur la carte",
+        couche.selectedFeatureCount() == 1 and iface.mapCanvas().scale() < avant,
+        (couche.selectedFeatureCount(), avant, iface.mapCanvas().scale()),
+    )
 
 
 @etape(2500)
@@ -241,7 +281,11 @@ def capture_site() -> None:
 @etape(1500)
 def capture_table() -> None:
     table = dock_titre("Mutabilité")
-    controler("table attributaire mutabilité ancrée en bas", table is not None, [d.windowTitle() for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible()])
+    controler(
+        "table attributaire mutabilité ancrée en bas",
+        table is not None,
+        [d.windowTitle() for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible()],
+    )
     if table is not None:
         iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
         capture("08-table-mutabilite")
@@ -279,8 +323,14 @@ def envoyer_fichier_erreurs() -> None:
 @etape(4000)
 def resultats_avec_alertes() -> None:
     p = parcours()
-    controler("4 sites analysés, 6 lignes écartées", p.etape == 2 and p.synthese.nombre_sites == 4 and len(p.lignes_ecartees) == 6)
-    controler("sites à reprendre signalés dans le panneau", any("à reprendre" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()))
+    controler(
+        "4 sites analysés, 6 lignes écartées",
+        p.etape == 2 and p.synthese.nombre_sites == 4 and len(p.lignes_ecartees) == 6,
+    )
+    controler(
+        "sites à reprendre signalés dans le panneau",
+        any("à reprendre" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()),
+    )
 
 
 @etape(2500)
@@ -305,7 +355,11 @@ def mode_demonstration() -> None:
 @etape(3500)
 def resultats_demonstration() -> None:
     p = parcours()
-    controler("démonstration : 28 sites de la table figée", p.etape == 2 and p.synthese.nombre_sites == 28 and "table figée" in p.synthese.provenance, p.synthese.provenance if p.synthese else "")
+    controler(
+        "démonstration : 28 sites de la table figée",
+        p.etape == 2 and p.synthese.nombre_sites == 28 and "table figée" in p.synthese.provenance,
+        p.synthese.provenance if p.synthese else "",
+    )
     capture("11-mode-demonstration")
 
 
@@ -322,8 +376,19 @@ def staging() -> None:
     QgsSettings().remove("mutafriches/api/url")
     liste = dock().pages[1].environnements
     liste.setCurrentIndex(liste.findData("staging"))
-    controler("bascule staging : retour à l'import, couches de résultats retirées", p.environnement == "staging" and p.etape == 1 and p.synthese is None and len(QgsProject.instance().mapLayers()) == couches - 2, (p.environnement, p.etape, len(QgsProject.instance().mapLayers()), couches))
-    controler("adresse et bandeau de staging", url_api("staging") == URLS["staging"] and "staging" in dock().bandeau.text() and dock().bandeau.isVisible(), dock().bandeau.text())
+    controler(
+        "bascule staging : retour à l'import, couches de résultats retirées",
+        p.environnement == "staging"
+        and p.etape == 1
+        and p.synthese is None
+        and len(QgsProject.instance().mapLayers()) == couches - 2,
+        (p.environnement, p.etape, len(QgsProject.instance().mapLayers()), couches),
+    )
+    controler(
+        "adresse et bandeau de staging",
+        url_api("staging") == URLS["staging"] and "staging" in dock().bandeau.text() and dock().bandeau.isVisible(),
+        dock().bandeau.text(),
+    )
     controler("sélecteur visible en mode développeur", liste.isVisible())
     contexte["url"] = personnalisee
 
@@ -333,7 +398,10 @@ def capture_staging() -> None:
     capture("12-environnement-staging")
     liste = dock().pages[1].environnements
     liste.setCurrentIndex(liste.findData("production"))
-    controler("retour en production : bandeau masqué", parcours().environnement == "production" and not dock().bandeau.isVisible())
+    controler(
+        "retour en production : bandeau masqué",
+        parcours().environnement == "production" and not dock().bandeau.isVisible(),
+    )
     QgsSettings().setValue("mutafriches/api/url", contexte["url"])
     QgsSettings().remove("mutafriches/dev")
     QgsSettings().remove("mutafriches/api/environnement")
@@ -357,7 +425,7 @@ def suivante(index: int = 0) -> None:
     def executer() -> None:
         try:
             fonction()
-        except Exception:  # noqa: BLE001 (tout échec doit apparaître dans le rapport)
+        except Exception:
             rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
             capture(f"erreur-{fonction.__name__}")
             terminer()

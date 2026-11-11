@@ -23,22 +23,77 @@ API = "https://mutafriches.beta.gouv.fr/api/attributaire/sites?codeInsee=77305&f
 
 # Colonnes du TableSchema cnigfr/schema-friches v1.0.6, dans l'ordre (miroir de shared-types)
 COLONNES_CNIG = [
-    "site_id", "site_nom", "site_type", "site_adresse", "site_identif_date", "site_actu_date",
-    "site_url", "site_ademe_url", "site_securite", "site_occupation", "site_statut",
-    "site_projet_url", "site_reconv_annee", "site_reconv_type", "activite_libelle",
-    "activite_code", "activite_fin_annee", "comm_nom", "comm_insee", "bati_type", "bati_nombre",
-    "bati_surface", "bati_pollution", "bati_vacance", "bati_patrimoine", "bati_etat",
-    "local_ancien_annee", "local_recent_annee", "proprio_type", "proprio_personne", "proprio_nom",
-    "sol_pollution_annee", "sol_pollution_existe", "sol_pollution_origine",
-    "sol_pollution_commentaire", "sol_depollution_fiche", "unite_fonciere_surface",
-    "unite_fonciere_refcad", "urba_zone_type", "urba_zone_lib", "urba_zone_formdomi", "urba_zaer",
-    "urba_doc_type", "desserte_distance", "desserte_commentaire", "source_nom", "source_url",
-    "source_producteur", "source_contact", "geompoint", "geomsurf",
+    "site_id",
+    "site_nom",
+    "site_type",
+    "site_adresse",
+    "site_identif_date",
+    "site_actu_date",
+    "site_url",
+    "site_ademe_url",
+    "site_securite",
+    "site_occupation",
+    "site_statut",
+    "site_projet_url",
+    "site_reconv_annee",
+    "site_reconv_type",
+    "activite_libelle",
+    "activite_code",
+    "activite_fin_annee",
+    "comm_nom",
+    "comm_insee",
+    "bati_type",
+    "bati_nombre",
+    "bati_surface",
+    "bati_pollution",
+    "bati_vacance",
+    "bati_patrimoine",
+    "bati_etat",
+    "local_ancien_annee",
+    "local_recent_annee",
+    "proprio_type",
+    "proprio_personne",
+    "proprio_nom",
+    "sol_pollution_annee",
+    "sol_pollution_existe",
+    "sol_pollution_origine",
+    "sol_pollution_commentaire",
+    "sol_depollution_fiche",
+    "unite_fonciere_surface",
+    "unite_fonciere_refcad",
+    "urba_zone_type",
+    "urba_zone_lib",
+    "urba_zone_formdomi",
+    "urba_zaer",
+    "urba_doc_type",
+    "desserte_distance",
+    "desserte_commentaire",
+    "source_nom",
+    "source_url",
+    "source_producteur",
+    "source_contact",
+    "geompoint",
+    "geomsurf",
 ]
 INCONNU = "inconnu"
-LISTES = {"site_type", "site_securite", "site_occupation", "site_statut", "bati_type", "bati_pollution",
-          "bati_vacance", "bati_patrimoine", "bati_etat", "proprio_type", "proprio_personne",
-          "sol_pollution_existe", "sol_pollution_origine", "urba_zone_type", "urba_zaer", "urba_doc_type"}
+LISTES = {
+    "site_type",
+    "site_securite",
+    "site_occupation",
+    "site_statut",
+    "bati_type",
+    "bati_pollution",
+    "bati_vacance",
+    "bati_patrimoine",
+    "bati_etat",
+    "proprio_type",
+    "proprio_personne",
+    "sol_pollution_existe",
+    "sol_pollution_origine",
+    "urba_zone_type",
+    "urba_zaer",
+    "urba_doc_type",
+}
 
 
 def wkt(geometrie: dict) -> str:
@@ -47,11 +102,17 @@ def wkt(geometrie: dict) -> str:
 
     if geometrie["type"] == "Polygon":
         return "POLYGON(" + ",".join(anneau(a) for a in geometrie["coordinates"]) + ")"
-    return "MULTIPOLYGON(" + ",".join("(" + ",".join(anneau(a) for a in p) + ")" for p in geometrie["coordinates"]) + ")"
+    return (
+        "MULTIPOLYGON(" + ",".join("(" + ",".join(anneau(a) for a in p) + ")" for p in geometrie["coordinates"]) + ")"
+    )
 
 
 def centroide(geometrie: dict) -> tuple[float, float]:
-    points = [p for poly in (geometrie["coordinates"] if geometrie["type"] == "MultiPolygon" else [geometrie["coordinates"]]) for p in poly[0]]
+    points = [
+        p
+        for poly in (geometrie["coordinates"] if geometrie["type"] == "MultiPolygon" else [geometrie["coordinates"]])
+        for p in poly[0]
+    ]
     return sum(p[0] for p in points) / len(points), sum(p[1] for p in points) / len(points)
 
 
@@ -93,13 +154,18 @@ if __name__ == "__main__":
         brut = reponse.read()
     collection = json.loads(brut)
     collection["figeLe"] = date.today().isoformat()
-    (DOSSIER / "attributaire-77305.geojson").write_text(json.dumps(collection, ensure_ascii=False) + "\n", encoding="utf-8")
-    entites = sorted(collection["features"], key=lambda e: (e["properties"]["nom"] is None, e["properties"]["nom"] or "", e["properties"]["cle_site"]))
+    (DOSSIER / "attributaire-77305.geojson").write_text(
+        json.dumps(collection, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    entites = sorted(
+        collection["features"],
+        key=lambda e: (e["properties"]["nom"] is None, e["properties"]["nom"] or "", e["properties"]["cle_site"]),
+    )
     lignes = [ligne_cnig(e, i + 1) for i, e in enumerate(entites)]
     ecrire_csv(DOSSIER / "friches-cnig-montereau.csv", COLONNES_CNIG, lignes)
     # Fichier mêlant lignes correctes et lignes en erreur : doublon, parcelle mal formée, nom
     # vide, code INSEE invalide, géométrie absente, parcelles vides
-    erreurs = [dict(l) for l in lignes[:10]]
+    erreurs = [dict(ligne) for ligne in lignes[:10]]
     erreurs[2]["site_id"] = erreurs[1]["site_id"]
     erreurs[3]["unite_fonciere_refcad"] = "AB 160|77305000AB0161"
     erreurs[5]["site_nom"] = ""

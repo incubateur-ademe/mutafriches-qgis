@@ -1,8 +1,21 @@
 """Pages du prototype : envoi des sites au format CNIG, puis résultats territoriaux."""
 
+from functools import partial
+
 from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
+from qgis.PyQt.QtGui import QResizeEvent
+from qgis.PyQt.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLineEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..carto.couches import COULEURS_USAGES
 from ..core.attributaire import ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
@@ -10,13 +23,12 @@ from ..core.client_api import DEMONSTRATION, LIBELLES_ENVIRONNEMENTS, PRODUCTION
 from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
+from .graphiques import anneau_avec_legende, tableau
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
-from .graphiques import anneau_avec_legende, tableau
 from .widgets import Encadre, badge, bouton, entete_champ, separateur, texte, vider
 
 MAX_LIGNES_AFFICHEES = 40
-
 
 
 class PageAccueil(Page):
@@ -93,7 +105,9 @@ class PageImport(Page):
         self.pied_layout.addLayout(ligne)
         self.bouton_envoyer = bouton("Envoyer mes sites", "primaire", parcours.envoyer)
         self.pied_layout.addWidget(self.bouton_envoyer)
-        self.bouton_mode = bouton("", "lien", lambda: parcours.changer_environnement(DEMONSTRATION if parcours.reel else PRODUCTION))
+        self.bouton_mode = bouton(
+            "", "lien", lambda: parcours.changer_environnement(DEMONSTRATION if parcours.reel else PRODUCTION)
+        )
         self.pied_layout.addWidget(self.bouton_mode, 0, Qt.AlignmentFlag.AlignCenter)
         # Réservé à l'équipe (mode développeur) : production, staging ou démonstration
         self.environnements = QComboBox()
@@ -123,7 +137,9 @@ class PageImport(Page):
             traites, total = parcours.avancement
             self.zone.addWidget(
                 Chargement(
-                    f"Analyse en cours : {traites} / {total} sites" if parcours.reel else f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
+                    f"Analyse en cours : {traites} / {total} sites"
+                    if parcours.reel
+                    else f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
                     contenus.SOUS_TITRE_ANALYSE_REELLE if parcours.reel else contenus.SOUS_TITRE_CHARGEMENT,
                     contenus.MESSAGE_ANALYSE_LOT,
                     parcours.avancement if parcours.reel else None,
@@ -134,9 +150,19 @@ class PageImport(Page):
             self.zone.addWidget(Encadre("erreur", "Analyse impossible", parcours.erreur_api.message))
             if parcours.reel:
                 self.zone.addWidget(texte(contenus.AIDE_ERREUR_API, "mfAide"))
-                self.zone.addWidget(bouton("Passer en mode démonstration", "secondaire", lambda: parcours.changer_environnement(DEMONSTRATION)))
+                self.zone.addWidget(
+                    bouton(
+                        "Passer en mode démonstration",
+                        "secondaire",
+                        lambda: parcours.changer_environnement(DEMONSTRATION),
+                    )
+                )
         elif lecture is not None and lecture.bloquants:
-            self.zone.addWidget(Encadre("erreur", f"Fichier refusé : {lecture.fichier}", "\n".join(p.message for p in lecture.bloquants)))
+            self.zone.addWidget(
+                Encadre(
+                    "erreur", f"Fichier refusé : {lecture.fichier}", "\n".join(p.message for p in lecture.bloquants)
+                )
+            )
             self.zone.addWidget(texte(contenus.AIDE_ERREUR_CNIG, "mfAide"))
         elif lecture is not None:
             ok, ko = lecture.sites_ok, lecture.sites_ko
@@ -149,7 +175,13 @@ class PageImport(Page):
                     )
                 )
             else:
-                self.zone.addWidget(Encadre("succes", f"{pluriel(len(ok), 'site')} lu{'s' if len(ok) > 1 else ''} dans {lecture.fichier}", "\n".join(p.message for p in lecture.problemes)))
+                self.zone.addWidget(
+                    Encadre(
+                        "succes",
+                        f"{pluriel(len(ok), 'site')} lu{'s' if len(ok) > 1 else ''} dans {lecture.fichier}",
+                        "\n".join(p.message for p in lecture.problemes),
+                    )
+                )
             # Contrôle ligne à ligne, lignes en erreur en tête
             for site in (ko + ok)[:MAX_LIGNES_AFFICHEES]:
                 self.zone.addWidget(LigneCnig(site))
@@ -161,7 +193,11 @@ class PageImport(Page):
         n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Envoyer mes {n} sites" if n > 1 else "Envoyer mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
-        self.bouton_mode.setText("Passer en mode démonstration (données figées)" if parcours.reel else "Passer en mode réel (API Mutafriches)")
+        self.bouton_mode.setText(
+            "Passer en mode démonstration (données figées)"
+            if parcours.reel
+            else "Passer en mode réel (API Mutafriches)"
+        )
         developpeur = mode_developpeur()
         self.bouton_mode.setVisible(not developpeur and not parcours.analyse_en_cours)
         self.environnements.blockSignals(True)
@@ -182,7 +218,9 @@ class LigneCnig(QFrame):
         entete = QHBoxLayout()
         entete.setSpacing(8)
         entete.addWidget(texte(site.site_nom or site.site_id or f"Ligne {site.ligne}", "mfValeur"), 1)
-        entete.addWidget(badge("OK" if site.ok else "KO", "automatique" if site.ok else "alerte"), 0, Qt.AlignmentFlag.AlignTop)
+        entete.addWidget(
+            badge("OK" if site.ok else "KO", "automatique" if site.ok else "alerte"), 0, Qt.AlignmentFlag.AlignTop
+        )
         layout.addLayout(entete)
         details = [f"ligne {site.ligne}", site.site_id or "sans identifiant", pluriel(len(site.parcelles), "parcelle")]
         layout.addWidget(texte(" · ".join(details), "mfAide"))
@@ -224,7 +262,7 @@ class Barre(QWidget):
         valeur.setMinimumWidth(64)
         layout.addWidget(valeur, 1, 1)
 
-    def resizeEvent(self, evenement) -> None:  # type: ignore[no-untyped-def]
+    def resizeEvent(self, evenement: QResizeEvent) -> None:
         super().resizeEvent(evenement)
         self._remplissage.setGeometry(0, 0, int(self._piste.width() * self._part), self._piste.height())
 
@@ -242,7 +280,9 @@ class PageResultats(Page):
         ligne.addWidget(bouton("Table mutabilité", "secondaire", parcours.ouvrir_table_mutabilite))
         ligne.addWidget(bouton("Table qualification", "secondaire", parcours.ouvrir_table_qualification))
         self.pied_layout.addLayout(ligne)
-        self.pied_layout.addWidget(bouton("Analyser un autre inventaire", "lien", parcours.nouvelle_analyse), 0, Qt.AlignmentFlag.AlignCenter)
+        self.pied_layout.addWidget(
+            bouton("Analyser un autre inventaire", "lien", parcours.nouvelle_analyse), 0, Qt.AlignmentFlag.AlignCenter
+        )
 
     def _titre(self, contenu: str, aide: str = "") -> None:
         self.zone.addWidget(separateur())
@@ -263,14 +303,26 @@ class PageResultats(Page):
         # 1 et 2 : nombre de sites, fiabilité
         grille = QGridLayout()
         grille.setSpacing(8)
-        grille.addWidget(Chiffre("Sites analysés", str(s.nombre_sites), f"{len(s.sites_a_qualifier)} sans saisie terrain"), 0, 0)
-        grille.addWidget(Chiffre("Fiabilité moyenne", f"{formater_note(s.fiabilite_moyenne)} / 10", f"{s.par_fiabilite.get('Très fiable', 0)} très fiables sur {s.nombre_sites}"), 0, 1)
+        grille.addWidget(
+            Chiffre("Sites analysés", str(s.nombre_sites), f"{len(s.sites_a_qualifier)} sans saisie terrain"), 0, 0
+        )
+        grille.addWidget(
+            Chiffre(
+                "Fiabilité moyenne",
+                f"{formater_note(s.fiabilite_moyenne)} / 10",
+                f"{s.par_fiabilite.get('Très fiable', 0)} très fiables sur {s.nombre_sites}",
+            ),
+            0,
+            1,
+        )
         self.zone.addLayout(grille)
 
         # 3 : jauges par usage le plus compatible
         self._titre("Usage le plus compatible", "Nombre de sites dont c'est l'usage prioritaire.")
         for usage in ORDRE_USAGES:
-            self.zone.addWidget(Barre(libelle_usage(usage), s.par_usage.get(usage, 0), s.nombre_sites, COULEURS_USAGES[usage]))
+            self.zone.addWidget(
+                Barre(libelle_usage(usage), s.par_usage.get(usage, 0), s.nombre_sites, COULEURS_USAGES[usage])
+            )
 
         # 4 : répartition
         self._titre("Répartition des usages les plus compatibles")
@@ -278,27 +330,51 @@ class PageResultats(Page):
         self.zone.addWidget(anneau_avec_legende(serie_usages, str(s.nombre_sites), "sites"))
 
         # 5 : profils
-        self._titre("Profils de sites", "Écart entre le meilleur et le moins bon usage d'un même site. Grille de lecture du prototype, à valider.")
+        self._titre(
+            "Profils de sites",
+            "Écart entre le meilleur et le moins bon usage d'un même site. Grille de lecture du prototype, à valider.",
+        )
         lignes = []
         for seuil, libelle, lecture in PROFILS_ECART:
             nombre = s.par_profil.get(libelle, 0)
             borne = "30 pts et plus" if seuil == float("inf") else f"< {int(seuil)} pts"
-            lignes.append([libelle, borne, str(nombre), f"{round(100 * nombre / s.nombre_sites) if s.nombre_sites else 0} %", lecture])
+            lignes.append(
+                [
+                    libelle,
+                    borne,
+                    str(nombre),
+                    f"{round(100 * nombre / s.nombre_sites) if s.nombre_sites else 0} %",
+                    lecture,
+                ]
+            )
         self.zone.addWidget(tableau(["Profil", "Écart", "Sites", "Part", "Lecture"], lignes, [3, 2, 1, 1, 4]))
 
         # 6 : sites à forte compatibilité, cliquables
-        self._titre(f"Sites à forte compatibilité ({len(s.sites_forte_compatibilite)})", "Indice de l'usage prioritaire supérieur ou égal à 70 %. Cliquer un site le sélectionne et cadre la carte.")
+        self._titre(
+            f"Sites à forte compatibilité ({len(s.sites_forte_compatibilite)})",
+            "Indice de l'usage prioritaire supérieur ou égal à 70 %. Cliquer un site le sélectionne et cadre la carte.",
+        )
         for site in s.sites_forte_compatibilite:
             ligne = QHBoxLayout()
-            lien = bouton(site.nom, "lien", lambda _=False, site=site: parcours.mettre_en_avant(site))
+            lien = bouton(site.nom, "lien", partial(parcours.mettre_en_avant, site))
             lien.setAccessibleName(f"Voir sur la carte : {site.nom}")
             ligne.addWidget(lien, 1)
-            ligne.addWidget(badge(f"{libelle_usage(site.usage_prioritaire)} · {round(site.indice_max)} %", "tag"), 0, Qt.AlignmentFlag.AlignTop)
+            ligne.addWidget(
+                badge(f"{libelle_usage(site.usage_prioritaire)} · {round(site.indice_max)} %", "tag"),
+                0,
+                Qt.AlignmentFlag.AlignTop,
+            )
             self.zone.addLayout(ligne)
 
         # 7 : sites nécessitant une attention (lignes écartées, non retrouvés, peu fiables)
-        peu_fiables = [x for x in s.sites_a_qualifier if x.fiabilite_niveau in ("Moyennement fiable", "Peu fiable", "Très peu fiable")]
-        attention = parcours.attention + [f"{x.nom} : {x.fiabilite_niveau.lower()}, qualification à compléter" for x in peu_fiables]
+        peu_fiables = [
+            x
+            for x in s.sites_a_qualifier
+            if x.fiabilite_niveau in ("Moyennement fiable", "Peu fiable", "Très peu fiable")
+        ]
+        attention = parcours.attention + [
+            f"{x.nom} : {x.fiabilite_niveau.lower()}, qualification à compléter" for x in peu_fiables
+        ]
         self._titre("Sites nécessitant votre attention")
         if attention:
             n = len(attention)
@@ -310,5 +386,13 @@ class PageResultats(Page):
                 )
             )
         else:
-            self.zone.addWidget(Encadre("succes", "Aucun site à reprendre", "Toutes les lignes ont été analysées et aucune n'est peu fiable."))
-        self.zone.addWidget(texte(parcours.avertissement if parcours.reel else f"Démonstration : {parcours.avertissement}", "mfAide"))
+            self.zone.addWidget(
+                Encadre(
+                    "succes",
+                    "Aucun site à reprendre",
+                    "Toutes les lignes ont été analysées et aucune n'est peu fiable.",
+                )
+            )
+        self.zone.addWidget(
+            texte(parcours.avertissement if parcours.reel else f"Démonstration : {parcours.avertissement}", "mfAide")
+        )

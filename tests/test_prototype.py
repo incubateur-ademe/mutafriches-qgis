@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from _qgis import RACINE  # noqa: F401  (initialise QGIS)
+from _qgis import RACINE
 from qgis.core import QgsCategorizedSymbolRenderer, QgsProject
 
 from mutafriches.carto.couches import NOM_COUCHE_MUTABILITE, champs_mutabilite, creer_couches
@@ -96,9 +96,23 @@ class TestAttributaire(unittest.TestCase):
 class TestCouches(unittest.TestCase):
     def test_colonnes_mutabilite_dans_l_ordre_demande(self) -> None:
         noms = [c.name() for c in champs_mutabilite()]
-        self.assertEqual(noms[:5], ["site_id", "site_nom", "mf_usage_prioritaire", "mf_usage_prioritaire_lib", "mf_indice_prioritaire"])
+        self.assertEqual(
+            noms[:5],
+            ["site_id", "site_nom", "mf_usage_prioritaire", "mf_usage_prioritaire_lib", "mf_indice_prioritaire"],
+        )
         self.assertEqual(noms[5:12], [f"mf_indice_{u}" for u in ORDRE_USAGES])
-        self.assertEqual(noms[12:], ["mf_fiabilite", "mf_fiabilite_niveau", "mf_usages_exclus", "nb_parcelles", "unite_fonciere_refcad", "comm_insee", "mf_version_algorithme"])
+        self.assertEqual(
+            noms[12:],
+            [
+                "mf_fiabilite",
+                "mf_fiabilite_niveau",
+                "mf_usages_exclus",
+                "nb_parcelles",
+                "unite_fonciere_refcad",
+                "comm_insee",
+                "mf_version_algorithme",
+            ],
+        )
 
     def test_couches_et_symbologie(self) -> None:
         sites, _ = charger_table()

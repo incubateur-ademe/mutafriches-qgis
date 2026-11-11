@@ -1,10 +1,10 @@
 """Écran des résultats et fenêtres de détail, calqués sur la page web /resultats."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.PyQt.QtGui import QMouseEvent, QPixmap
+from qgis.PyQt.QtGui import QKeyEvent, QMouseEvent, QPixmap
 from qgis.PyQt.QtWidgets import (
     QDialog,
     QFrame,
@@ -32,7 +32,8 @@ from .parcours import Etape, Parcours
 from .widgets import BoutonAide, Encadre, FlowLayout, badge, bouton, texte, vider
 
 DOSSIER_IMAGES = Path(__file__).resolve().parent.parent / "icons" / "usages"
-Json = dict[str, object]
+# Réponse JSON de l'API : structure libre, vérifiée à l'usage
+Json = dict[str, Any]
 
 
 def image_usage(usage: str, taille: int) -> QLabel:
@@ -40,7 +41,9 @@ def image_usage(usage: str, taille: int) -> QLabel:
     pixmap = QPixmap(str(DOSSIER_IMAGES / IMAGES_USAGES.get(usage, "")))
     if not pixmap.isNull():
         etiquette.setPixmap(
-            pixmap.scaled(taille, taille, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            pixmap.scaled(
+                taille, taille, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+            )
         )
     etiquette.setAlignment(Qt.AlignmentFlag.AlignCenter)
     return etiquette
@@ -106,7 +109,7 @@ def tableau(colonnes: list[str], largeurs: list[int]) -> QGridLayout:
     grille = QGridLayout()
     grille.setHorizontalSpacing(10)
     grille.setVerticalSpacing(6)
-    for i, (colonne, largeur) in enumerate(zip(colonnes, largeurs)):
+    for i, (colonne, largeur) in enumerate(zip(colonnes, largeurs, strict=True)):
         entete = texte(colonne)
         entete.setStyleSheet("font-weight: bold;")
         grille.addWidget(entete, 0, i)
@@ -172,7 +175,9 @@ class DialogueDetailUsage(Fenetre):
         if isinstance(zaer, dict) and zaer.get("enZoneExclusion"):
             corps.addWidget(Encadre("avertissement", "", MESSAGE_ZONE_EXCLUSION_ENR))
         if not resultat.get("exclu"):
-            corps.addWidget(self._barre_ratio(float(resultat.get("avantages") or 0), float(resultat.get("contraintes") or 0)))  # type: ignore[arg-type]
+            corps.addWidget(
+                self._barre_ratio(float(resultat.get("avantages") or 0), float(resultat.get("contraintes") or 0))
+            )  # type: ignore[arg-type]
         grille = tableau(["Critère", "Valeur", "Pondération", "Impact"], [5, 4, 2, 2])
         ligne = 1
         for titre_section, lignes in construire_detail_usage(resultat, enrichissement, complementaires):
@@ -186,7 +191,9 @@ class DialogueDetailUsage(Fenetre):
                 valeur.setStyleSheet("font-weight: bold;")
                 grille.addWidget(valeur, ligne, 1)
                 grille.addWidget(texte(f"{detail.poids:.1f}"), ligne, 2, Qt.AlignmentFlag.AlignCenter)
-                grille.addWidget(badge(detail.impact.libelle, detail.impact.niveau), ligne, 3, Qt.AlignmentFlag.AlignCenter)
+                grille.addWidget(
+                    badge(detail.impact.libelle, detail.impact.niveau), ligne, 3, Qt.AlignmentFlag.AlignCenter
+                )
                 ligne += 1
         corps.addLayout(grille)
         corps.addStretch(1)
@@ -311,7 +318,7 @@ class LigneTableau(QFrame):
         if evenement.button() == Qt.MouseButton.LeftButton:
             self.detail.emit(self.usage)
 
-    def keyPressEvent(self, evenement) -> None:  # type: ignore[no-untyped-def]
+    def keyPressEvent(self, evenement: QKeyEvent) -> None:
         if evenement.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
             self.detail.emit(self.usage)
         else:
@@ -321,7 +328,9 @@ class LigneTableau(QFrame):
 class PageResultats(Page):
     def __init__(self, parcours: Parcours) -> None:
         super().__init__(parcours)
-        self.corps.addWidget(bouton("‹  Modifier les données", "secondaire", lambda: parcours.aller_etape(Etape.SITE_BATI)))
+        self.corps.addWidget(
+            bouton("‹  Modifier les données", "secondaire", lambda: parcours.aller_etape(Etape.SITE_BATI))
+        )
         self.corps.addWidget(titre_avec_aide("Analyse de mutabilité", "mfH2", contenus.AIDE_ANALYSE))
         self.zone = QVBoxLayout()
         self.zone.setSpacing(12)
@@ -342,7 +351,7 @@ class PageResultats(Page):
         )
         return reponses
 
-    def _resultat(self, usage: str) -> Optional[Json]:
+    def _resultat(self, usage: str) -> Json | None:
         site = self.parcours.site
         resultats = site.evaluation["resultats"] if site and site.evaluation else []
         return next((r for r in resultats if r["usage"] == usage), None)  # type: ignore[union-attr]
@@ -366,7 +375,9 @@ class PageResultats(Page):
             return
         fiabilite = site.fiabilite() or {}
         note = float(fiabilite.get("note", 0))  # type: ignore[arg-type]
-        self.zone.addWidget(titre_avec_aide(f"Indice de fiabilité : {formater_note(note)}/10", "mfH3", contenus.AIDE_FIABILITE))
+        self.zone.addWidget(
+            titre_avec_aide(f"Indice de fiabilité : {formater_note(note)}/10", "mfH3", contenus.AIDE_FIABILITE)
+        )
         self.zone.addWidget(self._bandeau_site(site.enrichissement, len(site.parcelles), site.surface_m2))
 
         self.zone.addWidget(titre_avec_aide("Usages les plus compatibles", "mfH3", contenus.AIDE_USAGES))

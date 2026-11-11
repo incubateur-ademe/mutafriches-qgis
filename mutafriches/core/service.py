@@ -1,9 +1,11 @@
 """Interface du service Mutafriches : l'interface ne dépend que de ce contrat."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional, Protocol
+from typing import Any, Protocol
 
-Json = dict[str, object]
+# Réponse JSON de l'API : structure libre, vérifiée à l'usage
+Json = dict[str, Any]
 
 
 class ErreurService(Exception):
@@ -19,10 +21,10 @@ class ResultatEvaluation:
     # Forme de MutabiliteOutputDto (mode détaillé)
     resultat: Json
     # Informations propres à la simulation, None pour un vrai service
-    variante_id: Optional[str] = None
-    variante_titre: Optional[str] = None
+    variante_id: str | None = None
+    variante_titre: str | None = None
     ecarts: int = 0
-    note_simulation: Optional[str] = None
+    note_simulation: str | None = None
 
 
 class Tache(Protocol):

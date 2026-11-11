@@ -1,7 +1,6 @@
 """Champs, valeurs et libellés. Miroir de packages/shared-types et de apps/ui (Mutafriches)."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 NE_SAIT_PAS = "ne-sait-pas"
 VALEUR_NON_DISPONIBLE = "Non disponible"
@@ -125,8 +124,7 @@ CHAMPS_TERRAIN: tuple[ChampTerrain, ...] = (
             ("corridor-a-restaurer", "Corridor à restaurer"),
             (NE_SAIT_PAS, "Ne sait pas"),
         ),
-        "Indiquez si le site est situé dans un corridor écologique ou un réservoir de "
-        "biodiversité.",
+        "Indiquez si le site est situé dans un corridor écologique ou un réservoir de biodiversité.",
     ),
     ChampTerrain(
         "presenceEspecesProtegees",
@@ -163,12 +161,12 @@ SECTIONS: dict[str, str] = {
     "risques-zonages": "Les risques et zonages du site",
 }
 
-# Miroir de USAGE_CONFIG (apps/ui/src/features/resultats/utils/usagesLabels.utils.ts)
+# Miroir de USAGE_LABELS (shared-types, usages.constants.ts), vérifié par tests/test_miroirs.py
 USAGES: dict[str, str] = {
     "residentiel": "Habitat & commerce de proximité",
     "equipements": "Équipement public",
     "culture": "Équipement culturel & touristique",
-    "tertiaire": "Bureaux",
+    "tertiaire": "Locaux d'activité",
     "industrie": "Industrie",
     "renaturation": "Espace renaturé",
     "photovoltaique": "Centrale photovoltaïque au sol",
@@ -216,7 +214,7 @@ class Critere:
     libelle: str
     section: str
     automatique: bool
-    source: Optional[str] = None
+    source: str | None = None
 
 
 # Miroir de CRITERES_METADATA (ordre, libellé, saisie) et SOURCE_LABELS (packages/shared-types)
@@ -233,7 +231,9 @@ CRITERES: tuple[Critere, ...] = (
     Critere("siteEnCentreVille", "Site en centre-ville", "environnement", True, "API Service Public"),
     Critere("proximiteCommercesServices", "Proximité commerces et services", "environnement", True, "BPE (INSEE)"),
     Critere("tauxLogementsVacants", "Taux de logements vacants", "environnement", True, "LOVAC"),
-    Critere("distanceTransportCommun", "Distance aux transports en commun", "environnement", True, "Transport Data Gouv"),
+    Critere(
+        "distanceTransportCommun", "Distance aux transports en commun", "environnement", True, "Transport Data Gouv"
+    ),
     Critere("distanceAutoroute", "Distance par la route à un accès autoroutier", "environnement", True, "IGN"),
     Critere(
         "distanceIte",
@@ -247,7 +247,9 @@ CRITERES: tuple[Critere, ...] = (
     Critere("trameVerteEtBleue", "Trame verte et bleue", "environnement", False),
     Critere("presenceEspecesProtegees", "Présence d'espèces protégées", "environnement", False),
     Critere("presenceZoneHumide", "Présence d'une zone humide", "environnement", False),
-    Critere("presenceRisquesTechnologiques", "Présence de risques technologiques", "risques-zonages", True, "GéoRisques"),
+    Critere(
+        "presenceRisquesTechnologiques", "Présence de risques technologiques", "risques-zonages", True, "GéoRisques"
+    ),
     Critere("risqueRetraitGonflementArgile", "Retrait-gonflement des argiles", "risques-zonages", True, "GéoRisques"),
     Critere("risqueCavitesSouterraines", "Cavités souterraines", "risques-zonages", True, "GéoRisques"),
     Critere("risqueInondation", "Risque d'inondation", "risques-zonages", True, "GéoRisques"),
@@ -383,6 +385,7 @@ MESSAGE_ZONE_EXCLUSION_ENR = "Pas de projet possible hors photovoltaïque en toi
 
 # --- Formats, miroir de valeurs.labels.ts (locale fr-FR) -----------------------------------
 
+
 def _nombre(valeur: float, decimales: int = 0) -> str:
     texte = f"{valeur:,.{decimales}f}".replace(",", " ").replace(".", ",")
     if decimales and "," in texte:
@@ -390,7 +393,7 @@ def _nombre(valeur: float, decimales: int = 0) -> str:
     return texte
 
 
-def formater_surface(m2: Optional[float]) -> str:
+def formater_surface(m2: float | None) -> str:
     return VALEUR_NON_DISPONIBLE if m2 is None else f"{_nombre(round(m2))} m²"
 
 
@@ -398,7 +401,7 @@ def formater_hectares(m2: float) -> str:
     return f"{_nombre(m2 / 10000, 2)} ha"
 
 
-def formater_distance(metres: Optional[float]) -> str:
+def formater_distance(metres: float | None) -> str:
     if metres is None:
         return VALEUR_NON_DISPONIBLE
     if metres >= 1000:
@@ -406,11 +409,11 @@ def formater_distance(metres: Optional[float]) -> str:
     return f"{_nombre(round(metres))} m"
 
 
-def formater_pourcentage(valeur: Optional[float]) -> str:
+def formater_pourcentage(valeur: float | None) -> str:
     return VALEUR_NON_DISPONIBLE if valeur is None else f"{_nombre(valeur, 2)} %"
 
 
-def formater_booleen(valeur: Optional[bool]) -> str:
+def formater_booleen(valeur: bool | None) -> str:
     if valeur is None:
         return VALEUR_NON_DISPONIBLE
     return "Oui" if valeur else "Non"

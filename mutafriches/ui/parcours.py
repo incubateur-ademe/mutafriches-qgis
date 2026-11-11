@@ -3,7 +3,6 @@
 import shutil
 from datetime import date
 from pathlib import Path
-from typing import Optional
 
 from qgis.core import QgsProject, QgsVectorLayer
 from qgis.gui import QgisInterface
@@ -56,24 +55,24 @@ class Parcours(QObject):
         self.environnement = environnement_api()
         self._couches: list[str] = []
         self.avancement: tuple[int, int] = (0, 0)
-        self.erreur_api: Optional[ErreurApi] = None
+        self.erreur_api: ErreurApi | None = None
         self.echecs: list[str] = []
-        self._analyse: Optional[AnalyseInventaire] = None
+        self._analyse: AnalyseInventaire | None = None
         self.canvas = iface.mapCanvas()
         self.utilisateur: Utilisateur = charger_utilisateur()
         # L'accueil n'est demandé qu'une fois : ensuite le panneau s'ouvre sur l'envoi des sites
         self.etape = Etape.IMPORT if self.utilisateur.complet else Etape.ACCUEIL
-        self.fichier: Optional[Path] = None
-        self.lecture: Optional[LectureCnig] = None
+        self.fichier: Path | None = None
+        self.lecture: LectureCnig | None = None
         self.analyse_en_cours = False
         self.sites: list[SiteAttributaire] = []
         self.non_retrouves: list[str] = []
         self.lignes_ecartees: list[str] = []
-        self.synthese: Optional[Synthese] = None
+        self.synthese: Synthese | None = None
         self.avertissement = ""
-        self.couche_mutabilite: Optional[QgsVectorLayer] = None
-        self.couche_qualification: Optional[QgsVectorLayer] = None
-        self._timer: Optional[QTimer] = None
+        self.couche_mutabilite: QgsVectorLayer | None = None
+        self.couche_qualification: QgsVectorLayer | None = None
+        self._timer: QTimer | None = None
 
     # --- Accueil ------------------------------------------------------------------------------
 
@@ -155,7 +154,11 @@ class Parcours(QObject):
         self.change.emit()
         if self.reel:
             self._analyse = AnalyseInventaire(
-                self.lecture.sites_ok, self._progression, self._analyse_terminee, self.version, environnement=self.environnement
+                self.lecture.sites_ok,
+                self._progression,
+                self._analyse_terminee,
+                self.version,
+                environnement=self.environnement,
             )
             self._analyse.demarrer()
             return
@@ -178,7 +181,7 @@ class Parcours(QObject):
         self.avancement = (traites, total)
         self.change.emit()
 
-    def _analyse_terminee(self, resultats: list[ResultatSite], erreur: Optional[ErreurApi]) -> None:
+    def _analyse_terminee(self, resultats: list[ResultatSite], erreur: ErreurApi | None) -> None:
         self._analyse = None
         self.analyse_en_cours = False
         if self.lecture is None:
@@ -193,12 +196,21 @@ class Parcours(QObject):
         if erreur is not None:
             self.echecs.append(f"Analyse interrompue : {erreur.message}")
         self.sites = [
-            site_depuis_api(r.site.site_id, r.site.site_nom, r.site.parcelles, r.enrichissement or {}, r.mutabilite or {}, r.complementaires)
+            site_depuis_api(
+                r.site.site_id,
+                r.site.site_nom,
+                r.site.parcelles,
+                r.enrichissement or {},
+                r.mutabilite or {},
+                r.complementaires,
+            )
             for r in reussis
         ]
         self.non_retrouves = []
         source = "API Mutafriches" + (" (staging)" if self.environnement != PRODUCTION else "")
-        self._afficher_resultats({"provenance": f"{source} · analyse du {date.today().strftime('%d/%m/%Y')}"}, AVERTISSEMENT_API)
+        self._afficher_resultats(
+            {"provenance": f"{source} · analyse du {date.today().strftime('%d/%m/%Y')}"}, AVERTISSEMENT_API
+        )
 
     def _resultats_recus(self) -> None:
         self.analyse_en_cours = False
@@ -216,14 +228,18 @@ class Parcours(QObject):
     def _afficher_resultats(self, meta: dict[str, object], avertissement: str) -> None:
         if self.lecture is None:
             return
-        self.lignes_ecartees = [f"ligne {s.ligne} : {s.site_nom or s.site_id or 'sans nom'}" for s in self.lecture.sites_ko]
+        self.lignes_ecartees = [
+            f"ligne {s.ligne} : {s.site_nom or s.site_id or 'sans nom'}" for s in self.lecture.sites_ko
+        ]
         self.avertissement = avertissement
         self.synthese = synthese(self.sites, meta)
         if not self.sites:
             self.erreur_api = ErreurApi("Aucun site n'a pu être analysé : " + " ; ".join(self.echecs[:3]))
             self.change.emit()
             return
-        self.couche_mutabilite, self.couche_qualification = creer_couches(self.sites, self.synthese.code_insee or "inventaire")
+        self.couche_mutabilite, self.couche_qualification = creer_couches(
+            self.sites, self.synthese.code_insee or "inventaire"
+        )
         self._couches = [self.couche_mutabilite.id(), self.couche_qualification.id()]
         self.etape = Etape.RESULTATS
         self.change.emit()

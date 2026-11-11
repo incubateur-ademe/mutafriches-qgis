@@ -8,8 +8,8 @@ Les clics sur la carte et sur les boutons passent par de vrais événements Qt.
 import json
 import os
 import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import qgis.utils
 from qgis.core import (
@@ -112,7 +112,7 @@ def page(etape_: int):  # type: ignore[no-untyped-def]
     return dock().pages[etape_]
 
 
-def remplir(etape_: int, valeurs: Optional[dict[str, str]] = None) -> None:
+def remplir(etape_: int, valeurs: dict[str, str] | None = None) -> None:
     """Renseigne les champs de l'étape ; les champs non précisés reçoivent « Ne sait pas »."""
     valeurs = valeurs or {}
     # Champs masqués compris : un champ peut réapparaître en cours de remplissage (« Pas de bâti »)
@@ -132,7 +132,7 @@ def modal(action: Callable[[QWidget], None], delai_ms: int = 700) -> None:
         fenetre = QApplication.activeModalWidget()
         try:
             action(fenetre)
-        except Exception:  # noqa: BLE001
+        except Exception:
             rapport["erreurs"].append({"etape": "modal", "trace": traceback.format_exc()})  # type: ignore[union-attr]
             if fenetre is not None:
                 fenetre.close()
@@ -140,7 +140,7 @@ def modal(action: Callable[[QWidget], None], delai_ms: int = 700) -> None:
     QTimer.singleShot(delai_ms, agir)
 
 
-def traverser_etapes(etape_1: Optional[dict[str, str]] = None) -> None:
+def traverser_etapes(etape_1: dict[str, str] | None = None) -> None:
     remplir(1, etape_1)
     cliquer("Suivant")
     remplir(2)
@@ -215,7 +215,9 @@ if PHASE == "parcours":
         controler("étape 1 après 2 s", parcours().etape == 1 and site.enrichissement is not None)
         pollution = page(1).champs["presencePollution"]
         controler("pollution « Oui » présélectionnée", pollution.liste.currentData() == "oui")
-        controler("choix vide par défaut", page(1).champs["typeProprietaire"].liste.currentText() == "Sélectionner une option")
+        controler(
+            "choix vide par défaut", page(1).champs["typeProprietaire"].liste.currentText() == "Sélectionner une option"
+        )
         cliquer("Suivant")
         erreurs = [c.cle for c in page(1).champs.values() if not c.erreur.isHidden()]
         controler("champs obligatoires signalés", parcours().etape == 1 and len(erreurs) == 4, erreurs)
@@ -223,7 +225,9 @@ if PHASE == "parcours":
         page(1).champs["etatBatiInfrastructure"].liste.setCurrentIndex(
             page(1).champs["etatBatiInfrastructure"].liste.findData("pas-de-bati")
         )
-        controler("valeur patrimoniale masquée si pas de bâti", page(1).champs["valeurArchitecturaleHistorique"].isHidden())
+        controler(
+            "valeur patrimoniale masquée si pas de bâti", page(1).champs["valeurArchitecturaleHistorique"].isHidden()
+        )
         remplir(1, {"typeProprietaire": "prive", "etatBatiInfrastructure": "degradation-heterogene"})
         controler("valeur patrimoniale réaffichée", not page(1).champs["valeurArchitecturaleHistorique"].isHidden())
         capture("05-etape-1")
@@ -280,7 +284,13 @@ if PHASE == "parcours":
     def modifier_donnees() -> None:
         cliquer("‹  Modifier les données")
         controler("retour à l'étape 1", parcours().etape == 1)
-        traverser_etapes({"typeProprietaire": "prive", "etatBatiInfrastructure": "degradation-heterogene", "presencePollution": "non"})
+        traverser_etapes(
+            {
+                "typeProprietaire": "prive",
+                "etatBatiInfrastructure": "degradation-heterogene",
+                "presencePollution": "non",
+            }
+        )
 
     @etape(2300)
     def approximation() -> None:
@@ -306,7 +316,11 @@ if PHASE == "parcours":
         donnees = parcours().site.enrichissement
         # Surface de la parcelle réellement sélectionnée (le clic peut tomber sur une voisine)
         surface = parcours().site.surface_m2
-        controler("profil générique : surface mesurée", abs(donnees["surfaceSite"] - surface) < 1, (donnees["surfaceSite"], surface))
+        controler(
+            "profil générique : surface mesurée",
+            abs(donnees["surfaceSite"] - surface) < 1,
+            (donnees["surfaceSite"], surface),
+        )
         controler("profil générique : commune", donnees["commune"] == "Trélazé", donnees["commune"])
         traverser_etapes()
 
@@ -330,7 +344,7 @@ else:
         exemple = QgsVectorLayer(str(FICHIER_PARCELLES), "source", "ogr")
         # Deux parcelles libres et contiguës, recopiées en WGS84 avec un champ « id » (format Etalab)
         reserves = {i for s in charger_scenarios() for i in s.parcelles}
-        paire: Optional[tuple[QgsFeature, QgsFeature]] = None
+        paire: tuple[QgsFeature, QgsFeature] | None = None
         for a in exemple.getFeatures():
             if a["idu"] in reserves or not 500 < a.geometry().area() < 3000:
                 continue
@@ -346,7 +360,9 @@ else:
                 paire = (a, voisine)
                 break
         assert paire is not None
-        couche = QgsVectorLayer("Polygon?crs=EPSG:4326&field=id:string&field=commune:string", "Ma couche cadastrale", "memory")
+        couche = QgsVectorLayer(
+            "Polygon?crs=EPSG:4326&field=id:string&field=commune:string", "Ma couche cadastrale", "memory"
+        )
         vers_wgs84 = QgsCoordinateTransform(L93, QgsCoordinateReferenceSystem("EPSG:4326"), QgsProject.instance())
         for source in paire:
             copie = QgsFeature(couche.fields())
@@ -402,9 +418,7 @@ else:
 
 
 def terminer() -> None:
-    (SORTIE / f"rapport-{PHASE}.json").write_text(
-        json.dumps(rapport, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    (SORTIE / f"rapport-{PHASE}.json").write_text(json.dumps(rapport, ensure_ascii=False, indent=2), encoding="utf-8")
     QgsProject.instance().setDirty(False)
     iface.actionExit().trigger()
 
@@ -418,7 +432,7 @@ def suivante(index: int = 0) -> None:
     def executer() -> None:
         try:
             fonction()
-        except Exception:  # noqa: BLE001 (tout échec doit apparaître dans le rapport)
+        except Exception:
             rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
             capture(f"erreur-{fonction.__name__}")
             terminer()

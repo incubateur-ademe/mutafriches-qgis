@@ -1,11 +1,12 @@
 """Modèle d'un site : une ou plusieurs parcelles analysées ensemble."""
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any
 
 from .referentiel import CLES_TERRAIN, NE_SAIT_PAS
 
-Json = dict[str, object]
+# Réponse JSON de l'API : structure libre, vérifiée à l'usage
+Json = dict[str, Any]
 
 
 @dataclass
@@ -19,9 +20,9 @@ class ParcelleSite:
 class InfoSimulation:
     """Écart entre la réponse simulée affichée et la saisie (service simulé uniquement)."""
 
-    variante_titre: Optional[str] = None
+    variante_titre: str | None = None
     ecarts: int = 0
-    note: Optional[str] = None
+    note: str | None = None
 
 
 @dataclass
@@ -29,10 +30,10 @@ class Site:
     parcelles: list[ParcelleSite]
     # Union des parcelles en Lambert 93
     geometrie_wkt: str
-    enrichissement: Optional[Json] = None
+    enrichissement: Json | None = None
     reponses: dict[str, str] = field(default_factory=dict)
-    evaluation: Optional[Json] = None
-    simulation: Optional[InfoSimulation] = None
+    evaluation: Json | None = None
+    simulation: InfoSimulation | None = None
 
     @property
     def identifiants(self) -> list[str]:
@@ -64,7 +65,7 @@ class Site:
         else:
             self.reponses.pop(cle, None)
 
-    def fiabilite(self) -> Optional[Json]:
+    def fiabilite(self) -> Json | None:
         if not self.evaluation:
             return None
-        return self.evaluation.get("fiabilite")  # type: ignore[return-value]
+        return self.evaluation.get("fiabilite")

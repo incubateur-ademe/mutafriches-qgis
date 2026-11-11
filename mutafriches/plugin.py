@@ -1,7 +1,6 @@
 """Point d'entrée QGIS : bouton de barre d'outils et panneau."""
 
 from pathlib import Path
-from typing import Optional
 
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import Qt
@@ -10,6 +9,7 @@ from qgis.PyQt.QtWidgets import QAction, QToolBar
 
 from .ui.dock import DockMutafriches
 from .ui.parcours import Parcours
+
 
 def version_extension() -> str:
     for ligne in (Path(__file__).resolve().parent / "metadata.txt").read_text(encoding="utf-8").splitlines():
@@ -25,10 +25,10 @@ MENU = "&Mutafriches"
 class MutafrichesPlugin:
     def __init__(self, iface: QgisInterface) -> None:
         self.iface = iface
-        self.action: Optional[QAction] = None
-        self.barre: Optional[QToolBar] = None
-        self.dock: Optional[DockMutafriches] = None
-        self.parcours: Optional[Parcours] = None
+        self.action: QAction | None = None
+        self.barre: QToolBar | None = None
+        self.dock: DockMutafriches | None = None
+        self.parcours: Parcours | None = None
 
     def initGui(self) -> None:
         self.action = QAction(QIcon(ICONE), "Mutafriches", self.iface.mainWindow())

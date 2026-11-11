@@ -70,9 +70,7 @@ def _wkt(geom: dict) -> str:
     if geom["type"] == "Polygon":
         return "POLYGON(" + ",".join(anneau(a) for a in geom["coordinates"]) + ")"
     if geom["type"] == "MultiPolygon":
-        return "MULTIPOLYGON(" + ",".join(
-            "(" + ",".join(anneau(a) for a in p) + ")" for p in geom["coordinates"]
-        ) + ")"
+        return "MULTIPOLYGON(" + ",".join("(" + ",".join(anneau(a) for a in p) + ")" for p in geom["coordinates"]) + ")"
     raise ValueError(geom["type"])
 
 
@@ -159,9 +157,8 @@ CONTEXTE_QUARTIER = {
     "ilotChaleurUrbain": "non-couvert",
 }
 
-NE_SAIT_PAS = {
-    cle: "ne-sait-pas"
-    for cle in [
+NE_SAIT_PAS = dict.fromkeys(
+    [
         "typeProprietaire",
         "etatBatiInfrastructure",
         "presencePollution",
@@ -171,8 +168,9 @@ NE_SAIT_PAS = {
         "trameVerteEtBleue",
         "presenceEspecesProtegees",
         "presenceZoneHumide",
-    ]
-}
+    ],
+    "ne-sait-pas",
+)
 
 SANS_SAISIE = {"id": "sans-saisie", "titre": "Sans connaissance terrain", "reponses": {}}
 
@@ -321,9 +319,7 @@ VARIANTES_GENERIQUES = [
 
 def surface_batie(site: QgsGeometry, batiments: list[QgsGeometry]) -> float:
     boite = site.boundingBox()
-    return sum(
-        b.intersection(site).area() for b in batiments if b.boundingBox().intersects(boite)
-    )
+    return sum(b.intersection(site).area() for b in batiments if b.boundingBox().intersects(boite))
 
 
 def contigu(geometries: list[QgsGeometry]) -> bool:
@@ -380,9 +376,7 @@ def generer_sources(parcelles: dict[str, QgsGeometry], batiments: list[QgsGeomet
         print(f"{sc['id']} : {len(ids)} parcelle(s), {enr['surfaceSite']} m², bâti {enr.get('surfaceBati')} m²")
 
     gabarit = dict(CONTEXTE_QUARTIER)
-    gabarit.update(
-        {"sourcesUtilisees": SOURCES_COMPLETES, "sourcesEchouees": [], "champsManquants": []}
-    )
+    gabarit.update({"sourcesUtilisees": SOURCES_COMPLETES, "sourcesEchouees": [], "champsManquants": []})
     ecrire_json(
         DOSSIER_SOURCES / "generique.json",
         {

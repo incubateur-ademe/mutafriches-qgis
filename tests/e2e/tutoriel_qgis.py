@@ -8,8 +8,8 @@ Images en WebP, 1600 px de large, noms stables repris par la page web.
 import json
 import os
 import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import qgis.utils
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsSettings
@@ -49,6 +49,9 @@ def enregistrer(image: QPixmap, nom: str) -> None:
 
 
 def capture(nom: str) -> None:
+    taille = iface.mainWindow().size()
+    if (taille.width(), taille.height()) != (1600, 1000):
+        raise AssertionError(f"Fenêtre QGIS en {taille.width()}x{taille.height()}, 1600x1000 attendu")
     # Le tutoriel montre l'extension telle qu'en production : pas de bandeau d'environnement
     dock().bandeau.hide()
     QApplication.processEvents()
@@ -58,7 +61,11 @@ def capture(nom: str) -> None:
 def cliquer(libelle: str) -> None:
     QApplication.processEvents()
     bouton = next(
-        (b for b in dock().findChildren(QPushButton) if b.isVisible() and b.isEnabled() and b.text().strip().startswith(libelle)),
+        (
+            b
+            for b in dock().findChildren(QPushButton)
+            if b.isVisible() and b.isEnabled() and b.text().strip().startswith(libelle)
+        ),
         None,
     )
     if bouton is None:
@@ -76,11 +83,20 @@ def cliquer_accessible(nom: str) -> None:
 
 def table_ancree(fragment: str) -> QDockWidget | None:
     QApplication.processEvents()
-    ancre = next((d for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible() and fragment in d.windowTitle()), None)
+    ancre = next(
+        (d for d in iface.mainWindow().findChildren(QDockWidget) if d.isVisible() and fragment in d.windowTitle()), None
+    )
     if ancre is not None:
         return ancre
     # Table ouverte en fenêtre malgré le réglage du profil : on l'ancre en bas pour la capture
-    fenetre = next((w for w in QApplication.topLevelWidgets() if w.isVisible() and w is not iface.mainWindow() and fragment in w.windowTitle()), None)
+    fenetre = next(
+        (
+            w
+            for w in QApplication.topLevelWidgets()
+            if w.isVisible() and w is not iface.mainWindow() and fragment in w.windowTitle()
+        ),
+        None,
+    )
     if fenetre is None:
         return None
     ancre = QDockWidget(fenetre.windowTitle(), iface.mainWindow())
@@ -102,7 +118,10 @@ def etape(delai_ms: int = 600) -> Callable[[Callable[[], None]], Callable[[], No
 def preparer() -> None:
     from mutafriches.carto.couches import ajouter_fond_osm
 
-    iface.mainWindow().resize(1600, 1000)
+    # Taille fixe, même si QGIS s'ouvre maximisé ou en plein écran : sinon le texte des captures rétrécit
+    fenetre = iface.mainWindow()
+    fenetre.showNormal()
+    fenetre.setFixedSize(1600, 1000)
     QgsSettings().remove("mutafriches/utilisateur")
     QgsSettings().setValue("qgis/dockAttributeTable", True)
     for nom in ("Browser", "Browser2"):
@@ -133,13 +152,17 @@ def installation() -> None:
     try:
         # Onglets : toutes, installées, non installées, à mettre à jour, nouvelles, invalides, ZIP
         iface.pluginManagerInterface().showPluginManager(6)
-    except Exception:  # noqa: BLE001 (capture facultative)
+    except Exception:
         rapport["notes"].append("Gestionnaire d'extensions non capturé : " + traceback.format_exc(limit=1))  # type: ignore[union-attr]
 
 
 @etape(1500)
 def ouvrir() -> None:
-    vers_carte = QgsCoordinateTransform(QgsCoordinateReferenceSystem("EPSG:4326"), iface.mapCanvas().mapSettings().destinationCrs(), QgsProject.instance())
+    vers_carte = QgsCoordinateTransform(
+        QgsCoordinateReferenceSystem("EPSG:4326"),
+        iface.mapCanvas().mapSettings().destinationCrs(),
+        QgsProject.instance(),
+    )
     iface.mapCanvas().setExtent(vers_carte.transformBoundingBox(QgsRectangle(2.93, 48.375, 2.98, 48.40)))
     iface.mapCanvas().refresh()
     plugin().action.trigger()
@@ -284,7 +307,7 @@ def terminer() -> None:
 def garder(fonction: Callable[[], None]) -> None:
     try:
         fonction()
-    except Exception:  # noqa: BLE001 (tout échec doit apparaître dans le rapport)
+    except Exception:
         rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
         terminer()
 
@@ -299,7 +322,7 @@ def suivante(index: int = 0) -> None:
     def executer() -> None:
         try:
             fonction()
-        except Exception:  # noqa: BLE001
+        except Exception:
             rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
             terminer()
             return

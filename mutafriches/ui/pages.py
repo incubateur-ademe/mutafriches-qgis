@@ -1,7 +1,5 @@
 """Socle des pages du panneau, encart de chargement et champ de saisie terrain."""
 
-from typing import Optional
-
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QComboBox, QFrame, QLabel, QProgressBar, QVBoxLayout, QWidget
 
@@ -39,7 +37,9 @@ class Page:
 class Chargement(QFrame):
     """Encart d'attente de la qualification automatique (EnrichmentLoadingCallout)."""
 
-    def __init__(self, titre: str, sous_titre: str, message: str = "", avancement: Optional[tuple[int, int]] = None) -> None:
+    def __init__(
+        self, titre: str, sous_titre: str, message: str = "", avancement: tuple[int, int] | None = None
+    ) -> None:
         super().__init__()
         self.setObjectName("mfBandeauSite")
         layout = QVBoxLayout(self)
@@ -85,8 +85,8 @@ class ChampSaisie(QWidget):
         self.liste = self._liste(champ.libelle, champ.options)
         layout.addWidget(self.liste)
         # Pollution « Oui » : le type est demandé ensuite (PollutionField)
-        self.type_pollution: Optional[QComboBox] = None
-        self.libelle_type: Optional[QLabel] = None
+        self.type_pollution: QComboBox | None = None
+        self.libelle_type: QLabel | None = None
         # « Oui » sans type encore choisi : à conserver entre deux rafraîchissements
         self._oui_choisi = False
         if cle == "presencePollution":
