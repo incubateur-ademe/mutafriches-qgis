@@ -249,6 +249,9 @@ jamais en `--force`.
 - L'API exige `Origin` en liste blanche même pour un client serveur : 403 « Origin required »
   sinon. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
 - 100 requêtes par minute et par IP, deux requêtes par site : ne pas paralléliser.
+- L'API répond **500 « Erreur lors de l'enrichissement »** quand aucune parcelle du site
+  n'existe au cadastre : c'est un échec du site, à expliquer en clair, jamais « Erreur 500 ».
+- Le fichier exemple (commune 99999) est refusé au contrôle local : ne jamais l'envoyer à l'API.
 - Trois environnements (`core/client_api.py`) : production, staging, démonstration. Le staging
   n'est visible qu'en mode développeur ; tout changement d'environnement doit vider les
   résultats et retirer les couches (`canvas.refreshAllLayers()` ensuite, sinon la carte garde

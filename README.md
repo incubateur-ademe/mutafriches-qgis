@@ -32,7 +32,8 @@ précédente est remplacée).
    n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
    OK ou KO avec ses erreurs ; les lignes KO sont écartées de l'envoi. **Télécharger un fichier
-   exemple** enregistre un modèle à remplir, aux valeurs volontairement fictives (commune 99999).
+   exemple** enregistre un modèle à remplir, aux valeurs volontairement fictives (commune 99999) :
+   envoyé tel quel, il est refusé au contrôle, chaque site d'exemple devant être remplacé.
    Pour une démonstration, utiliser `mutafriches/demo/montereau/friches-cnig-montereau.csv`
    (28 sites) ou `friches-cnig-erreurs.csv` (4 sites corrects, 6 lignes en erreur).
 3. **Envoyer mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée

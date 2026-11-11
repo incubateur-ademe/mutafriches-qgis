@@ -190,6 +190,12 @@ def modele() -> None:
     capture("04-fichier-lignes-en-erreur")
     chemin = parcours().enregistrer_modele(str(SORTIE / "modele-friches-cnig.csv"))
     controler("modèle CNIG copié", chemin is not None and "99999" in chemin.read_text(encoding="utf-8"))
+    parcours().choisir_fichier(str(chemin))
+    controler(
+        "fichier exemple envoyé tel quel : refusé au contrôle",
+        not parcours().pret_a_envoyer and len(parcours().lecture.sites_ko) == 3,
+    )
+    capture("04b-fichier-exemple-refuse")
     refuse = parcours().enregistrer_modele(str(SORTIE / "dossier-absent" / "modele.csv"))
     controler("dossier inaccessible : message, pas d'exception", refuse is None)
     iface.messageBar().clearWidgets()

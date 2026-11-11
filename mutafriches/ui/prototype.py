@@ -155,14 +155,17 @@ class PageImport(Page):
         elif parcours.erreur_api is not None:
             self.zone.addWidget(Encadre("erreur", "Analyse impossible", parcours.erreur_api.message))
             if parcours.reel:
-                self.zone.addWidget(texte(contenus.AIDE_ERREUR_API, "mfAide"))
-                self.zone.addWidget(
-                    bouton(
-                        "Passer en mode démonstration",
-                        "secondaire",
-                        lambda: parcours.changer_environnement(DEMONSTRATION),
+                # L'aide dépend de la cause : accès à l'API, ou sites que l'API n'a pas su traiter
+                aide = contenus.AIDE_ERREUR_API if parcours.erreur_api.bloquante else contenus.AIDE_AUCUN_SITE
+                self.zone.addWidget(texte(aide, "mfAide"))
+                if parcours.erreur_api.bloquante:
+                    self.zone.addWidget(
+                        bouton(
+                            "Passer en mode démonstration",
+                            "secondaire",
+                            lambda: parcours.changer_environnement(DEMONSTRATION),
+                        )
                     )
-                )
         elif lecture is not None and lecture.bloquants:
             self.zone.addWidget(
                 Encadre(

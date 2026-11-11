@@ -265,7 +265,11 @@ class Parcours(QObject):
         self.avertissement = avertissement
         self.synthese = synthese(self.sites, meta)
         if not self.sites:
-            self.erreur_api = ErreurApi("Aucun site n'a pu être analysé : " + " ; ".join(self.echecs[:3]))
+            # Un seul exemplaire de chaque motif : trois sites en échec ont souvent la même cause
+            motifs = list(dict.fromkeys(echec.split(" : ", 1)[-1] for echec in self.echecs))
+            self.erreur_api = ErreurApi(
+                f"Aucun des {len(self.echecs)} sites n'a pu être analysé. " + " ".join(motifs[:2])
+            )
             self.change.emit()
             return
         self.couche_mutabilite, self.couche_qualification = creer_couches(

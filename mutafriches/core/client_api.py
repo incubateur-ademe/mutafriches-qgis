@@ -48,6 +48,9 @@ DELAI_REQUETE_MS = 90_000
 INTERVALLE_SITES_MS = 1500
 ATTENTE_DEBIT_MS = 20_000
 ESSAIS_DEBIT = 2
+MESSAGE_ERREUR_SERVEUR = (
+    "L'API n'a pas pu enrichir ce site : parcelles introuvables au cadastre, ou service momentanément indisponible."
+)
 MESSAGE_DELAI = "Délai dépassé : l'API n'a pas répondu à temps pour ce site."
 # Un second essai aboutit souvent : l'API a mis en cache ce qu'elle avait déjà récupéré
 ESSAIS_DELAI = 1
@@ -119,6 +122,9 @@ def message_http(statut: int, corps: bytes, erreur_reseau: str, delai_depasse: b
         )
     if statut == 0:
         return ErreurApi(f"API Mutafriches injoignable ({erreur_reseau}).", bloquante=True)
+    # L'API répond 500 quand elle ne retrouve aucune parcelle du site au cadastre
+    if statut >= 500:
+        return ErreurApi(MESSAGE_ERREUR_SERVEUR)
     detail = ""
     try:
         contenu = json.loads(corps.decode("utf-8"))

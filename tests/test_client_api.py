@@ -83,6 +83,14 @@ class TestClientApi(unittest.TestCase):
         self.assertEqual([r.ok for r in resultats], [False, True, True])
         self.assertIn("Délai dépassé", resultats[0].erreur)
 
+    def test_erreur_serveur_expliquee_et_limitee_au_site(self) -> None:
+        inconnu = SiteCnig("I", "Site inconnu du cadastre", "77305", [serveur_factice.PARCELLE_INCONNUE], 96)
+        resultats, erreur, _ = analyser([inconnu, self.sites[0]])
+        self.assertIsNone(erreur)
+        self.assertEqual([r.ok for r in resultats], [False, True])
+        self.assertIn("parcelles introuvables au cadastre", resultats[0].erreur)
+        self.assertNotIn("500", resultats[0].erreur)
+
     def test_origine_non_autorisee_arrete_l_inventaire(self) -> None:
         QgsSettings().setValue(CLE_ORIGINE, "https://autre.exemple.fr")
         resultats, erreur, _ = analyser(self.sites[:3])
