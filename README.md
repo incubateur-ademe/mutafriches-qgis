@@ -27,7 +27,9 @@ précédente est remplacée).
 
 ## Tester en 3 minutes
 
-1. Ouvrir le panneau **Mutafriches** : la fenêtre d'accueil demande structure et mail (une fois).
+1. Ouvrir le panneau **Mutafriches** : il demande structure et mail (une fois). Sur un projet
+   vide, un fond OpenStreetMap cadré sur la France est ajouté ; un projet qui a déjà des couches
+   n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
    OK ou KO avec ses erreurs ; les lignes KO sont écartées de l'envoi. **Télécharger un fichier
    exemple** enregistre un modèle à remplir, aux valeurs volontairement fictives (commune 99999).
