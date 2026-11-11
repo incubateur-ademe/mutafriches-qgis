@@ -23,8 +23,9 @@ mutafriches=true
 overrideFlag=true
 userLocale=fr_FR
 
-[mutafriches]
-api\\url=$API
+[plugins]
+mutafriches\\dev=true
+mutafriches\\api\\url=$API
 
 [qgis]
 checkVersion=false

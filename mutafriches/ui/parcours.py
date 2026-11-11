@@ -15,6 +15,7 @@ from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 
 from ..carto.couches import EMPRISE_FRANCE, ajouter_fond_osm, creer_couches, emprise_carte
+from ..core import reglages
 from ..core.attributaire import (
     FICHIER_MODELE_CNIG,
     SiteAttributaire,
@@ -31,12 +32,12 @@ from ..core.client_api import (
     AnalyseInventaire,
     ErreurApi,
     ResultatSite,
-    definir_environnement_api,
-    environnement_api,
 )
 from ..core.cnig import LectureCnig, lire_cnig
 from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 
+# Nom d'objet de la page « Mutafriches » des options de QGIS (ui/options.py)
+NOM_PAGE_OPTIONS = "mutafrichesOptions"
 # Attente simulée en mode démonstration
 DELAI_ANALYSE_MS = 2500
 AVERTISSEMENT_API = (
@@ -58,7 +59,8 @@ class Parcours(QObject):
         super().__init__()
         self.iface = iface
         self.version = version
-        self.environnement = environnement_api()
+        reglages.migrer_anciens_reglages()
+        self.environnement = reglages.environnement()
         self._couches: list[str] = []
         self.avancement: tuple[int, int] = (0, 0)
         self.erreur_api: ErreurApi | None = None
@@ -119,7 +121,7 @@ class Parcours(QObject):
 
     def preparer_carte(self) -> None:
         """À l'ouverture du panneau sur un projet vide : fond de carte, cadré sur la France."""
-        if not ajouter_fond_osm():
+        if not reglages.FOND_OSM.value() or not ajouter_fond_osm():
             return
         # La carte ne prend la projection du projet qu'au tour d'événements suivant : cadrer après
         QTimer.singleShot(300, self._cadrer_france)
@@ -146,10 +148,13 @@ class Parcours(QObject):
         """Bascule production, staging ou démonstration, en repartant d'un panneau vide."""
         if environnement not in LIBELLES_ENVIRONNEMENTS or environnement == self.environnement:
             return
+        reglages.ENVIRONNEMENT.setValue(environnement)
+        self.environnement = reglages.environnement()
+        self.repartir_a_vide()
+
+    def repartir_a_vide(self) -> None:
+        """Après un changement de service : jamais de résultats d'un service affichés sous un autre."""
         self.annuler_analyse()
-        self.environnement = environnement
-        definir_environnement_api(environnement)
-        # Jamais de résultats d'un environnement affichés sous le bandeau d'un autre
         self._retirer_couches()
         self.sites = []
         self.synthese = None
@@ -160,6 +165,22 @@ class Parcours(QObject):
         if self.etape == Etape.RESULTATS:
             self.etape = Etape.IMPORT
         self.change.emit()
+
+    def reglages_modifies(self, service_change: bool) -> None:
+        """Appelé par la page d'options : relit les réglages et met le panneau en accord."""
+        self.environnement = reglages.environnement()
+        self.utilisateur = charger_utilisateur()
+        if not self.utilisateur.complet:
+            self.etape = Etape.ACCUEIL
+        elif self.etape == Etape.ACCUEIL:
+            self.etape = Etape.IMPORT
+        if service_change:
+            self.repartir_a_vide()
+        else:
+            self.change.emit()
+
+    def ouvrir_reglages(self) -> None:
+        self.iface.showOptionsDialog(self.iface.mainWindow(), NOM_PAGE_OPTIONS)
 
     def changer_mode(self, mode: str) -> None:
         self.changer_environnement(DEMONSTRATION if mode == "demo" else PRODUCTION)

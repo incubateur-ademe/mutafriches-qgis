@@ -8,7 +8,6 @@ from qgis.PyQt.QtCore import QStandardPaths, Qt
 from qgis.PyQt.QtGui import QResizeEvent
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
-    QComboBox,
     QFileDialog,
     QFrame,
     QGridLayout,
@@ -20,7 +19,7 @@ from qgis.PyQt.QtWidgets import (
 
 from ..carto.couches import COULEURS_USAGES
 from ..core.attributaire import ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
-from ..core.client_api import DEMONSTRATION, LIBELLES_ENVIRONNEMENTS, PRODUCTION, mode_developpeur
+from ..core.client_api import DEMONSTRATION, PRODUCTION
 from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
@@ -110,15 +109,10 @@ class PageImport(Page):
             "", "lien", lambda: parcours.changer_environnement(DEMONSTRATION if parcours.reel else PRODUCTION)
         )
         self.pied_layout.addWidget(self.bouton_mode, 0, Qt.AlignmentFlag.AlignCenter)
-        # Réservé à l'équipe (mode développeur) : production, staging ou démonstration
-        self.environnements = QComboBox()
-        self.environnements.setAccessibleName("Environnement de l'API")
-        for cle, libelle in LIBELLES_ENVIRONNEMENTS.items():
-            self.environnements.addItem(f"Environnement : {libelle}", cle)
-        self.environnements.currentIndexChanged.connect(
-            lambda *_: parcours.changer_environnement(str(self.environnements.currentData()))
+        # Staging, adresse d'API et autres réglages : page « Mutafriches » des options de QGIS
+        self.pied_layout.addWidget(
+            bouton("Réglages", "lien", parcours.ouvrir_reglages), 0, Qt.AlignmentFlag.AlignCenter
         )
-        self.pied_layout.addWidget(self.environnements)
 
     def _telecharger_modele(self) -> None:
         # Dossier de départ explicite : sans lui la fenêtre s'ouvre à la racine du disque, en lecture seule
@@ -207,12 +201,7 @@ class PageImport(Page):
             if parcours.reel
             else "Passer en mode réel (API Mutafriches)"
         )
-        developpeur = mode_developpeur()
-        self.bouton_mode.setVisible(not developpeur and not parcours.analyse_en_cours)
-        self.environnements.blockSignals(True)
-        self.environnements.setCurrentIndex(self.environnements.findData(parcours.environnement))
-        self.environnements.blockSignals(False)
-        self.environnements.setVisible(developpeur and not parcours.analyse_en_cours)
+        self.bouton_mode.setVisible(not parcours.analyse_en_cours)
 
 
 class LigneCnig(QFrame):

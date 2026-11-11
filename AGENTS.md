@@ -39,7 +39,8 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── referentiel.py       # Champs, valeurs, libellés, badges (miroir de shared-types et apps/ui)
 │   ├── recapitulatif.py     # Récapitulatif, détail d'usage, valeurs des étapes (miroir des builders web)
 │   ├── cnig.py              # Lecture et contrôle d'un fichier CNIG Friches (51 colonnes)
-│   ├── client_api.py        # Appels réels : enrichissement puis calcul, site par site, réglages
+│   ├── reglages.py          # Réglages déclarés dans l'arbre de QGIS (plugins/mutafriches/...)
+│   ├── client_api.py        # Appels réels : enrichissement puis calcul, site par site
 │   ├── attributaire.py      # Ligne attributaire (API ou table figée), appariement, synthèse
 │   ├── modele.py            # Site analysé (parcours site à site, hors panneau)
 │   ├── service.py           # Interface du service (enrichir / évaluer), erreurs
@@ -49,7 +50,8 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── exemple.py           # Couche de parcelles d'exemple (parcours site à site)
 │   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
-│   ├── accueil.py           # Fenêtre d'accueil (structure, mail, consentement), QgsSettings
+│   ├── accueil.py           # Utilisateur (structure, mail, consentement)
+│   ├── options.py           # Page « Mutafriches » de Préférences › Options
 │   ├── parcours.py          # État : fichier CNIG, analyse réelle ou démonstration, résultats
 │   ├── prototype.py         # Pages Accueil, Import et Résultats (tableau de bord territorial)
 │   ├── graphiques.py        # Anneaux, légendes et petits tableaux dessinés avec QPainter
@@ -252,8 +254,11 @@ jamais en `--force`.
 - L'API répond **500 « Erreur lors de l'enrichissement »** quand aucune parcelle du site
   n'existe au cadastre : c'est un échec du site, à expliquer en clair, jamais « Erreur 500 ».
 - Le fichier exemple (commune 99999) est refusé au contrôle local : ne jamais l'envoyer à l'API.
-- Trois environnements (`core/client_api.py`) : production, staging, démonstration. Le staging
-  n'est visible qu'en mode développeur ; tout changement d'environnement doit vider les
+- **Réglages** : tous déclarés dans `core/reglages.py` (ADR-0004), jamais de clé `QgsSettings`
+  en dur ailleurs ; tout nouveau réglage y entre avec sa description, puis dans `ui/options.py`
+  s'il doit être modifiable. Ne jamais exposer un seuil ou un paramètre de calcul.
+- Trois environnements : production, staging, démonstration. Le staging et l'adresse d'API
+  libre ne sont lus qu'en mode développeur ; tout changement d'environnement doit vider les
   résultats et retirer les couches (`canvas.refreshAllLayers()` ensuite, sinon la carte garde
   le dernier rendu).
 - QGIS interrompt lui-même une requête de plus de 60 s (« Operation canceled ») : c'est un
@@ -262,8 +267,9 @@ jamais en `--force`.
   Mutafriches, contre le staging réel ; ne pas les retoucher à la main.
 - `tests/serveur_factice.py` sert aux tests unitaires et à l'E2E ; ne jamais présenter un
   passage contre lui comme un test contre la production.
-- `QgsSettings` écrit dans le profil courant : un test qui change `mutafriches/api/*` doit le
-  remettre en état.
+- Les réglages s'écrivent dans le profil courant : un test qui en change un doit le remettre en
+  état (`entree.remove()`). Un profil de test les pose dans la section `[plugins]` de son
+  fichier de réglages, avec `mutafriches\dev=true` pour qu'une adresse d'API locale soit lue.
 
 ### Fond de carte et cadrage
 

@@ -120,7 +120,7 @@ def preparer() -> None:
     fenetre = iface.mainWindow()
     fenetre.showNormal()
     fenetre.setFixedSize(1600, 1000)
-    QgsSettings().remove("mutafriches/utilisateur")
+    QgsSettings().remove("plugins/mutafriches/utilisateur")
     QgsSettings().setValue("qgis/dockAttributeTable", True)
     for nom in ("Browser", "Browser2"):
         explorateur = iface.mainWindow().findChild(QDockWidget, nom)
@@ -285,7 +285,32 @@ def sites_a_reprendre() -> None:
     barre = dock().defilement.verticalScrollBar()
     barre.setValue(barre.maximum())
     capture("13-sites-a-reprendre")
-    QgsSettings().remove("mutafriches/utilisateur")
+
+
+@etape(1000)
+def reglages() -> None:
+    from mutafriches.core import reglages as reglages_extension
+
+    # La page telle que la voit un utilisateur : sans le mode développeur du profil de capture
+    reglages_extension.DEV.setValue(False)
+
+    def saisir() -> None:
+        fenetre = QApplication.activeModalWidget()
+        try:
+            if fenetre is None or fenetre.findChild(QWidget, "mutafrichesOptions") is None:
+                raise AssertionError("Fenêtre Options absente ou hors de la page Mutafriches")
+            fenetre.resize(1400, 875)
+            QApplication.processEvents()
+            enregistrer(fenetre.grab(), "14-reglages")
+        finally:
+            if fenetre is not None:
+                fenetre.reject()
+
+    QTimer.singleShot(2000, lambda: garder(saisir))
+    cliquer("Analyser un autre inventaire")
+    cliquer("Réglages")
+    reglages_extension.DEV.setValue(True)
+    QgsSettings().remove("plugins/mutafriches/utilisateur")
 
 
 def terminer() -> None:

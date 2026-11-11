@@ -1,11 +1,10 @@
-"""Utilisateur du prototype : structure, mail, consentement, mémorisés dans les réglages QGIS."""
+"""Utilisateur de l'extension : structure, mail, consentement, mémorisés dans les réglages QGIS."""
 
 import re
 from dataclasses import dataclass
 
-from qgis.core import QgsSettings
+from ..core import reglages
 
-CLE_REGLAGES = "mutafriches/utilisateur"
 FORMAT_MAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -21,16 +20,14 @@ class Utilisateur:
 
 
 def charger_utilisateur() -> Utilisateur:
-    reglages = QgsSettings()
     return Utilisateur(
-        structure=str(reglages.value(f"{CLE_REGLAGES}/structure", "")),
-        mail=str(reglages.value(f"{CLE_REGLAGES}/mail", "")),
-        consentement=str(reglages.value(f"{CLE_REGLAGES}/consentement", "false")).lower() == "true",
+        structure=reglages.STRUCTURE.value(),
+        mail=reglages.MAIL.value(),
+        consentement=reglages.CONSENTEMENT.value(),
     )
 
 
 def enregistrer_utilisateur(utilisateur: Utilisateur) -> None:
-    reglages = QgsSettings()
-    reglages.setValue(f"{CLE_REGLAGES}/structure", utilisateur.structure.strip())
-    reglages.setValue(f"{CLE_REGLAGES}/mail", utilisateur.mail.strip())
-    reglages.setValue(f"{CLE_REGLAGES}/consentement", "true" if utilisateur.consentement else "false")
+    reglages.STRUCTURE.setValue(utilisateur.structure.strip())
+    reglages.MAIL.setValue(utilisateur.mail.strip())
+    reglages.CONSENTEMENT.setValue(utilisateur.consentement)

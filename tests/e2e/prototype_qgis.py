@@ -112,7 +112,7 @@ def dock_titre(fragment: str) -> QDockWidget | None:
 def preparer() -> None:
     """Disposition des captures : carte au centre, couches à gauche, panneau à droite, tables en bas."""
     iface.mainWindow().resize(1600, 1000)
-    QgsSettings().remove("mutafriches/utilisateur")
+    QgsSettings().remove("plugins/mutafriches/utilisateur")
     QgsSettings().setValue("qgis/dockAttributeTable", True)
     for nom in ("Browser", "Browser2"):
         explorateur = iface.mainWindow().findChild(QDockWidget, nom)
@@ -218,7 +218,7 @@ def origine_refusee() -> None:
         "mode réel par défaut sur l'API locale, signalée au bandeau",
         parcours().reel and "API personnalisée" in dock().bandeau.text(),
     )
-    QgsSettings().setValue("mutafriches/api/origine", "https://autre.exemple.fr")
+    QgsSettings().setValue("plugins/mutafriches/api/origine", "https://autre.exemple.fr")
     cliquer("Envoyer mes 28 sites")
 
 
@@ -231,7 +231,7 @@ def acces_refuse() -> None:
         erreur,
     )
     capture("05b-acces-refuse")
-    QgsSettings().remove("mutafriches/api/origine")
+    QgsSettings().remove("plugins/mutafriches/api/origine")
     cliquer("Envoyer mes 28 sites")
 
 
@@ -379,19 +379,24 @@ def resultats_demonstration() -> None:
 
 @etape()
 def staging() -> None:
+    from mutafriches.core import reglages
     from mutafriches.core.client_api import URLS, url_api
 
     p = parcours()
     couches = len(QgsProject.instance().mapLayers())
-    controler("staging caché sans mode développeur", not dock().pages[1].environnements.isVisible() or p.etape != 1)
-    QgsSettings().setValue("mutafriches/dev", "true")
-    # Sans adresse personnalisée, le staging pointe sur son URL publique
-    personnalisee = QgsSettings().value("mutafriches/api/url")
-    QgsSettings().remove("mutafriches/api/url")
-    liste = dock().pages[1].environnements
-    liste.setCurrentIndex(liste.findData("staging"))
+    page = plugin().options.createWidget(None)
+    contexte["page"] = page
     controler(
-        "bascule staging : retour à l'import, couches de résultats retirées",
+        "page d'options : staging proposé en mode développeur",
+        page.dev.isChecked() and page.environnement.findData("staging") >= 0 and not page.url.isHidden(),
+    )
+    # Sans adresse libre, le staging pointe sur son URL publique
+    contexte["url"] = reglages.URL.value()
+    page.url.clear()
+    page.environnement.setCurrentIndex(page.environnement.findData("staging"))
+    page.apply()
+    controler(
+        "bascule staging depuis les options : retour à l'import, couches de résultats retirées",
         p.environnement == "staging"
         and p.etape == 1
         and p.synthese is None
@@ -400,26 +405,63 @@ def staging() -> None:
     )
     controler(
         "adresse et bandeau de staging",
-        url_api("staging") == URLS["staging"] and "staging" in dock().bandeau.text() and dock().bandeau.isVisible(),
-        dock().bandeau.text(),
+        url_api() == URLS["staging"] and "staging" in dock().bandeau.text() and dock().bandeau.isVisible(),
+        (url_api(), dock().bandeau.text()),
     )
-    controler("sélecteur visible en mode développeur", liste.isVisible())
-    contexte["url"] = personnalisee
 
 
 @etape(600)
-def capture_staging() -> None:
+def options_dans_qgis() -> None:
     capture("12-environnement-staging")
-    liste = dock().pages[1].environnements
-    liste.setCurrentIndex(liste.findData("production"))
+
+    # La vraie fenêtre Options de QGIS, ouverte par le lien « Réglages » du panneau
+    def saisir() -> None:
+        fenetre = QApplication.activeModalWidget()
+        controler(
+            "fenêtre Options ouverte sur la page Mutafriches",
+            fenetre is not None and fenetre.findChild(QWidget, "mutafrichesOptions") is not None,
+        )
+        if fenetre is not None:
+            fenetre.resize(1300, 900)
+            QApplication.processEvents()
+            fenetre.grab().save(str(CAPTURES / "13-page-options.png"))
+            fenetre.reject()
+
+    QTimer.singleShot(1500, saisir)
+    cliquer("Réglages")
+
+
+@etape(600)
+def options_sans_mode_developpeur() -> None:
+    from mutafriches.core import reglages
+
+    page = contexte["page"]
+    page.dev.setChecked(False)
     controler(
-        "retour en production : bandeau masqué",
-        parcours().environnement == "production" and not dock().bandeau.isVisible(),
+        "sans mode développeur : ni staging ni réglages d'API",
+        page.environnement.findData("staging") < 0 and page.url.isHidden() and page.intervalle.isHidden(),
     )
-    QgsSettings().setValue("mutafriches/api/url", contexte["url"])
-    QgsSettings().remove("mutafriches/dev")
-    QgsSettings().remove("mutafriches/api/environnement")
-    QgsSettings().remove("mutafriches/utilisateur")
+    page.dev.setChecked(True)
+    page.url.setText(str(contexte["url"]))
+    page.environnement.setCurrentIndex(page.environnement.findData("production"))
+    page.fond_osm.setChecked(False)
+    page.structure.setText("Agence d'urbanisme")
+    page.apply()
+    controler(
+        "retour en production depuis les options, informations et carte enregistrées",
+        parcours().environnement == "production"
+        and parcours().utilisateur.structure == "Agence d'urbanisme"
+        and not reglages.FOND_OSM.value(),
+        (parcours().environnement, parcours().utilisateur.structure),
+    )
+    page._effacer_utilisateur()
+    page.apply()
+    controler(
+        "informations effacées : le panneau revient à l'accueil",
+        parcours().etape == 0 and not parcours().utilisateur.complet,
+    )
+    reglages.FOND_OSM.remove()
+    reglages.ENVIRONNEMENT.remove()
 
 
 def terminer() -> None:

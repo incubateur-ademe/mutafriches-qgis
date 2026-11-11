@@ -27,6 +27,7 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QMetaType, QSizeF
 from qgis.PyQt.QtGui import QColor, QFont
 
+from ..core import reglages
 from ..core.attributaire import (
     CRITERES_QUALIFICATION_AUTO,
     CRITERES_QUALIFICATION_SAISIS,
@@ -287,7 +288,8 @@ def ajouter_fond_osm() -> bool:
 
 def creer_couches(sites: list[SiteAttributaire], suffixe: str) -> tuple[QgsVectorLayer, QgsVectorLayer]:
     projet = QgsProject.instance()
-    ajouter_fond_osm()
+    if reglages.FOND_OSM.value():
+        ajouter_fond_osm()
     nom_mutabilite = f"{NOM_COUCHE_MUTABILITE} ({suffixe})"
     nom_qualification = f"{NOM_COUCHE_QUALIFICATION} ({suffixe})"
     _remplacer(nom_mutabilite)

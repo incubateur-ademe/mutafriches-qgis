@@ -5,23 +5,33 @@ appels, site par site, sous la limite de 100 requêtes par minute (ADR-0003).
 """
 
 import json
-import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from qgis.core import QgsNetworkAccessManager, QgsSettings
+from qgis.core import QgsNetworkAccessManager
 from qgis.PyQt.QtCore import QObject, QTimer, QUrl
 from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 
+from . import reglages
 from .cnig import SiteCnig, complementaires_depuis_cnig
+from .reglages import DEMONSTRATION, PRODUCTION, STAGING
+
+__all__ = [
+    "DEMONSTRATION",
+    "LIBELLES_ENVIRONNEMENTS",
+    "PRODUCTION",
+    "STAGING",
+    "URLS",
+    "AnalyseInventaire",
+    "ErreurApi",
+    "ResultatSite",
+    "url_api",
+]
 
 # Réponse JSON de l'API : structure libre, vérifiée à l'usage
 Json = dict[str, Any]
 
-PRODUCTION = "production"
-STAGING = "staging"
-DEMONSTRATION = "demonstration"
 # Adresse de l'API par environnement ; la démonstration n'appelle rien (table figée)
 URLS: dict[str, str] = {
     PRODUCTION: "https://mutafriches.beta.gouv.fr",
@@ -32,20 +42,8 @@ LIBELLES_ENVIRONNEMENTS: dict[str, str] = {
     STAGING: "Staging (environnement de test)",
     DEMONSTRATION: "Démonstration (données figées)",
 }
-# Origine conventionnelle de l'extension, à déclarer dans ALLOWED_INTEGRATOR_ORIGINS sur chaque
-# environnement : elle sert d'identifiant d'intégrateur (docs/acces-api-integrateur.md de Mutafriches)
-ORIGINE_DEFAUT = "https://qgis.mutafriches.beta.gouv.fr"
-CLE_ENVIRONNEMENT = "mutafriches/api/environnement"
-# Adresse libre (serveur local, tests) : prend le pas sur celle de l'environnement
-CLE_URL = "mutafriches/api/url"
-CLE_ORIGINE = "mutafriches/api/origine"
-CLE_INTERVALLE = "mutafriches/api/intervalle_ms"
-CLE_DEV = "mutafriches/dev"
-VARIABLE_DEV = "MUTAFRICHES_DEV"
 
 DELAI_REQUETE_MS = 90_000
-# Deux requêtes par site et 100 requêtes par minute et par IP : un site toutes les 1,5 s au plus
-INTERVALLE_SITES_MS = 1500
 ATTENTE_DEBIT_MS = 20_000
 ESSAIS_DEBIT = 2
 MESSAGE_ERREUR_SERVEUR = (
@@ -57,36 +55,9 @@ ESSAIS_DELAI = 1
 ERREURS_DELAI = (QNetworkReply.NetworkError.OperationCanceledError, QNetworkReply.NetworkError.TimeoutError)
 
 
-def environnement_api() -> str:
-    valeur = str(QgsSettings().value(CLE_ENVIRONNEMENT, PRODUCTION))
-    return valeur if valeur in LIBELLES_ENVIRONNEMENTS else PRODUCTION
-
-
-def definir_environnement_api(environnement: str) -> None:
-    QgsSettings().setValue(CLE_ENVIRONNEMENT, environnement)
-
-
-def mode_developpeur() -> bool:
-    """Le staging n'est proposé qu'à l'équipe : variable d'environnement ou réglage avancé."""
-    reglage = str(QgsSettings().value(CLE_DEV, "false")).lower() == "true"
-    return reglage or os.environ.get(VARIABLE_DEV, "") not in ("", "0", "false")
-
-
-def url_personnalisee() -> str:
-    return str(QgsSettings().value(CLE_URL, "") or "").rstrip("/")
-
-
 def url_api(environnement: str = "") -> str:
-    return url_personnalisee() or URLS.get(environnement or environnement_api(), URLS[PRODUCTION])
-
-
-def intervalle_api() -> int:
-    # Réglable pour les tests ; en production, laisser la valeur par défaut (limite de débit)
-    return int(QgsSettings().value(CLE_INTERVALLE, INTERVALLE_SITES_MS) or INTERVALLE_SITES_MS)
-
-
-def origine_api() -> str:
-    return str(QgsSettings().value(CLE_ORIGINE, ORIGINE_DEFAUT) or ORIGINE_DEFAUT)
+    """Adresse libre du mode développeur si elle est renseignée, sinon celle de l'environnement."""
+    return reglages.url_personnalisee() or URLS.get(environnement or reglages.environnement(), URLS[PRODUCTION])
 
 
 @dataclass
@@ -152,9 +123,9 @@ class AnalyseInventaire(QObject):
         self.progression = progression
         self.termine = termine
         self.url = url_api(environnement)
-        self.origine = origine_api()
+        self.origine = reglages.origine()
         self.agent = f"mutafriches-qgis/{version_extension or 'dev'}"
-        self.intervalle_ms = intervalle_api() if intervalle_ms is None else intervalle_ms
+        self.intervalle_ms = reglages.intervalle_ms() if intervalle_ms is None else intervalle_ms
         self.resultats: list[ResultatSite] = []
         self._reponse: QNetworkReply | None = None
         self._annulee = False

@@ -5,8 +5,9 @@ from _qgis import RACINE  # noqa: F401  (initialise QGIS)
 from qgis.core import QgsSettings
 from qgis.PyQt.QtCore import QEventLoop, QTimer
 
+from mutafriches.core import reglages
 from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE, site_depuis_api, synthese
-from mutafriches.core.client_api import CLE_ORIGINE, CLE_URL, AnalyseInventaire, ErreurApi, ResultatSite
+from mutafriches.core.client_api import AnalyseInventaire, ErreurApi, ResultatSite, url_api
 from mutafriches.core.cnig import SiteCnig, complementaires_depuis_cnig, lire_cnig
 
 
@@ -30,16 +31,18 @@ class TestClientApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.serveur = serveur_factice.demarrer()
-        QgsSettings().setValue(CLE_URL, f"http://127.0.0.1:{cls.serveur.server_address[1]}")
+        # Une adresse libre n'est lue qu'en mode développeur
+        reglages.DEV.setValue(True)
+        reglages.URL.setValue(f"http://127.0.0.1:{cls.serveur.server_address[1]}")
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.serveur.shutdown()
-        QgsSettings().remove(CLE_URL)
-        QgsSettings().remove(CLE_ORIGINE)
+        for entree in (reglages.URL, reglages.ORIGINE, reglages.DEV):
+            entree.remove()
 
     def setUp(self) -> None:
-        QgsSettings().remove(CLE_ORIGINE)
+        reglages.ORIGINE.remove()
         self.sites = lire_cnig(FICHIER_CNIG_EXEMPLE).sites_ok
 
     def test_inventaire_analyse_site_par_site(self) -> None:
@@ -92,7 +95,7 @@ class TestClientApi(unittest.TestCase):
         self.assertNotIn("500", resultats[0].erreur)
 
     def test_origine_non_autorisee_arrete_l_inventaire(self) -> None:
-        QgsSettings().setValue(CLE_ORIGINE, "https://autre.exemple.fr")
+        reglages.ORIGINE.setValue("https://autre.exemple.fr")
         resultats, erreur, _ = analyser(self.sites[:3])
         self.assertEqual(resultats, [])
         self.assertIsNotNone(erreur)
@@ -100,42 +103,59 @@ class TestClientApi(unittest.TestCase):
         self.assertIn("Accès refusé", erreur.message)
 
     def test_api_injoignable(self) -> None:
-        QgsSettings().setValue(CLE_URL, "http://127.0.0.1:9")
+        reglages.URL.setValue("http://127.0.0.1:9")
         try:
             resultats, erreur, _ = analyser(self.sites[:1])
         finally:
-            QgsSettings().setValue(CLE_URL, f"http://127.0.0.1:{self.serveur.server_address[1]}")
+            reglages.URL.setValue(f"http://127.0.0.1:{self.serveur.server_address[1]}")
         self.assertEqual(resultats, [])
         self.assertTrue(erreur is not None and erreur.bloquante)
 
 
-class TestEnvironnements(unittest.TestCase):
-    def tearDown(self) -> None:
-        for cle in ("mutafriches/api/environnement", "mutafriches/dev"):
-            QgsSettings().remove(cle)
+class TestReglages(unittest.TestCase):
+    def setUp(self) -> None:
+        self.entrees = (reglages.ENVIRONNEMENT, reglages.DEV, reglages.URL, reglages.STRUCTURE, reglages.MAIL)
+        for entree in self.entrees:
+            entree.remove()
+
+    tearDown = setUp
+
+    def test_reglages_declares_dans_l_arbre_de_qgis(self) -> None:
+        self.assertEqual(reglages.DEV.key(), "/plugins/mutafriches/dev")
+        self.assertEqual(reglages.URL.key(), "/plugins/mutafriches/api/url")
+        self.assertTrue(reglages.FOND_OSM.value())
 
     def test_adresse_par_environnement(self) -> None:
-        from mutafriches.core.client_api import (
-            STAGING,
-            definir_environnement_api,
-            environnement_api,
-            mode_developpeur,
-            url_api,
-        )
-
-        self.assertEqual(environnement_api(), "production")
+        self.assertEqual(reglages.environnement(), "production")
         self.assertEqual(url_api(), "https://mutafriches.beta.gouv.fr")
-        definir_environnement_api(STAGING)
-        self.assertEqual(url_api(), "https://mutafriches.incubateur.ademe.dev")
-        # Une adresse personnalisée (tests, serveur local) prend le pas sur l'environnement
-        QgsSettings().setValue(CLE_URL, "http://127.0.0.1:1/")
+        reglages.ENVIRONNEMENT.setValue("inconnu")
+        self.assertEqual(reglages.environnement(), "production")
+
+    def test_staging_et_adresse_libre_reserves_au_mode_developpeur(self) -> None:
+        reglages.ENVIRONNEMENT.setValue("staging")
+        reglages.URL.setValue("http://127.0.0.1:1/")
+        self.assertEqual(reglages.environnement(), "production")
+        self.assertEqual(url_api(), "https://mutafriches.beta.gouv.fr")
+        reglages.DEV.setValue(True)
+        self.assertEqual(reglages.environnement(), "staging")
         self.assertEqual(url_api(), "http://127.0.0.1:1")
-        QgsSettings().remove(CLE_URL)
-        QgsSettings().setValue("mutafriches/api/environnement", "inconnu")
-        self.assertEqual(environnement_api(), "production")
-        self.assertFalse(mode_developpeur())
-        QgsSettings().setValue("mutafriches/dev", "true")
-        self.assertTrue(mode_developpeur())
+        reglages.URL.remove()
+        self.assertEqual(url_api(), "https://mutafriches.incubateur.ademe.dev")
+
+    def test_reprise_des_reglages_0_1(self) -> None:
+        anciens = QgsSettings()
+        anciens.setValue("mutafriches/utilisateur/structure", "CC du Pays de Montereau")
+        anciens.setValue("mutafriches/utilisateur/mail", "sig@exemple.fr")
+        anciens.setValue("mutafriches/dev", "true")
+        anciens.setValue("mutafriches/api/environnement", "demo")
+        self.assertEqual(reglages.migrer_anciens_reglages(), 4)
+        self.assertEqual(
+            (reglages.STRUCTURE.value(), reglages.MAIL.value()), ("CC du Pays de Montereau", "sig@exemple.fr")
+        )
+        self.assertTrue(reglages.DEV.value())
+        self.assertEqual(reglages.environnement(), "production")
+        self.assertFalse(anciens.contains("mutafriches/utilisateur/mail"))
+        self.assertEqual(reglages.migrer_anciens_reglages(), 0)
 
 
 class TestComplementairesCnig(unittest.TestCase):

@@ -50,47 +50,42 @@ précédente est remplacée).
 Un fichier CNIG d'une autre commune est accepté mais ses sites ne sont pas retrouvés dans la
 table figée : le panneau le signale et affiche les résultats de Montereau.
 
-### Environnements : production, staging, démonstration
+### Réglages
+
+Tous les réglages sont dans **Préférences › Options › Mutafriches**, page aussi ouverte par le
+lien « Réglages » du panneau et par le menu Extensions › Mutafriches (ADR-0004) :
+
+| Bloc | Réglages |
+|---|---|
+| Service | Environnement : production (défaut) ou démonstration |
+| Vos informations | Structure, mail, consentement ; « Effacer mes informations » fait revenir l'accueil |
+| Carte | Ajouter ou non le fond OpenStreetMap à l'ouverture d'un projet vide |
+| Développement | Mode développeur : staging, adresse d'API libre, origine envoyée, délai entre sites |
 
 | Environnement | API | Bandeau |
 |---|---|---|
-| `production` (défaut) | `https://mutafriches.beta.gouv.fr` | aucun |
-| `staging` | `https://mutafriches.incubateur.ademe.dev` | « Environnement de test (staging) » |
-| `demonstration` | aucune, table figée de Montereau | « Mode démonstration » |
+| Production | `https://mutafriches.beta.gouv.fr` | aucun |
+| Staging (mode développeur) | `https://mutafriches.incubateur.ademe.dev` | « Environnement de test (staging) » |
+| Démonstration | aucune, table figée de Montereau | « Mode démonstration » |
 
-Les utilisateurs ne voient qu'un lien pour passer de la production à la démonstration. Le
-sélecteur à trois valeurs, staging compris, n'apparaît qu'en **mode développeur** : lancer QGIS
-avec `MUTAFRICHES_DEV=1`, ou poser le réglage `mutafriches/dev = true` (Préférences, Avancé).
+Changer de service vide les résultats et retire les deux couches Mutafriches du projet. Sans
+mode développeur, le staging et l'adresse libre sont ignorés même s'ils sont enregistrés.
+`MUTAFRICHES_DEV=1` au lancement de QGIS active aussi le mode développeur. Les réglages sont
+enregistrés sous `plugins/mutafriches/` et visibles dans Options › Avancé.
 
-```bash
-MUTAFRICHES_DEV=1 /Applications/QGIS.app/Contents/MacOS/QGIS
-```
+L'extension pose l'en-tête `Origin: https://qgis.mutafriches.beta.gouv.fr`, autorisé sur les
+deux API. Un site prend deux à cinq secondes ; un site dont la réponse dépasse le délai réseau
+de QGIS (60 s par défaut) est retenté une fois, puis listé en échec sans interrompre les
+suivants. Structure et mail restent dans le profil QGIS, rien n'est transmis.
 
-Changer d'environnement vide les résultats et retire les deux couches Mutafriches du projet.
-Le choix est mémorisé (`mutafriches/api/environnement`).
-
-L'extension pose l'en-tête `Origin: https://qgis.mutafriches.beta.gouv.fr`. Cette origine doit
-être déclarée dans `ALLOWED_INTEGRATOR_ORIGINS` **sur chaque environnement** ; sinon l'envoi
-échoue avec « Accès refusé » et le panneau propose la démonstration. Autres réglages :
-`mutafriches/api/origine`, et `mutafriches/api/url` pour une adresse libre (serveur local), qui
-prend le pas sur l'environnement et s'affiche au bandeau. Un site prend deux à cinq secondes ;
-les sites en échec sont listés dans « Sites nécessitant votre attention ». Structure et mail
-restent dans le profil QGIS, rien n'est transmis.
-
-Un site dont la réponse dépasse le délai réseau de QGIS (60 s par défaut) est retenté une fois,
-puis listé en échec sans interrompre les suivants.
-
-Pour jouer le mode réel sans appeler Mutafriches : `python3 tests/serveur_factice.py 8799`, puis
-`mutafriches/api/url = http://127.0.0.1:8799`.
+Pour jouer le mode réel sans appeler Mutafriches : `python3 tests/serveur_factice.py 8799`, puis,
+en mode développeur, adresse d'API libre `http://127.0.0.1:8799`.
 
 ### Revoir l'accueil
 
-L'accueil (structure, mail, consentement) n'est demandé qu'une fois : il est mémorisé dans le
-profil QGIS. Pour le revoir, le lien **Modifier** en bas de la page d'import, ou, QGIS fermé :
-
-```bash
-./scripts/reinitialiser.sh
-```
+L'accueil (structure, mail, consentement) n'est demandé qu'une fois. Pour le revoir : le lien
+**Modifier** en bas de la page d'envoi, ou **Effacer mes informations** dans les réglages.
+QGIS fermé, `./scripts/reinitialiser.sh` fait la même chose.
 
 ## Captures
 
