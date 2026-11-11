@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .DS_Store
 captures/
+.venv/
+.mypy_cache/
+.ruff_cache/
