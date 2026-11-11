@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  qualite:
+    name: Format, lint, types et paquet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Installer uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Installer l'outillage
+        run: uv sync --locked
+
+      - name: Vérifier le format
+        run: uv run ruff format --check .
+
+      - name: Linter
+        run: uv run ruff check .
+
+      - name: Vérifier les types
+        run: uv run mypy
+
+      - name: Construire et contrôler le ZIP
+        run: |
+          ./scripts/package.sh
+          uv run python scripts/verifier-paquet.py
+
+  tests:
+    name: Tests unitaires dans QGIS 3.44
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Source des constantes recopiées dans l'extension : tests/test_miroirs.py la compare
+      - name: Récupérer Mutafriches (shared-types)
+        uses: actions/checkout@v5
+        with:
+          repository: incubateur-ademe/mutafriches
+          path: _mutafriches
+          sparse-checkout: packages/shared-types/src
+
+      # Image officielle : le parcours E2E avec captures reste manuel (macOS, session graphique)
+      - name: Lancer les tests avec le Python de QGIS
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src \
+            -e QT_QPA_PLATFORM=offscreen -e MUTAFRICHES_DEPOT=/src/_mutafriches \
+            qgis/qgis:3.44 \
+            python3 -m unittest discover -s tests -p "test_*.py" -v
