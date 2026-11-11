@@ -161,12 +161,12 @@ SECTIONS: dict[str, str] = {
     "risques-zonages": "Les risques et zonages du site",
 }
 
-# Miroir de USAGE_CONFIG (apps/ui/src/features/resultats/utils/usagesLabels.utils.ts)
+# Miroir de USAGE_LABELS (shared-types, usages.constants.ts), vérifié par tests/test_miroirs.py
 USAGES: dict[str, str] = {
     "residentiel": "Habitat & commerce de proximité",
     "equipements": "Équipement public",
     "culture": "Équipement culturel & touristique",
-    "tertiaire": "Bureaux",
+    "tertiaire": "Locaux d'activité",
     "industrie": "Industrie",
     "renaturation": "Espace renaturé",
     "photovoltaique": "Centrale photovoltaïque au sol",
