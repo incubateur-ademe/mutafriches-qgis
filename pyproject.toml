@@ -1,0 +1,64 @@
+# Outillage de développement uniquement : l'extension n'a aucune dépendance tierce et tourne
+# avec le Python embarqué par QGIS. Ne rien installer dans ce Python-là (cf. AGENTS.md).
+[project]
+name = "mutafriches-qgis"
+version = "0"
+description = "Extension QGIS de Mutafriches (outillage de développement)"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["ruff>=0.14", "mypy>=1.18"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["dist", "captures"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W", "F", # erreurs et code mort
+  "I",           # ordre des imports
+  "UP",          # syntaxe Python 3.12
+  "B",           # pièges courants
+  "SIM", "C4",   # simplifications
+  "TID251",      # imports interdits (PyQt5 direct)
+  "ANN",         # annotations obligatoires (règle 1 d'AGENTS.md)
+  "RUF",
+]
+ignore = [
+  "E501",                       # la longueur est l'affaire du formateur ; les libellés longs restent sur une ligne
+  "RUF001", "RUF002", "RUF003", # typographie française : guillemets, espaces insécables, apostrophes
+  "ANN401",                     # PyQGIS n'est pas typé : Any est parfois la seule annotation honnête
+  "SIM108",                     # un if/else explicite se lit mieux qu'un ternaire long
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"PyQt5".msg = "Importer Qt par qgis.PyQt : PyQt5 lie le code à Qt5 et casse le passage à QGIS 4."
+"PyQt6".msg = "Importer Qt par qgis.PyQt."
+
+[tool.ruff.lint.per-file-ignores]
+# Scénarios joués dans QGIS et scripts de génération : annotations non exigées
+"tests/**" = ["ANN", "B011"]
+"outils/**" = ["ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mutafriches"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["mutafriches"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+
+# PyQGIS et PyQt ne fournissent pas de types exploitables hors de QGIS
+[[tool.mypy.overrides]]
+module = ["qgis", "qgis.*"]
+ignore_missing_imports = true
