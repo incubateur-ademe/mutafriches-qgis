@@ -215,7 +215,9 @@ if PHASE == "parcours":
         controler("étape 1 après 2 s", parcours().etape == 1 and site.enrichissement is not None)
         pollution = page(1).champs["presencePollution"]
         controler("pollution « Oui » présélectionnée", pollution.liste.currentData() == "oui")
-        controler("choix vide par défaut", page(1).champs["typeProprietaire"].liste.currentText() == "Sélectionner une option")
+        controler(
+            "choix vide par défaut", page(1).champs["typeProprietaire"].liste.currentText() == "Sélectionner une option"
+        )
         cliquer("Suivant")
         erreurs = [c.cle for c in page(1).champs.values() if not c.erreur.isHidden()]
         controler("champs obligatoires signalés", parcours().etape == 1 and len(erreurs) == 4, erreurs)
@@ -223,7 +225,9 @@ if PHASE == "parcours":
         page(1).champs["etatBatiInfrastructure"].liste.setCurrentIndex(
             page(1).champs["etatBatiInfrastructure"].liste.findData("pas-de-bati")
         )
-        controler("valeur patrimoniale masquée si pas de bâti", page(1).champs["valeurArchitecturaleHistorique"].isHidden())
+        controler(
+            "valeur patrimoniale masquée si pas de bâti", page(1).champs["valeurArchitecturaleHistorique"].isHidden()
+        )
         remplir(1, {"typeProprietaire": "prive", "etatBatiInfrastructure": "degradation-heterogene"})
         controler("valeur patrimoniale réaffichée", not page(1).champs["valeurArchitecturaleHistorique"].isHidden())
         capture("05-etape-1")
@@ -280,7 +284,13 @@ if PHASE == "parcours":
     def modifier_donnees() -> None:
         cliquer("‹  Modifier les données")
         controler("retour à l'étape 1", parcours().etape == 1)
-        traverser_etapes({"typeProprietaire": "prive", "etatBatiInfrastructure": "degradation-heterogene", "presencePollution": "non"})
+        traverser_etapes(
+            {
+                "typeProprietaire": "prive",
+                "etatBatiInfrastructure": "degradation-heterogene",
+                "presencePollution": "non",
+            }
+        )
 
     @etape(2300)
     def approximation() -> None:
@@ -306,7 +316,11 @@ if PHASE == "parcours":
         donnees = parcours().site.enrichissement
         # Surface de la parcelle réellement sélectionnée (le clic peut tomber sur une voisine)
         surface = parcours().site.surface_m2
-        controler("profil générique : surface mesurée", abs(donnees["surfaceSite"] - surface) < 1, (donnees["surfaceSite"], surface))
+        controler(
+            "profil générique : surface mesurée",
+            abs(donnees["surfaceSite"] - surface) < 1,
+            (donnees["surfaceSite"], surface),
+        )
         controler("profil générique : commune", donnees["commune"] == "Trélazé", donnees["commune"])
         traverser_etapes()
 
@@ -346,7 +360,9 @@ else:
                 paire = (a, voisine)
                 break
         assert paire is not None
-        couche = QgsVectorLayer("Polygon?crs=EPSG:4326&field=id:string&field=commune:string", "Ma couche cadastrale", "memory")
+        couche = QgsVectorLayer(
+            "Polygon?crs=EPSG:4326&field=id:string&field=commune:string", "Ma couche cadastrale", "memory"
+        )
         vers_wgs84 = QgsCoordinateTransform(L93, QgsCoordinateReferenceSystem("EPSG:4326"), QgsProject.instance())
         for source in paire:
             copie = QgsFeature(couche.fields())
@@ -402,9 +418,7 @@ else:
 
 
 def terminer() -> None:
-    (SORTIE / f"rapport-{PHASE}.json").write_text(
-        json.dumps(rapport, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    (SORTIE / f"rapport-{PHASE}.json").write_text(json.dumps(rapport, ensure_ascii=False, indent=2), encoding="utf-8")
     QgsProject.instance().setDirty(False)
     iface.actionExit().trigger()
 

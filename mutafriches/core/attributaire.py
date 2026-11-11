@@ -176,7 +176,12 @@ def charger_table(fichier: Path = FICHIER_ATTRIBUTAIRE) -> tuple[list[SiteAttrib
 
 
 def site_depuis_api(
-    site_id: str, nom: str, parcelles: list[str], enrichissement: Json, mutabilite: Json, complementaires: dict[str, str]
+    site_id: str,
+    nom: str,
+    parcelles: list[str],
+    enrichissement: Json,
+    mutabilite: Json,
+    complementaires: dict[str, str],
 ) -> SiteAttributaire:
     """Ligne attributaire d'un site analysé par l'API (miroir de resumerPourAttributaire)."""
     resultats = [r for r in mutabilite.get("resultats", []) if isinstance(r, dict)]  # type: ignore[union-attr]
@@ -229,7 +234,9 @@ def synthese(sites: list[SiteAttributaire], meta: Json) -> Synthese:
     profils = Counter(s.profil for s in sites)
     compatibilites = Counter(s.niveau_compatibilite for s in sites)
     moyens = {
-        u: round(sum(s.indices[u] for s in sites if u in s.indices) / max(1, sum(1 for s in sites if u in s.indices)), 1)
+        u: round(
+            sum(s.indices[u] for s in sites if u in s.indices) / max(1, sum(1 for s in sites if u in s.indices)), 1
+        )
         for u in ORDRE_USAGES
     }
     forte = sorted((s for s in sites if s.indice_max >= 70), key=lambda s: -s.indice_max)

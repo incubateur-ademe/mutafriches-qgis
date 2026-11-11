@@ -161,8 +161,7 @@ class ServiceSimule:
             if tentative <= scenario.echecs_avant_succes:
                 echec(
                     ErreurService(
-                        "Le service d'enrichissement n'a pas répondu à temps. "
-                        "Vous pouvez relancer la récupération.",
+                        "Le service d'enrichissement n'a pas répondu à temps. Vous pouvez relancer la récupération.",
                         recuperable=True,
                         code="DELAI_DEPASSE",
                     )
@@ -180,9 +179,7 @@ class ServiceSimule:
         echec: Callable[[ErreurService], None],
     ) -> TacheSimulee:
         def repondre() -> None:
-            ids = enrichissement.get("identifiantsParcelles") or [
-                enrichissement.get("identifiantParcelle")
-            ]
+            ids = enrichissement.get("identifiantsParcelles") or [enrichissement.get("identifiantParcelle")]
             scenario = self.scenario_pour([str(i) for i in ids])  # type: ignore[union-attr]
             note = None
             if scenario is not None:

@@ -155,7 +155,11 @@ class Parcours(QObject):
         self.change.emit()
         if self.reel:
             self._analyse = AnalyseInventaire(
-                self.lecture.sites_ok, self._progression, self._analyse_terminee, self.version, environnement=self.environnement
+                self.lecture.sites_ok,
+                self._progression,
+                self._analyse_terminee,
+                self.version,
+                environnement=self.environnement,
             )
             self._analyse.demarrer()
             return
@@ -193,12 +197,21 @@ class Parcours(QObject):
         if erreur is not None:
             self.echecs.append(f"Analyse interrompue : {erreur.message}")
         self.sites = [
-            site_depuis_api(r.site.site_id, r.site.site_nom, r.site.parcelles, r.enrichissement or {}, r.mutabilite or {}, r.complementaires)
+            site_depuis_api(
+                r.site.site_id,
+                r.site.site_nom,
+                r.site.parcelles,
+                r.enrichissement or {},
+                r.mutabilite or {},
+                r.complementaires,
+            )
             for r in reussis
         ]
         self.non_retrouves = []
         source = "API Mutafriches" + (" (staging)" if self.environnement != PRODUCTION else "")
-        self._afficher_resultats({"provenance": f"{source} · analyse du {date.today().strftime('%d/%m/%Y')}"}, AVERTISSEMENT_API)
+        self._afficher_resultats(
+            {"provenance": f"{source} · analyse du {date.today().strftime('%d/%m/%Y')}"}, AVERTISSEMENT_API
+        )
 
     def _resultats_recus(self) -> None:
         self.analyse_en_cours = False
@@ -216,14 +229,18 @@ class Parcours(QObject):
     def _afficher_resultats(self, meta: dict[str, object], avertissement: str) -> None:
         if self.lecture is None:
             return
-        self.lignes_ecartees = [f"ligne {s.ligne} : {s.site_nom or s.site_id or 'sans nom'}" for s in self.lecture.sites_ko]
+        self.lignes_ecartees = [
+            f"ligne {s.ligne} : {s.site_nom or s.site_id or 'sans nom'}" for s in self.lecture.sites_ko
+        ]
         self.avertissement = avertissement
         self.synthese = synthese(self.sites, meta)
         if not self.sites:
             self.erreur_api = ErreurApi("Aucun site n'a pu être analysé : " + " ; ".join(self.echecs[:3]))
             self.change.emit()
             return
-        self.couche_mutabilite, self.couche_qualification = creer_couches(self.sites, self.synthese.code_insee or "inventaire")
+        self.couche_mutabilite, self.couche_qualification = creer_couches(
+            self.sites, self.synthese.code_insee or "inventaire"
+        )
         self._couches = [self.couche_mutabilite.id(), self.couche_qualification.id()]
         self.etape = Etape.RESULTATS
         self.change.emit()

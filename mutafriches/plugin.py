@@ -11,6 +11,7 @@ from qgis.PyQt.QtWidgets import QAction, QToolBar
 from .ui.dock import DockMutafriches
 from .ui.parcours import Parcours
 
+
 def version_extension() -> str:
     for ligne in (Path(__file__).resolve().parent / "metadata.txt").read_text(encoding="utf-8").splitlines():
         if ligne.startswith("version="):

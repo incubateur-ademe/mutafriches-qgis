@@ -31,8 +31,18 @@ ETAPES: dict[int, tuple[str, str, list[Element]]] = {
         "Qualifier l'environnement du site",
         [
             Info("commune", "Commune", "Récupéré depuis l'API IGN Cadastre :", "apicarto.ign.fr/api/doc/cadastre"),
-            Info("parcelles", "Identifiant parcelle", "Récupéré depuis l'API IGN Cadastre :", "apicarto.ign.fr/api/doc/cadastre"),
-            Info("surfaceSite", "Surface du site", "Récupéré depuis l'API IGN Cadastre :", "apicarto.ign.fr/api/doc/cadastre"),
+            Info(
+                "parcelles",
+                "Identifiant parcelle",
+                "Récupéré depuis l'API IGN Cadastre :",
+                "apicarto.ign.fr/api/doc/cadastre",
+            ),
+            Info(
+                "surfaceSite",
+                "Surface du site",
+                "Récupéré depuis l'API IGN Cadastre :",
+                "apicarto.ign.fr/api/doc/cadastre",
+            ),
             Info("surfaceBati", "Surface bâtie", "Récupéré depuis l'API BDNB :", "api-portail.bdnb.io"),
             Saisie("typeProprietaire"),
             SEPARATEUR,
@@ -183,9 +193,7 @@ ETAPES: dict[int, tuple[str, str, list[Element]]] = {
 # Prototype V0 : accueil, envoi des sites, résultats
 TITRE_ACCUEIL = "Bienvenue dans Mutafriches !"
 INTRO_ACCUEIL = "Pour nous aider à améliorer le service, dites-nous qui vous êtes."
-CONSENTEMENT_ACCUEIL = (
-    "J'accepte d'être contacté par l'équipe Mutafriches (ADEME) à des fins d'amélioration du service"
-)
+CONSENTEMENT_ACCUEIL = "J'accepte d'être contacté par l'équipe Mutafriches (ADEME) à des fins d'amélioration du service"
 TITRE_IMPORT = "Trouver le bon usage pour vos friches"
 INTRO_IMPORT = (
     "Envoyez votre inventaire de sites au standard CNIG Friches : Mutafriches qualifie chaque site "
@@ -215,8 +223,7 @@ MESSAGE_ANALYSE_LOT = (
 # AnalyserPage et carte de sélection
 TITRE_SELECTION = "Trouver le bon usage pour une friche"
 INTRO_SELECTION = (
-    "Pour démarrer l'analyse de l'usage le plus adapté à votre site en friche, sélectionner une "
-    "parcelle sur la carte."
+    "Pour démarrer l'analyse de l'usage le plus adapté à votre site en friche, sélectionner une parcelle sur la carte."
 )
 TUTORIEL = (
     "1. Dans le panneau Couches, sélectionnez une couche de parcelles.\n"
@@ -249,7 +256,7 @@ AIDE_ANALYSE = (
 )
 AIDE_FIABILITE = (
     "L'indice de fiabilité reflète la complétude des informations concernant la friche. Il baisse "
-    "si des données manquent ou si vous indiquez \"Je ne sais pas\"."
+    'si des données manquent ou si vous indiquez "Je ne sais pas".'
 )
 AIDE_USAGES = (
     "Pour les sites de plus d'un hectare, il vous est recommandé de privilégier un mixte d'usages "

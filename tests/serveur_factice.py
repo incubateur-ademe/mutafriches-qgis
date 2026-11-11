@@ -35,7 +35,9 @@ SITES = _sites()
 
 
 def enrichissement(identifiants: list[str]) -> tuple[int, dict]:
-    if PARCELLE_TROP_LENTE in identifiants or (PARCELLE_LENTE_UNE_FOIS in identifiants and PARCELLE_LENTE_UNE_FOIS not in _deja_lentes):
+    if PARCELLE_TROP_LENTE in identifiants or (
+        PARCELLE_LENTE_UNE_FOIS in identifiants and PARCELLE_LENTE_UNE_FOIS not in _deja_lentes
+    ):
         _deja_lentes.update(identifiants)
         time.sleep(ATTENTE_LENTE_S)
         return 400, {"statusCode": 400, "message": "Réponse tardive"}
@@ -76,7 +78,15 @@ def mutabilite(donnees: dict) -> tuple[int, dict]:
     exclus = [u for u in str(p.get("usages_exclus") or "").split("|") if u]
     classes = sorted(USAGES, key=lambda u: (u in exclus, -(p.get(f"indice_{u}") or 0)))
     return 200, {
-        "fiabilite": {"note": p["fiabilite"], "text": p["fiabilite_niveau"], "description": "", "criteresRenseignes": 0, "criteresTotal": 0, "poidsRenseignes": 0, "poidsTotal": 0},
+        "fiabilite": {
+            "note": p["fiabilite"],
+            "text": p["fiabilite_niveau"],
+            "description": "",
+            "criteresRenseignes": 0,
+            "criteresTotal": 0,
+            "poidsRenseignes": 0,
+            "poidsTotal": 0,
+        },
         "resultats": [
             {"rang": rang, "usage": usage, "indiceMutabilite": p.get(f"indice_{usage}") or 0, "exclu": usage in exclus}
             for rang, usage in enumerate(classes, start=1)

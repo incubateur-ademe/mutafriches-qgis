@@ -39,7 +39,9 @@ class Page:
 class Chargement(QFrame):
     """Encart d'attente de la qualification automatique (EnrichmentLoadingCallout)."""
 
-    def __init__(self, titre: str, sous_titre: str, message: str = "", avancement: Optional[tuple[int, int]] = None) -> None:
+    def __init__(
+        self, titre: str, sous_titre: str, message: str = "", avancement: Optional[tuple[int, int]] = None
+    ) -> None:
         super().__init__()
         self.setObjectName("mfBandeauSite")
         layout = QVBoxLayout(self)

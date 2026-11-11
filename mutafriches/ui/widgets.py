@@ -32,9 +32,7 @@ def texte(contenu: str, nom: str = "", selectionnable: bool = False) -> QLabel:
     return label
 
 
-def bouton(
-    libelle: str, variante: str = "primaire", action: Optional[Callable[[], None]] = None
-) -> QPushButton:
+def bouton(libelle: str, variante: str = "primaire", action: Optional[Callable[[], None]] = None) -> QPushButton:
     noms = {"primaire": "mfPrimaire", "secondaire": "mfSecondaire", "lien": "mfLien"}
     b = QPushButton(libelle)
     b.setObjectName(noms[variante])
@@ -82,9 +80,7 @@ class Encadre(QFrame):
 
     def definir(self, niveau: str, titre: str, contenu: str = "") -> None:
         couleur, fond = style.NIVEAUX[niveau]
-        self.setStyleSheet(
-            f"Encadre {{ background: {fond}; border: none; border-left: 4px solid {couleur}; }}"
-        )
+        self.setStyleSheet(f"Encadre {{ background: {fond}; border: none; border-left: 4px solid {couleur}; }}")
         self.titre.setText(titre)
         self.titre.setStyleSheet(f"font-weight: bold; color: {couleur};")
         self.titre.setVisible(bool(titre))

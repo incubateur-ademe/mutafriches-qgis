@@ -40,7 +40,9 @@ def image_usage(usage: str, taille: int) -> QLabel:
     pixmap = QPixmap(str(DOSSIER_IMAGES / IMAGES_USAGES.get(usage, "")))
     if not pixmap.isNull():
         etiquette.setPixmap(
-            pixmap.scaled(taille, taille, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            pixmap.scaled(
+                taille, taille, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+            )
         )
     etiquette.setAlignment(Qt.AlignmentFlag.AlignCenter)
     return etiquette
@@ -172,7 +174,9 @@ class DialogueDetailUsage(Fenetre):
         if isinstance(zaer, dict) and zaer.get("enZoneExclusion"):
             corps.addWidget(Encadre("avertissement", "", MESSAGE_ZONE_EXCLUSION_ENR))
         if not resultat.get("exclu"):
-            corps.addWidget(self._barre_ratio(float(resultat.get("avantages") or 0), float(resultat.get("contraintes") or 0)))  # type: ignore[arg-type]
+            corps.addWidget(
+                self._barre_ratio(float(resultat.get("avantages") or 0), float(resultat.get("contraintes") or 0))
+            )  # type: ignore[arg-type]
         grille = tableau(["Critère", "Valeur", "Pondération", "Impact"], [5, 4, 2, 2])
         ligne = 1
         for titre_section, lignes in construire_detail_usage(resultat, enrichissement, complementaires):
@@ -186,7 +190,9 @@ class DialogueDetailUsage(Fenetre):
                 valeur.setStyleSheet("font-weight: bold;")
                 grille.addWidget(valeur, ligne, 1)
                 grille.addWidget(texte(f"{detail.poids:.1f}"), ligne, 2, Qt.AlignmentFlag.AlignCenter)
-                grille.addWidget(badge(detail.impact.libelle, detail.impact.niveau), ligne, 3, Qt.AlignmentFlag.AlignCenter)
+                grille.addWidget(
+                    badge(detail.impact.libelle, detail.impact.niveau), ligne, 3, Qt.AlignmentFlag.AlignCenter
+                )
                 ligne += 1
         corps.addLayout(grille)
         corps.addStretch(1)
@@ -321,7 +327,9 @@ class LigneTableau(QFrame):
 class PageResultats(Page):
     def __init__(self, parcours: Parcours) -> None:
         super().__init__(parcours)
-        self.corps.addWidget(bouton("‹  Modifier les données", "secondaire", lambda: parcours.aller_etape(Etape.SITE_BATI)))
+        self.corps.addWidget(
+            bouton("‹  Modifier les données", "secondaire", lambda: parcours.aller_etape(Etape.SITE_BATI))
+        )
         self.corps.addWidget(titre_avec_aide("Analyse de mutabilité", "mfH2", contenus.AIDE_ANALYSE))
         self.zone = QVBoxLayout()
         self.zone.setSpacing(12)
@@ -366,7 +374,9 @@ class PageResultats(Page):
             return
         fiabilite = site.fiabilite() or {}
         note = float(fiabilite.get("note", 0))  # type: ignore[arg-type]
-        self.zone.addWidget(titre_avec_aide(f"Indice de fiabilité : {formater_note(note)}/10", "mfH3", contenus.AIDE_FIABILITE))
+        self.zone.addWidget(
+            titre_avec_aide(f"Indice de fiabilité : {formater_note(note)}/10", "mfH3", contenus.AIDE_FIABILITE)
+        )
         self.zone.addWidget(self._bandeau_site(site.enrichissement, len(site.parcelles), site.surface_m2))
 
         self.zone.addWidget(titre_avec_aide("Usages les plus compatibles", "mfH3", contenus.AIDE_USAGES))
