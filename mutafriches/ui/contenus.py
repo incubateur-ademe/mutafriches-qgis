@@ -219,6 +219,21 @@ AIDE_AUCUN_SITE = (
     "relancez l'envoi. Si l'erreur persiste pour des parcelles valides, écrivez à "
     "contact@mutafriches.beta.gouv.fr."
 )
+# Page « Mutafriches » des options de QGIS
+AIDE_OPTION_ENVIRONNEMENT = (
+    "Production : vos sites sont analysés par le service Mutafriches. Démonstration : aucun appel "
+    "réseau, résultats figés d'un inventaire d'exemple."
+)
+AIDE_OPTION_INFORMATIONS = "Ces informations restent sur votre poste : elles ne sont pas transmises à Mutafriches."
+AIDE_OPTION_FOND = (
+    "À l'ouverture du panneau sur un projet sans couche, un fond de carte OpenStreetMap est ajouté. "
+    "Décochez si votre structure n'autorise pas les fonds de carte externes."
+)
+AIDE_OPTION_DEV = "Donne accès à l'environnement de staging et aux réglages de l'API. Sans effet sur vos analyses."
+AIDE_OPTION_INTERVALLE = (
+    "L'API accepte 100 requêtes par minute et deux requêtes sont faites par site : ne pas descendre "
+    "sous 1500 ms hors d'un serveur local."
+)
 MESSAGE_ANALYSE_LOT = (
     "Pour chaque site, nous recueillons des informations localisées depuis plus de dix bases de "
     "données nationales, puis calculons sa mutabilité pour sept usages."

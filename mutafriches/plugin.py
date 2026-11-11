@@ -7,8 +7,10 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QToolBar
 
+from .core import reglages
 from .ui.dock import DockMutafriches
-from .ui.parcours import Parcours
+from .ui.options import FabriqueOptions
+from .ui.parcours import NOM_PAGE_OPTIONS, Parcours
 
 
 def version_extension() -> str:
@@ -29,8 +31,11 @@ class MutafrichesPlugin:
         self.barre: QToolBar | None = None
         self.dock: DockMutafriches | None = None
         self.parcours: Parcours | None = None
+        self.options: FabriqueOptions | None = None
+        self.action_reglages: QAction | None = None
 
     def initGui(self) -> None:
+        reglages.migrer_anciens_reglages()
         self.action = QAction(QIcon(ICONE), "Mutafriches", self.iface.mainWindow())
         self.action.setToolTip("Ouvrir le panneau Mutafriches")
         self.action.setCheckable(True)
@@ -40,6 +45,14 @@ class MutafrichesPlugin:
         self.barre.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.barre.addAction(self.action)
         self.iface.addPluginToMenu(MENU, self.action)
+        # Page « Mutafriches » de Préférences › Options, et son raccourci dans le menu de l'extension
+        self.options = FabriqueOptions(lambda: self.parcours)
+        self.iface.registerOptionsWidgetFactory(self.options)
+        self.action_reglages = QAction("Réglages…", self.iface.mainWindow())
+        self.action_reglages.triggered.connect(
+            lambda: self.iface.showOptionsDialog(self.iface.mainWindow(), NOM_PAGE_OPTIONS)
+        )
+        self.iface.addPluginToMenu(MENU, self.action_reglages)
 
     def _assurer_panneau(self) -> DockMutafriches:
         if self.dock is None:
@@ -71,5 +84,11 @@ class MutafrichesPlugin:
             self.iface.removePluginMenu(MENU, self.action)
         if self.barre is not None:
             self.barre.deleteLater()
+        if self.action_reglages is not None:
+            self.iface.removePluginMenu(MENU, self.action_reglages)
+        if self.options is not None:
+            self.iface.unregisterOptionsWidgetFactory(self.options)
+        reglages.retirer_de_l_arbre()
+        self.options = None
         self.dock = None
         self.parcours = None

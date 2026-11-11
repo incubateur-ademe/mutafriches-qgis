@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import QPoint, Qt, QTimer
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt.QtWidgets import QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
-from ..core.client_api import DEMONSTRATION, STAGING, url_personnalisee
+from ..core.reglages import DEMONSTRATION, STAGING, url_personnalisee
 from . import style
 from .pages import Page
 from .parcours import Etape, Parcours
