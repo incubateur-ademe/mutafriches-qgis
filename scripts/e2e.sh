@@ -12,6 +12,11 @@ PROFILS="$E2E/profils"
 PROFIL="$PROFILS/profiles/default"
 
 "$RACINE/scripts/package.sh" > /dev/null
+
+# API factice locale : le parcours joue le mode réel sans dépendre de la production
+PORT_API="${MF_E2E_PORT_API:-8799}"
+python3 "$RACINE/tests/serveur_factice.py" "$PORT_API" &
+PID_API=$!
 rm -rf "$E2E" "$CAPTURES"
 mkdir -p "$CAPTURES"
 # Sous macOS, QSettings range les réglages sous le domaine de l'organisation (qgis.org)
@@ -25,6 +30,10 @@ mutafriches=true
 overrideFlag=true
 userLocale=fr_FR
 
+[mutafriches]
+api\\url=http://127.0.0.1:$PORT_API
+api\\intervalle_ms=100
+
 [qgis]
 checkVersion=false
 showTips=false
@@ -35,7 +44,9 @@ INI
 # Un réglage déjà posé par l'utilisateur est laissé tel quel.
 if ! defaults read org.qgis.qgis3 NSRequiresAquaSystemAppearance >/dev/null 2>&1; then
   defaults write org.qgis.qgis3 NSRequiresAquaSystemAppearance -bool true
-  trap 'defaults delete org.qgis.qgis3 NSRequiresAquaSystemAppearance >/dev/null 2>&1 || true' EXIT
+  trap 'kill $PID_API 2>/dev/null || true; defaults delete org.qgis.qgis3 NSRequiresAquaSystemAppearance >/dev/null 2>&1 || true' EXIT
+else
+  trap 'kill $PID_API 2>/dev/null || true' EXIT
 fi
 
 for PHASE in prototype; do
