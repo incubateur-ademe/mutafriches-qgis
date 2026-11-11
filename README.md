@@ -123,11 +123,17 @@ dans une fenêtre ancrée ».
 
 ## Développement
 
+Prérequis : QGIS 3.44 et [uv](https://docs.astral.sh/uv/) (`brew install uv`), puis `uv sync`.
+
 ```bash
-./scripts/tests.sh     # Tests unitaires avec le Python de QGIS (sans interface)
-./scripts/package.sh   # ZIP installable
+./scripts/valider.sh   # Format, lint, types, tests unitaires, ZIP et contrôle du ZIP
 ./scripts/e2e.sh       # Parcours complet dans une vraie session QGIS, sur un profil isolé
 ```
+
+Ruff et mypy vivent dans `.venv/`, jamais dans le Python de QGIS. La CI joue
+`./scripts/valider.sh --check` en deux jobs : qualité, et tests unitaires dans l'image Docker
+officielle de QGIS. Les constantes recopiées de Mutafriches sont comparées à leur source par
+`tests/test_miroirs.py` quand le dépôt voisin `../mutafriches` est présent.
 
 `scripts/e2e.sh` joue le parcours du prototype dans QGIS sur un profil temporaire (le profil
 de l'utilisateur n'est pas modifié) : captures dans `captures/`, rapport et journal dans
