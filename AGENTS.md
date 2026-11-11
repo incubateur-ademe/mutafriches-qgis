@@ -23,6 +23,7 @@ référence des valeurs, libellés et formes de réponse reproduits ici.
 
 - **QGIS 3.44** (seule version testée : 3.44.14, macOS arm64), PyQGIS, **Qt 5.15 / PyQt 5.15**
 - **Python 3.12** embarqué par QGIS (aucune dépendance tierce)
+- **Outillage de développement** : `uv`, Ruff, mypy (hors du Python de QGIS)
 - **Interface Qt native** (widgets + QSS), inspirée du DSFR : pas de QtWebEngine (cf. Gotchas)
 - **Outillage hors plugin** : Python 3 (générateur de terrain), TypeScript via le `tsx` de
   Mutafriches (gel des réponses simulées)
@@ -80,10 +81,12 @@ tests/                       # Tests unittest exécutés avec le Python de QGIS
 ```python
 # INTERDIT : lie le code à PyQt5 et casse le passage à QGIS 4 / Qt6
 from PyQt5.QtWidgets import QPushButton
+
 label.setAlignment(Qt.AlignLeft)
 
 # OBLIGATOIRE
 from qgis.PyQt.QtWidgets import QPushButton
+
 label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 ```
 
@@ -150,11 +153,28 @@ Une ligne, le **pourquoi** et jamais le quoi. Pas de docstrings longues sauf sé
 ### Vérification post-implémentation
 
 ```bash
-./scripts/tests.sh      # Tests unitaires avec le Python de QGIS
-./scripts/package.sh    # Construit dist/mutafriches-<version>.zip
+./scripts/valider.sh    # Tout d'un coup : format, lint, types, tests, ZIP et son contrôle
 ./scripts/e2e.sh        # Parcours complet dans une vraie session QGIS (profil isolé)
-./scripts/reinitialiser.sh  # Efface l'accueil mémorisé dans le profil QGIS (QGIS fermé)
 ```
+
+`valider.sh` enchaîne `ruff format`, `ruff check --fix`, `mypy`, `scripts/tests.sh`,
+`scripts/package.sh` et `scripts/verifier-paquet.py` ; avec `--check`, il ne modifie rien
+(c'est ce que joue la CI). **Le lancer avant chaque commit** : un commit doit le laisser vert.
+
+- **Outillage** : Ruff (format et lint) et mypy, configurés dans `pyproject.toml`, installés
+  par `uv sync` dans `.venv/`. Ne jamais les installer dans le Python de QGIS.
+- **Règles tenues par les outils** : annotations obligatoires (`ANN`, `disallow_untyped_defs`),
+  `PyQt5` interdit au profit de `qgis.PyQt` (`TID251`), imports triés, syntaxe Python 3.12.
+- **`# type: ignore`** : toujours avec son code d'erreur, jamais pour contourner un `Json` ;
+  mypy signale ceux devenus inutiles.
+- **Miroirs de shared-types** : toute constante recopiée de Mutafriches (colonnes CNIG,
+  critères manuels, libellés d'usage, niveaux de fiabilité) est comparée à sa source par
+  `tests/test_miroirs.py`, ignoré si le dépôt voisin est absent. Ajouter un cas à ce test
+  pour toute nouvelle constante recopiée.
+- **CI** (`.github/workflows/ci.yml`) : job qualité, et tests unitaires dans l'image Docker
+  `qgis/qgis:3.44`. L'E2E avec captures reste manuel (macOS, session graphique).
+- Autres scripts : `./scripts/reinitialiser.sh` (accueil mémorisé, QGIS fermé),
+  `./scripts/captures-tutoriel.sh` (captures du tutoriel web, contre le staging).
 
 Ne jamais présenter une vérification syntaxique ou une capture simulée comme un test dans
 QGIS. Préciser la version et l'OS réellement testés.
