@@ -13,7 +13,7 @@ if [ ! -f "$INI" ]; then
   echo "Réglages introuvables : $INI" >&2
   exit 1
 fi
-# Section [mutafriches] : clés utilisateur\structure, utilisateur\mail, utilisateur\consentement
+# Clés plugins/mutafriches/utilisateur/* (et section [mutafriches] des versions 0.1.x)
 python3 - "$INI" <<'PY'
 import re
 import sys
@@ -21,7 +21,8 @@ from pathlib import Path
 
 chemin = Path(sys.argv[1])
 texte = chemin.read_text(encoding="utf-8")
-nouveau, n = re.subn(r"(?ms)^\[mutafriches\]\n(?:[^\[\n][^\n]*\n|\n)*", "", texte)
+nouveau, anciennes = re.subn(r"(?ms)^\[mutafriches\]\n(?:[^\[\n][^\n]*\n|\n)*", "", texte)
+nouveau, actuelles = re.subn(r"(?m)^mutafriches\\utilisateur\\[^\n]*\n", "", nouveau)
 chemin.write_text(nouveau, encoding="utf-8")
-print("Accueil réinitialisé." if n else "Rien à effacer : l'accueil n'était pas mémorisé.")
+print("Accueil réinitialisé." if anciennes or actuelles else "Rien à effacer : l'accueil n'était pas mémorisé.")
 PY

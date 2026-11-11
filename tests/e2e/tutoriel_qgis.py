@@ -120,7 +120,7 @@ def preparer() -> None:
     fenetre = iface.mainWindow()
     fenetre.showNormal()
     fenetre.setFixedSize(1600, 1000)
-    QgsSettings().remove("mutafriches/utilisateur")
+    QgsSettings().remove("plugins/mutafriches/utilisateur")
     QgsSettings().setValue("qgis/dockAttributeTable", True)
     for nom in ("Browser", "Browser2"):
         explorateur = iface.mainWindow().findChild(QDockWidget, nom)
@@ -285,7 +285,7 @@ def sites_a_reprendre() -> None:
     barre = dock().defilement.verticalScrollBar()
     barre.setValue(barre.maximum())
     capture("13-sites-a-reprendre")
-    QgsSettings().remove("mutafriches/utilisateur")
+    QgsSettings().remove("plugins/mutafriches/utilisateur")
 
 
 def terminer() -> None:

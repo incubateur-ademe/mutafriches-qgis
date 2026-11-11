@@ -30,9 +30,10 @@ mutafriches=true
 overrideFlag=true
 userLocale=fr_FR
 
-[mutafriches]
-api\\url=http://127.0.0.1:$PORT_API
-api\\intervalle_ms=100
+[plugins]
+mutafriches\\dev=true
+mutafriches\\api\\url=http://127.0.0.1:$PORT_API
+mutafriches\\api\\intervalle_ms=100
 
 [qgis]
 checkVersion=false
