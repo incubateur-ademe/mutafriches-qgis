@@ -24,11 +24,14 @@ dans le panneau, visible seulement après cette manipulation.
 | Service | Environnement : production ou démonstration | Tous |
 | Vos informations | Structure, mail, consentement, bouton « Effacer » | Tous |
 | Carte | Fond OpenStreetMap à l'ouverture d'un projet vide | Tous |
-| Développement | Mode développeur ; staging, adresse d'API libre, origine, délai entre sites | Équipe |
+| Développement | Mode développeur ; adresse d'API libre, origine, délai entre sites | Équipe |
 
-- **Mode développeur** : une case de la page (ou `MUTAFRICHES_DEV=1`). Sans lui, le staging et
-  l'adresse libre sont ignorés même s'ils sont enregistrés : un réglage oublié ne peut pas
-  détourner les analyses d'un utilisateur.
+- **Mode développeur** : une case de la page (ou `MUTAFRICHES_DEV=1`). Sans lui, l'adresse
+  libre est ignorée même si elle est enregistrée : un réglage oublié ne peut pas détourner les
+  analyses d'un utilisateur.
+- **Staging** (amendement, version 0.3.2) : d'abord réservé au mode développeur, il est proposé à
+  tous dans la liste des environnements, pour que l'équipe et ses testeurs y accèdent sans étape
+  cachée. Le bandeau « Environnement de test (staging) » signale ce choix en permanence.
 - **Non exposés** : seuils d'affichage du tableau de bord, critères, tout ce qui relève du
   calcul. Ils appartiennent à Mutafriches.
 - **Reprise** : les clés des versions 0.1.x sont copiées une fois vers les nouvelles, puis
