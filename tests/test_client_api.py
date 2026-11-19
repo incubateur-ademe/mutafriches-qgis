@@ -131,11 +131,12 @@ class TestReglages(unittest.TestCase):
         reglages.ENVIRONNEMENT.setValue("inconnu")
         self.assertEqual(reglages.environnement(), "production")
 
-    def test_staging_et_adresse_libre_reserves_au_mode_developpeur(self) -> None:
+    def test_staging_ouvert_et_adresse_libre_reservee_au_mode_developpeur(self) -> None:
         reglages.ENVIRONNEMENT.setValue("staging")
         reglages.URL.setValue("http://127.0.0.1:1/")
-        self.assertEqual(reglages.environnement(), "production")
-        self.assertEqual(url_api(), "https://mutafriches.beta.gouv.fr")
+        # Le staging se choisit sans mode développeur ; l'adresse libre reste ignorée sans lui
+        self.assertEqual(reglages.environnement(), "staging")
+        self.assertEqual(url_api(), "https://mutafriches.incubateur.ademe.dev")
         reglages.DEV.setValue(True)
         self.assertEqual(reglages.environnement(), "staging")
         self.assertEqual(url_api(), "http://127.0.0.1:1")
