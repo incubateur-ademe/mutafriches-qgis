@@ -75,8 +75,8 @@ class Parcours(QObject):
         self._analyse: AnalyseInventaire | None = None
         self.canvas = iface.mapCanvas()
         self.utilisateur: Utilisateur = charger_utilisateur()
-        # L'accueil n'est demandé qu'une fois : ensuite le panneau s'ouvre sur l'envoi des sites
-        self.etape = Etape.IMPORT if self.utilisateur.complet else Etape.ACCUEIL
+        # L'accueil n'est proposé qu'une fois : ensuite le panneau s'ouvre sur l'envoi des sites
+        self.etape = Etape.IMPORT if reglages.accueil_vu() else Etape.ACCUEIL
         self.fichier: Path | None = None
         self.lecture: LectureCnig | None = None
         self.analyse_en_cours = False
@@ -93,7 +93,7 @@ class Parcours(QObject):
 
     def valider_accueil(self, structure: str, mail: str, consentement: bool) -> bool:
         utilisateur = Utilisateur(structure, mail, consentement)
-        if not utilisateur.complet:
+        if not utilisateur.valide:
             return False
         self.utilisateur = utilisateur
         enregistrer_utilisateur(utilisateur)
@@ -177,7 +177,7 @@ class Parcours(QObject):
         """Appelé par la page d'options : relit les réglages et met le panneau en accord."""
         self.environnement = reglages.environnement()
         self.utilisateur = charger_utilisateur()
-        if not self.utilisateur.complet:
+        if not reglages.accueil_vu():
             self.etape = Etape.ACCUEIL
         elif self.etape == Etape.ACCUEIL:
             self.etape = Etape.IMPORT

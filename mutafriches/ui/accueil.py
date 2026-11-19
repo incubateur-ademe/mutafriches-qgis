@@ -1,4 +1,4 @@
-"""Utilisateur de l'extension : structure, mail, consentement, mémorisés dans les réglages QGIS."""
+"""Utilisateur de l'extension : structure, mail, consentement, tous facultatifs, mémorisés dans les réglages QGIS."""
 
 import re
 from dataclasses import dataclass
@@ -15,8 +15,17 @@ class Utilisateur:
     consentement: bool = False
 
     @property
-    def complet(self) -> bool:
-        return bool(self.structure.strip()) and bool(FORMAT_MAIL.match(self.mail.strip()))
+    def valide(self) -> bool:
+        """Tout est facultatif ; seul un mail saisi doit avoir la forme d'une adresse."""
+        return not self.mail.strip() or bool(FORMAT_MAIL.match(self.mail.strip()))
+
+    @property
+    def renseigne(self) -> bool:
+        return bool(self.structure.strip() or self.mail.strip())
+
+    @property
+    def resume(self) -> str:
+        return " · ".join(valeur.strip() for valeur in (self.structure, self.mail) if valeur.strip())
 
 
 def charger_utilisateur() -> Utilisateur:
@@ -30,4 +39,6 @@ def charger_utilisateur() -> Utilisateur:
 def enregistrer_utilisateur(utilisateur: Utilisateur) -> None:
     reglages.STRUCTURE.setValue(utilisateur.structure.strip())
     reglages.MAIL.setValue(utilisateur.mail.strip())
-    reglages.CONSENTEMENT.setValue(utilisateur.consentement)
+    # Un accord pour être contacté n'a de sens qu'avec une adresse
+    reglages.CONSENTEMENT.setValue(utilisateur.consentement and bool(utilisateur.mail.strip()))
+    reglages.ACCUEIL_VU.setValue(True)
