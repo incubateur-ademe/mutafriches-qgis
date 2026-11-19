@@ -54,10 +54,17 @@ INTERVALLE_MS = QgsSettingsEntryInteger(
 DEV = QgsSettingsEntryBool(
     "dev", _racine, False, "Mode développeur : donne accès au staging et aux réglages d'API dans les options."
 )
-STRUCTURE = QgsSettingsEntryString("structure", _utilisateur, "", "Structure de l'utilisateur, saisie à l'accueil.")
-MAIL = QgsSettingsEntryString("mail", _utilisateur, "", "Adresse mail de l'utilisateur, saisie à l'accueil.")
+STRUCTURE = QgsSettingsEntryString(
+    "structure", _utilisateur, "", "Structure de l'utilisateur, saisie facultative à l'accueil."
+)
+MAIL = QgsSettingsEntryString(
+    "mail", _utilisateur, "", "Adresse mail de l'utilisateur, saisie facultative à l'accueil."
+)
 CONSENTEMENT = QgsSettingsEntryBool(
     "consentement", _utilisateur, False, "Accord pour être contacté par l'équipe Mutafriches."
+)
+ACCUEIL_VU = QgsSettingsEntryBool(
+    "accueil_vu", _utilisateur, False, "L'accueil a été passé : il n'est plus proposé à l'ouverture du panneau."
 )
 FOND_OSM = QgsSettingsEntryBool(
     "fond_osm", _carte, True, "Ajouter un fond OpenStreetMap à l'ouverture du panneau sur un projet vide."
@@ -123,8 +130,13 @@ def intervalle_ms() -> int:
     return max(0, INTERVALLE_MS.value())
 
 
+def accueil_vu() -> bool:
+    # Structure ou mail déjà enregistrés : accueil passé avec une version d'avant ce réglage
+    return ACCUEIL_VU.value() or bool(STRUCTURE.value().strip() or MAIL.value().strip())
+
+
 def effacer_utilisateur() -> None:
-    for entree in (STRUCTURE, MAIL, CONSENTEMENT):
+    for entree in (STRUCTURE, MAIL, CONSENTEMENT, ACCUEIL_VU):
         entree.remove()
 
 

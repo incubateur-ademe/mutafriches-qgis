@@ -38,9 +38,9 @@ class PageAccueil(Page):
         self.corps.addWidget(texte(contenus.TITRE_ACCUEIL, "mfTitre"))
         self.corps.addWidget(texte(contenus.INTRO_ACCUEIL))
         self.corps.addSpacing(6)
-        self.structure = self._champ("Votre structure", "Collectivité, agence, bureau d'études…")
-        self.mail = self._champ("Votre mail", "prenom.nom@exemple.fr")
-        self.erreur = texte("Renseignez votre structure et une adresse mail valide.", "mfErreurChamp")
+        self.structure = self._champ("Votre structure (facultatif)", "Collectivité, agence, bureau d'études…")
+        self.mail = self._champ("Votre mail (facultatif)", "prenom.nom@exemple.fr")
+        self.erreur = texte(contenus.ERREUR_MAIL_ACCUEIL, "mfErreurChamp")
         self.erreur.setVisible(False)
         self.corps.addWidget(self.erreur)
         # Une case sans texte et un libellé à part : QCheckBox ne sait pas passer à la ligne
@@ -113,7 +113,8 @@ class PageImport(Page):
         self.utilisateur = texte("", "mfAide")
         ligne = QHBoxLayout()
         ligne.addWidget(self.utilisateur, 1)
-        ligne.addWidget(bouton("Modifier", "lien", parcours.modifier_utilisateur))
+        self.lien_utilisateur = bouton("Modifier", "lien", parcours.modifier_utilisateur)
+        ligne.addWidget(self.lien_utilisateur)
         self.pied_layout.addLayout(ligne)
         # Démonstration, staging et autres réglages : page « Mutafriches » des options de QGIS.
         # Sans bandeau ni lien, ce rappel est le seul signe que l'envoi ne part pas vers l'API.
@@ -204,8 +205,9 @@ class PageImport(Page):
                 self.zone.addWidget(analyser)
                 self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         utilisateur = parcours.utilisateur
-        self.utilisateur.setText(f"{utilisateur.structure} · {utilisateur.mail}" if utilisateur.complet else "")
-        self.utilisateur.setVisible(utilisateur.complet)
+        self.utilisateur.setText(utilisateur.resume)
+        # Rien de saisi à l'accueil : le lien y ramène, sans laisser un « Modifier » orphelin
+        self.lien_utilisateur.setText("Modifier" if utilisateur.renseigne else "Me présenter")
         n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Analyser mes {n} sites" if n > 1 else "Analyser mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
