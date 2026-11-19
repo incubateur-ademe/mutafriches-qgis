@@ -4,6 +4,7 @@ import json
 
 from qgis.core import (
     QgsCategorizedSymbolRenderer,
+    QgsConditionalStyle,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsDataSourceUri,
@@ -37,22 +38,29 @@ from ..core.attributaire import (
     libelle_usage,
 )
 from ..core.recapitulatif import valeur_etape
+from ..core.referentiel import NE_SAIT_PAS
 
 NOM_COUCHE_MUTABILITE = "Mutafriches — Mutabilité"
 NOM_COUCHE_QUALIFICATION = "Mutafriches — Qualification"
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
 
-# Une couleur par usage, lisible sur fond de carte (palette du prototype, pas celle du web)
+# Une couleur par usage, commune à la carte et au tableau de bord (palette fournie par l'équipe)
 COULEURS_USAGES: dict[str, str] = {
-    "residentiel": "#e4794a",
-    "equipements": "#009099",
-    "culture": "#a558a0",
-    "tertiaire": "#000091",
-    "industrie": "#7b7b7b",
-    "renaturation": "#18753c",
-    "photovoltaique": "#c3992a",
+    "renaturation": "#3ea47a",
+    "photovoltaique": "#efcb3a",
+    "industrie": "#ce614a",
+    "tertiaire": "#ff732c",
+    "residentiel": "#a558a0",
+    "culture": "#8585f6",
+    "equipements": "#000091",
 }
 COULEUR_SANS_USAGE = "#cecece"
+# Usages dont la couleur est trop claire pour porter une étiquette en blanc
+USAGES_TEXTE_SOMBRE = ("photovoltaique",)
+TEXTE_ETIQUETTE_SOMBRE = "#161616"
+# Cellule d'un critère de terrain non renseigné, dans la table de qualification
+CRITERE_A_RENSEIGNER_FOND = "#ffe9e9"
+CRITERE_A_RENSEIGNER_TEXTE = "#ce0500"
 
 
 def _champ(nom: str, type_: QMetaType.Type = QMetaType.Type.QString) -> QgsField:
@@ -239,6 +247,13 @@ def appliquer_symbologie(couche: QgsVectorLayer) -> None:
     )
     proprietes = parametres.dataDefinedProperties()
     proprietes.setProperty(QgsPalLayerSettings.Property.ShapeFillColor, QgsProperty.fromExpression(cas))
+    sombres = ", ".join(f"'{u}'" for u in USAGES_TEXTE_SOMBRE)
+    proprietes.setProperty(
+        QgsPalLayerSettings.Property.Color,
+        QgsProperty.fromExpression(
+            f"CASE WHEN \"mf_usage_prioritaire\" IN ({sombres}) THEN '{TEXTE_ETIQUETTE_SOMBRE}' ELSE '#ffffff' END"
+        ),
+    )
     parametres.setDataDefinedProperties(proprietes)
     couche.setLabelsEnabled(True)
     couche.setLabeling(QgsVectorLayerSimpleLabeling(parametres))
@@ -250,6 +265,33 @@ def appliquer_symbologie_qualification(couche: QgsVectorLayer) -> None:
         QgsRendererCategory("non", _symbole("#b34000"), "Site à qualifier (« Ne sait pas » partout)"),
     ]
     couche.setRenderer(QgsCategorizedSymbolRenderer("saisie_declarative", categories))
+
+
+def signaler_criteres_a_renseigner(couche: QgsVectorLayer) -> list[str]:
+    """Colore, dans la table attributaire, les critères de terrain vides ou « Ne sait pas »."""
+    colonnes = []
+    for cle, colonne in CRITERES_QUALIFICATION_SAISIS:
+        inconnu = libelle_saisie(cle, NE_SAIT_PAS).replace("'", "''")
+        regle = QgsConditionalStyle(f"@value IS NULL OR @value = '' OR @value = '{inconnu}'")
+        regle.setName("Critère à renseigner")
+        regle.setBackgroundColor(QColor(CRITERE_A_RENSEIGNER_FOND))
+        regle.setTextColor(QColor(CRITERE_A_RENSEIGNER_TEXTE))
+        couche.conditionalStyles().setFieldStyles(colonne, [regle])
+        colonnes.append(colonne)
+    return colonnes
+
+
+def avancer_criteres_de_terrain(couche: QgsVectorLayer) -> None:
+    """Place les critères de terrain juste après le nom du site, dans la table attributaire."""
+    terrain = [colonne for _, colonne in CRITERES_QUALIFICATION_SAISIS]
+    configuration = couche.attributeTableConfig()
+    configuration.update(couche.fields())
+    colonnes = configuration.columns()
+    tete = [c for c in colonnes if c.name in ("site_id", "site_nom")]
+    criteres = [c for c in colonnes if c.name in terrain]
+    reste = [c for c in colonnes if c not in tete and c not in criteres]
+    configuration.setColumns(tete + criteres + reste)
+    couche.setAttributeTableConfig(configuration)
 
 
 # --- Création dans le projet -----------------------------------------------------------------
@@ -306,6 +348,7 @@ def creer_couches(sites: list[SiteAttributaire], suffixe: str) -> tuple[QgsVecto
     qualification.dataProvider().addFeatures([_entite_qualification(s, champs_q) for s in sites])
     qualification.updateExtents()
     appliquer_symbologie_qualification(qualification)
+    signaler_criteres_a_renseigner(qualification)
 
     # Qualification sous la mutabilité, masquée par défaut : une seule lecture à la fois
     projet.addMapLayer(qualification)

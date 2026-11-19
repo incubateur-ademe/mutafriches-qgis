@@ -14,7 +14,7 @@ import qgis.utils
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsSettings
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtTest import QTest
-from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QPushButton, QWidget
+from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QLabel, QPushButton, QWidget
 
 from mutafriches.ui.widgets import Encadre
 
@@ -169,7 +169,24 @@ def panneau_vide() -> None:
         "utilisateur enregistré",
         parcours().etape == 1 and parcours().utilisateur.structure == "CC du Pays de Montereau",
     )
-    controler("bouton Envoyer inactif", not any(b.isEnabled() for b in boutons("Envoyer")))
+    controler("bouton Analyser inactif", not any(b.isEnabled() for b in boutons("Analyser mes")))
+    controler("accueil : pas de pied vide", not dock().pages[0].pied.isVisible())
+    # Le modèle de fichier se télécharge depuis l'infobulle du champ, ouverte au clic
+    from mutafriches.ui.widgets import BoutonAide
+
+    aide = next(b for b in dock().pages[1].contenu.findChildren(BoutonAide) if b.isVisible())
+    QTest.mouseClick(aide, Qt.MouseButton.LeftButton)
+    QApplication.processEvents()
+    liens = [b.text() for b in aide.bulle.findChildren(QPushButton)] if aide.bulle is not None else []
+    controler(
+        "infobulle du fichier : lien de téléchargement du modèle vide",
+        liens == ["Télécharger un modèle de fichier vide"],
+        liens,
+    )
+    if aide.bulle is not None:
+        # Fenêtre à part : absente d'une capture de la fenêtre principale
+        aide.bulle.grab().save(str(CAPTURES / "03b-infobulle-fichier-exemple.png"))
+        aide.bulle.close()
     capture("03-import-vide")
 
 
@@ -188,14 +205,29 @@ def fichier_avec_erreurs() -> None:
 @etape(800)
 def modele() -> None:
     capture("04-fichier-lignes-en-erreur")
+    libelles = [b.text() for b in boutons("") if b.isVisible()]
+    controler(
+        "sites KO : envoi sous la liste, avec rechargement du fichier",
+        "Analyser les 4 sites OK" in libelles
+        and "Charger de nouveau le fichier" in libelles
+        and not any(x.startswith("Analyser mes") for x in libelles),
+        libelles,
+    )
+    controler(
+        "titre du contrôle : sites OK et KO",
+        any("4 sites OK, 6 sites KO" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()),
+    )
     chemin = parcours().enregistrer_modele(str(SORTIE / "modele-friches-cnig.csv"))
-    controler("modèle CNIG copié", chemin is not None and "99999" in chemin.read_text(encoding="utf-8"))
+    controler(
+        "modèle CNIG copié : colonnes seules",
+        chemin is not None and len(chemin.read_text(encoding="utf-8-sig").strip().splitlines()) == 1,
+    )
     parcours().choisir_fichier(str(chemin))
     controler(
-        "fichier exemple envoyé tel quel : refusé au contrôle",
-        not parcours().pret_a_envoyer and len(parcours().lecture.sites_ko) == 3,
+        "modèle vide envoyé tel quel : refusé au contrôle",
+        not parcours().pret_a_envoyer and not parcours().lecture.sites and bool(parcours().lecture.bloquants),
     )
-    capture("04b-fichier-exemple-refuse")
+    capture("04b-modele-vide-refuse")
     refuse = parcours().enregistrer_modele(str(SORTIE / "dossier-absent" / "modele.csv"))
     controler("dossier inaccessible : message, pas d'exception", refuse is None)
     iface.messageBar().clearWidgets()
@@ -219,7 +251,7 @@ def origine_refusee() -> None:
         parcours().reel and "API personnalisée" in dock().bandeau.text(),
     )
     QgsSettings().setValue("plugins/mutafriches/api/origine", "https://autre.exemple.fr")
-    cliquer("Envoyer mes 28 sites")
+    cliquer("Analyser mes 28 sites")
 
 
 @etape(2500)
@@ -232,7 +264,7 @@ def acces_refuse() -> None:
     )
     capture("05b-acces-refuse")
     QgsSettings().remove("plugins/mutafriches/api/origine")
-    cliquer("Envoyer mes 28 sites")
+    cliquer("Analyser mes 28 sites")
 
 
 @etape(900)
@@ -255,6 +287,22 @@ def resultats() -> None:
         "deux couches créées", any("Mutabilité" in n for n in noms) and any("Qualification" in n for n in noms), noms
     )
     controler("étiquettes activées", p.couche_mutabilite.labelsEnabled())
+    regles = p.couche_qualification.conditionalStyles().fieldStyles("pollution")
+    controler("table de qualification : critères inconnus mis en évidence", len(regles) == 1)
+    libelles = [b.text() for b in boutons("")]
+    controler(
+        "tableau de bord : lien de fiabilité, tables au pied, autre inventaire près du logo",
+        "Améliorer la fiabilité" in libelles
+        and "Voir table de mutabilité" in libelles
+        and "Voir table de qualification" in libelles
+        and dock().autre_inventaire.isVisible(),
+        libelles,
+    )
+    textes = [e.text() for e in dock().pages[2].contenu.findChildren(QLabel) if e.isVisible()]
+    controler(
+        "tableau de bord : ni commune, ni provenance, ni bloc « attention »",
+        not any("77305" in t or "analyse du" in t or "attention" in t for t in textes),
+    )
 
 
 @etape(4000)
@@ -265,7 +313,7 @@ def table_mutabilite() -> None:
         barre.setValue(int(barre.maximum() * position))
         capture(f"07{'abc'[numero - 1]}-tableau-de-bord-{numero}")
     barre.setValue(0)
-    cliquer("Table mutabilité")
+    cliquer("Voir table de mutabilité")
 
 
 @etape(1500)
@@ -289,7 +337,7 @@ def capture_site() -> None:
     capture("07d-site-selectionne")
     parcours().couche_mutabilite.removeSelection()
     parcours().zoomer()
-    cliquer("Table mutabilité")
+    cliquer("Voir table de mutabilité")
 
 
 @etape(1500)
@@ -304,7 +352,7 @@ def capture_table() -> None:
         iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
         capture("08-table-mutabilite")
         table.close()
-    cliquer("Table qualification")
+    cliquer("Voir table de qualification")
 
 
 @etape(1500)
@@ -315,6 +363,23 @@ def capture_table_qualification() -> None:
         iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
         capture("09-table-qualification")
         table.close()
+    cliquer("Améliorer la fiabilité")
+
+
+@etape(1500)
+def capture_ameliorer_fiabilite() -> None:
+    table = dock_titre("Qualification")
+    colonnes = [c.name for c in parcours().couche_qualification.attributeTableConfig().columns()]
+    controler(
+        "améliorer la fiabilité : table de qualification ouverte, critères de terrain en tête",
+        table is not None and colonnes[:3] == ["site_id", "site_nom", "proprietaire"],
+        colonnes[:4],
+    )
+    if table is not None:
+        iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
+        capture("09b-ameliorer-la-fiabilite")
+        table.close()
+    iface.messageBar().clearWidgets()
 
 
 @etape()
@@ -331,7 +396,7 @@ def envoyer_fichier_erreurs() -> None:
     from mutafriches.core.attributaire import FICHIER_CNIG_ERREURS
 
     parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
-    cliquer("Envoyer mes 4 sites")
+    cliquer("Analyser les 4 sites OK")
 
 
 @etape(4000)
@@ -341,10 +406,15 @@ def resultats_avec_alertes() -> None:
         "4 sites analysés, 6 lignes écartées",
         p.etape == 2 and p.synthese.nombre_sites == 4 and len(p.lignes_ecartees) == 6,
     )
+    from qgis.core import Qgis
+
+    alertes = [m.text() for m in iface.messageBar().items() if m.level() == Qgis.MessageLevel.Warning]
     controler(
-        "sites à reprendre signalés dans le panneau",
-        any("à reprendre" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()),
+        "sites non analysés signalés dans la barre de messages de QGIS",
+        any("6 sites non analysés" in a for a in alertes),
+        alertes,
     )
+    iface.messageBar().clearWidgets()
 
 
 @etape(2500)
@@ -360,10 +430,19 @@ def capture_alertes() -> None:
 def mode_demonstration() -> None:
     from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE
 
-    cliquer("Passer en mode démonstration")
-    controler("mode démonstration : bandeau affiché", not parcours().reel and "démonstration" in dock().bandeau.text())
+    controler(
+        "panneau : ni lien de démonstration ni lien de réglages",
+        not boutons("Passer en mode") and not boutons("Réglages"),
+    )
+    # La démonstration se choisit dans les options de QGIS
+    parcours().changer_environnement("demonstration")
+    controler(
+        "démonstration rappelée au pied du panneau",
+        dock().pages[1].rappel_demonstration.isVisible(),
+    )
+    controler("mode démonstration : aucun bandeau", not parcours().reel and not dock().bandeau.isVisible())
     parcours().choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
-    cliquer("Envoyer mes 28 sites")
+    cliquer("Analyser mes 28 sites")
 
 
 @etape(3500)
@@ -414,7 +493,7 @@ def staging() -> None:
 def options_dans_qgis() -> None:
     capture("12-environnement-staging")
 
-    # La vraie fenêtre Options de QGIS, ouverte par le lien « Réglages » du panneau
+    # La vraie fenêtre Options de QGIS, ouverte comme par le menu Extensions › Mutafriches
     def saisir() -> None:
         fenetre = QApplication.activeModalWidget()
         controler(
@@ -428,7 +507,7 @@ def options_dans_qgis() -> None:
             fenetre.reject()
 
     QTimer.singleShot(1500, saisir)
-    cliquer("Réglages")
+    parcours().ouvrir_reglages()
 
 
 @etape(600)

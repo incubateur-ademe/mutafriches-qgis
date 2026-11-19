@@ -122,7 +122,8 @@ Une ligne, le **pourquoi** et jamais le quoi. Pas de docstrings longues sauf sé
 - Composants accessibles : libellés associés aux champs (`setBuddy`), `setAccessibleName`
   sur les boutons sans texte explicite, navigation clavier fonctionnelle.
 - Le panneau doit rester utilisable étroit (≈ 320 px) : défilement vertical, pas d'horizontal.
-- Bandeau permanent « Mode démonstration » tant que les résultats ne viennent pas de l'API.
+- Bandeau réservé au staging et à une adresse d'API libre (mode développeur). Pas de bandeau en
+  démonstration : le tableau de bord y précise « Démonstration » et la provenance figée des résultats.
 
 ### 7. Séparation réel / simulé
 
@@ -185,8 +186,8 @@ QGIS. Préciser la version et l'OS réellement testés.
 
 - Prototype : `python3 outils/figer_attributaire.py` gèle la table attributaire publique de
   Montereau (`demo/montereau/`), ne jamais éditer les fichiers produits. Le modèle CNIG proposé
-  à l'utilisateur porte des valeurs fictives (commune 99999) pour qu'il ne soit jamais envoyé
-  tel quel ; les fichiers de Montereau servent aux démonstrations et aux tests seulement. Les sites SCET nommés
+  à l'utilisateur est vide (les 51 colonnes, aucune ligne) : il ne peut pas être envoyé tel
+  quel ; les fichiers de Montereau servent aux démonstrations et aux tests seulement. Les sites SCET nommés
   sont des données partenaires publiques via l'API ; la saisie est déclarative.
 - Terrain : modifier `outils/generer_terrain.py`, jamais les GeoJSON à la main.
 - Réponses simulées : `./outils/figer-reponses.sh` (nécessite `../mutafriches` avec
@@ -253,7 +254,8 @@ jamais en `--force`.
 - 100 requêtes par minute et par IP, deux requêtes par site : ne pas paralléliser.
 - L'API répond **500 « Erreur lors de l'enrichissement »** quand aucune parcelle du site
   n'existe au cadastre : c'est un échec du site, à expliquer en clair, jamais « Erreur 500 ».
-- Le fichier exemple (commune 99999) est refusé au contrôle local : ne jamais l'envoyer à l'API.
+- Les anciens fichiers exemple (sites fictifs, commune 99999) restent refusés au contrôle local :
+  ne jamais les envoyer à l'API. Le modèle actuel est vide.
 - **Réglages** : tous déclarés dans `core/reglages.py` (ADR-0004), jamais de clé `QgsSettings`
   en dur ailleurs ; tout nouveau réglage y entre avec sa description, puis dans `ui/options.py`
   s'il doit être modifiable. Ne jamais exposer un seuil ou un paramètre de calcul.

@@ -31,12 +31,12 @@ précédente est remplacée).
    vide, un fond OpenStreetMap cadré sur la France est ajouté ; un projet qui a déjà des couches
    n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
-   OK ou KO avec ses erreurs ; les lignes KO sont écartées de l'envoi. **Télécharger un fichier
-   exemple** enregistre un modèle à remplir, aux valeurs volontairement fictives (commune 99999) :
-   envoyé tel quel, il est refusé au contrôle, chaque site d'exemple devant être remplacé.
+   OK ou KO avec ses erreurs ; les lignes KO sont écartées de l'envoi. L'infobulle du champ
+   propose **Télécharger un modèle de fichier vide** : les 51 colonnes du standard, sans aucune
+   ligne, à remplir avec vos sites. Envoyé tel quel, il est refusé (« aucun site »).
    Pour une démonstration, utiliser `mutafriches/demo/montereau/friches-cnig-montereau.csv`
    (28 sites) ou `friches-cnig-erreurs.csv` (4 sites corrects, 6 lignes en erreur).
-3. **Envoyer mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
+3. **Analyser mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
    par usage et indice ; Qualification, masquée), avec un fond OpenStreetMap si le projet était
    vide.
 4. Panneau résultats, tableau de bord territorial : alerte « sites nécessitant votre attention »
@@ -53,7 +53,7 @@ table figée : le panneau le signale et affiche les résultats de Montereau.
 ### Réglages
 
 Tous les réglages sont dans **Préférences › Options › Mutafriches**, page aussi ouverte par le
-lien « Réglages » du panneau et par le menu Extensions › Mutafriches (ADR-0004) :
+menu Extensions › Mutafriches (ADR-0004). Le panneau n'a ni lien de réglages ni bascule de mode :
 
 | Bloc | Réglages |
 |---|---|
@@ -66,7 +66,7 @@ lien « Réglages » du panneau et par le menu Extensions › Mutafriches (ADR-0
 |---|---|---|
 | Production | `https://mutafriches.beta.gouv.fr` | aucun |
 | Staging (mode développeur) | `https://mutafriches.incubateur.ademe.dev` | « Environnement de test (staging) » |
-| Démonstration | aucune, table figée de Montereau | « Mode démonstration » |
+| Démonstration | aucune, table figée de Montereau | aucun ; le tableau de bord précise « Démonstration » et la provenance figée |
 
 Changer de service vide les résultats et retire les deux couches Mutafriches du projet. Sans
 mode développeur, le staging et l'adresse libre sont ignorés même s'ils sont enregistrés.

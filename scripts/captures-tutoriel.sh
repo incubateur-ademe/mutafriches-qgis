@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # Captures du tutoriel web de l'extension, jouées dans QGIS contre une API réelle (staging par
 # défaut), en WebP 1600 px. Sortie par défaut : la page tutoriel du dépôt voisin Mutafriches.
-# Attention : chaque passage analyse 32 sites sur l'API visée (quota BDNB, table attributaire).
+# Attention : chaque passage analyse 28 sites sur l'API visée (quota BDNB, table attributaire).
+# Deux captures du bandeau de staging, hors tutoriel, vont dans captures/ (local, ignoré).
 set -euo pipefail
 RACINE="$(cd "$(dirname "$0")/.." && pwd)"
 QGIS_APP="${QGIS_APP:-/Applications/QGIS.app}"
-API="${MF_TUTORIEL_API:-https://mutafriches.incubateur.ademe.dev}"
+STAGING="https://mutafriches.incubateur.ademe.dev"
+API="${MF_TUTORIEL_API:-$STAGING}"
+# Le staging se choisit comme environnement, pour montrer son bandeau ; toute autre API par son adresse
+if [ "$API" = "$STAGING" ]; then SERVICE='mutafriches\api\environnement=staging'; else SERVICE="mutafriches\\api\\url=$API"; fi
 SORTIE="${MF_TUTORIEL_SORTIE:-$RACINE/../mutafriches/apps/ui/public/images/tutoriel-qgis}"
 TRAVAIL="$RACINE/dist/tutoriel"
 PROFILS="$TRAVAIL/profils"
@@ -25,7 +29,7 @@ userLocale=fr_FR
 
 [plugins]
 mutafriches\\dev=true
-mutafriches\\api\\url=$API
+$SERVICE
 
 [qgis]
 checkVersion=false
@@ -38,7 +42,7 @@ if ! defaults read org.qgis.qgis3 NSRequiresAquaSystemAppearance >/dev/null 2>&1
   trap 'defaults delete org.qgis.qgis3 NSRequiresAquaSystemAppearance >/dev/null 2>&1 || true' EXIT
 fi
 
-MF_TUTORIEL_SORTIE="$SORTIE" MF_TUTORIEL_RAPPORT="$TRAVAIL/rapport.json" MF_TUTORIEL_ETAPES="${MF_TUTORIEL_ETAPES:-}" \
+MF_TUTORIEL_HORS_PAGE="$RACINE/captures" MF_TUTORIEL_SORTIE="$SORTIE" MF_TUTORIEL_RAPPORT="$TRAVAIL/rapport.json" MF_TUTORIEL_ETAPES="${MF_TUTORIEL_ETAPES:-}" \
   "$QGIS_APP/Contents/MacOS/QGIS" --profiles-path "$PROFILS" --noversioncheck --nologo \
   --code "$RACINE/tests/e2e/tutoriel_qgis.py" > "$TRAVAIL/qgis.log" 2>&1 || true
 
