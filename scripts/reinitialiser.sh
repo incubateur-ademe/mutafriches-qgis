@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Efface ce que le prototype mémorise dans le profil QGIS (accueil : structure, mail,
-# consentement), pour revoir l'accueil à la prochaine ouverture du panneau. QGIS doit être fermé.
+# consentement, accueil déjà passé), pour revoir l'accueil à la prochaine ouverture du panneau. QGIS doit être fermé.
 set -euo pipefail
 PROFIL="${QGIS_PROFIL:-$HOME/Library/Application Support/QGIS/QGIS3/profiles/default}"
 INI="$PROFIL/qgis.org/QGIS3.ini"

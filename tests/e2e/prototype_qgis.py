@@ -150,11 +150,12 @@ def accueil() -> None:
     iface.messageBar().clearWidgets()
     controler("panneau ouvert sur l'accueil", dock().isVisible() and parcours().etape == 0)
     capture("01-accueil")
-    cliquer("Suivant")
-    controler("accueil refusé sans structure ni mail", parcours().etape == 0)
-    capture("01b-accueil-erreur")
     page = dock().pages[0]
     champs = page.contenu.findChildren(QLineEdit)
+    champs[1].setText("sig-sans-arobase")
+    cliquer("Suivant")
+    controler("accueil refusé avec un mail invalide", parcours().etape == 0 and page.erreur.isVisible())
+    capture("01b-accueil-erreur")
     champs[0].setText("CC du Pays de Montereau")
     champs[1].setText("sig@exemple.fr")
     page.contenu.findChild(QCheckBox).setChecked(True)
@@ -537,8 +538,14 @@ def options_sans_mode_developpeur() -> None:
     page.apply()
     controler(
         "informations effacées : le panneau revient à l'accueil",
-        parcours().etape == 0 and not parcours().utilisateur.complet,
+        parcours().etape == 0 and not parcours().utilisateur.renseigne,
     )
+    cliquer("Suivant")
+    controler(
+        "accueil passé sans structure ni mail : tout est facultatif",
+        parcours().etape == 1 and reglages.accueil_vu() and bool(boutons("Me présenter")),
+    )
+    reglages.effacer_utilisateur()
     reglages.FOND_OSM.remove()
     reglages.ENVIRONNEMENT.remove()
 
