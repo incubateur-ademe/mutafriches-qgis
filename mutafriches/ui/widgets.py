@@ -32,6 +32,24 @@ def texte(contenu: str, nom: str = "", selectionnable: bool = False) -> QLabel:
     return label
 
 
+def texte_riche(html: str, nom: str = "") -> QLabel:
+    """Texte portant des liens, ouverts dans le navigateur. Réservé aux contenus de l'extension."""
+    label = QLabel(html)
+    label.setWordWrap(True)
+    label.setTextFormat(Qt.TextFormat.RichText)
+    label.setOpenExternalLinks(True)
+    label.setTextInteractionFlags(
+        Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.LinksAccessibleByKeyboard
+    )
+    if nom:
+        label.setObjectName(nom)
+    return label
+
+
+def lien(libelle: str, adresse: str) -> str:
+    return f'<a href="{adresse}" style="color: {style.BLEU_FRANCE};">{libelle}</a>'
+
+
 def bouton(libelle: str, variante: str = "primaire", action: Callable[[], None] | None = None) -> QPushButton:
     noms = {"primaire": "mfPrimaire", "secondaire": "mfSecondaire", "lien": "mfLien"}
     b = QPushButton(libelle)
@@ -200,10 +218,15 @@ def badges(valeurs: list[str], nature: str = "enrichi") -> QWidget:
     return conteneur
 
 
+# Libellé et action d'un lien proposé dans une infobulle
+ActionAide = tuple[str, Callable[[], None]]
+LARGEUR_BULLE = 280
+
+
 class BoutonAide(QToolButton):
     """Bouton « ? » : infobulle au survol et au clic, comme les infobulles DSFR du web."""
 
-    def __init__(self, aide: str, nom_accessible: str = "") -> None:
+    def __init__(self, aide: str, nom_accessible: str = "", action: ActionAide | None = None) -> None:
         super().__init__()
         self.setObjectName("mfAide")
         self.setText("?")
@@ -211,10 +234,52 @@ class BoutonAide(QToolButton):
         self.setToolTip(f"<p style='max-width: 320px'>{aide}</p>")
         self.setAccessibleName(f"Infobulle {nom_accessible}".strip())
         self.setAccessibleDescription(aide)
-        self.clicked.connect(lambda: QToolTip.showText(QCursor.pos(), self.toolTip(), self))
+        self._aide = aide
+        self._action = action
+        self.bulle: QFrame | None = None
+        if action is None:
+            self.clicked.connect(lambda: QToolTip.showText(QCursor.pos(), self.toolTip(), self))
+        else:
+            # Une infobulle Qt disparaît dès que le curseur la quitte : un lien n'y serait pas cliquable
+            self.clicked.connect(self._ouvrir_bulle)
+
+    def _ouvrir_bulle(self) -> None:
+        if self._action is None:
+            return
+        libelle, action = self._action
+        bulle = QFrame(self, Qt.WindowType.Popup)
+        bulle.setObjectName("mfBulle")
+        bulle.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        bulle.setFixedWidth(LARGEUR_BULLE)
+        layout = QVBoxLayout(bulle)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6)
+        contenu = texte(self._aide)
+        # Hors de toute mise en page parente, un texte replié ne réserve pas seul sa hauteur
+        largeur = LARGEUR_BULLE - 24
+        contenu.setFixedWidth(largeur)
+        contenu.setMinimumHeight(contenu.heightForWidth(largeur))
+        layout.addWidget(contenu)
+
+        def suivre() -> None:
+            bulle.close()
+            action()
+
+        layout.addWidget(bouton(libelle, "lien", suivre), 0, Qt.AlignmentFlag.AlignLeft)
+        # Sous le « ? », sans dépasser le bord droit de la fenêtre qui porte le panneau
+        position = self.mapToGlobal(QPoint(0, self.height() + 4))
+        fenetre = self.window()
+        gauche = fenetre.mapToGlobal(QPoint(0, 0)).x()
+        droite = gauche + fenetre.width()
+        position.setX(max(gauche + 8, min(position.x(), droite - LARGEUR_BULLE - 8)))
+        bulle.move(position)
+        bulle.show()
+        self.bulle = bulle
 
 
-def entete_champ(libelle: str, aide: str = "", gras: bool = True) -> QWidget:
+def entete_champ(
+    libelle: str, aide: str = "", gras: bool = True, action: ActionAide | None = None, aide_accolee: bool = False
+) -> QWidget:
     ligne = QWidget()
     layout = QHBoxLayout(ligne)
     layout.setContentsMargins(0, 0, 0, 0)
@@ -222,7 +287,14 @@ def entete_champ(libelle: str, aide: str = "", gras: bool = True) -> QWidget:
     etiquette = texte(libelle)
     if gras:
         etiquette.setStyleSheet("font-weight: bold;")
-    layout.addWidget(etiquette, 1)
+    if aide_accolee:
+        # Le « ? » suit le libellé au lieu d'être repoussé au bord droit
+        etiquette.setWordWrap(False)
+        layout.addWidget(etiquette, 0)
+    else:
+        layout.addWidget(etiquette, 1)
     if aide:
-        layout.addWidget(BoutonAide(aide, libelle), 0, Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(BoutonAide(aide, libelle, action), 0, Qt.AlignmentFlag.AlignTop)
+    if aide_accolee:
+        layout.addStretch(1)
     return ligne

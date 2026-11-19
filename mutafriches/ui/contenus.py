@@ -194,25 +194,47 @@ TITRE_ACCUEIL = "Bienvenue dans Mutafriches !"
 INTRO_ACCUEIL = "Pour nous aider à améliorer le service, dites-nous qui vous êtes."
 CONSENTEMENT_ACCUEIL = "J'accepte d'être contacté par l'équipe Mutafriches (ADEME) à des fins d'amélioration du service"
 TITRE_IMPORT = "Trouver le bon usage pour vos friches"
-INTRO_IMPORT = (
-    "Envoyez votre inventaire de sites au standard CNIG Friches : Mutafriches qualifie chaque site "
-    "et calcule sa mutabilité pour sept usages."
+# Tableau de bord territorial
+TITRE_REPARTITION = "Répartition des usages les plus compatibles"
+AIDE_REPARTITION = "Nombre de sites dont c'est l'usage le plus compatible."
+TITRE_FORTE_COMPATIBILITE = "Sites à forte compatibilité"
+AIDE_FORTE_COMPATIBILITE = (
+    "Classement des sites dont l'usage le plus compatible dépasse 70 %. Cliquer sur un site pour le "
+    "sélectionner et le cadrer sur la carte."
 )
+TITRE_PROFILS = "Profils des sites"
+AIDE_PROFILS = (
+    "Les sites dont la répartition des usages est contrastée, avec de forts écarts, sont considérés "
+    "comme mieux qualifiés que ceux au profil plat."
+)
+LIEN_AMELIORER_FIABILITE = "Améliorer la fiabilité"
+AIDE_AMELIORER_FIABILITE = (
+    "Critères de terrain en rouge : inconnus. Renseignez-les dans votre fichier CNIG, puis relancez l'analyse."
+)
+RAPPEL_DEMONSTRATION = (
+    "Mode démonstration : résultats figés d'un inventaire d'exemple. Pour analyser vos sites, "
+    "choisissez « Production » dans Préférences › Options › Mutafriches."
+)
+URL_STANDARD_CNIG = "https://schema.data.gouv.fr/cnigfr/schema-friches/"
+# {standard} : lien vers le standard, posé sur les mots « standard CNIG »
+INTRO_IMPORT = (
+    "Chargez votre inventaire de sites au {standard} Friches. Mutafriches qualifiera chacun de vos "
+    "sites et calculera leur mutabilité sur 7 usages de reconversion."
+)
+LIBELLE_STANDARD_CNIG = "standard CNIG"
 AIDE_FICHIER = (
     "Fichier CSV ou GeoJSON au standard CNIG Friches (v2023-12). Colonnes attendues : site_id, "
-    "site_nom, comm_insee, unite_fonciere_refcad (parcelles séparées par |) et geompoint."
+    "site_nom, comm_insee, unite_fonciere_refcad (parcelles de 14 caractères, séparées par |) et "
+    "geompoint, par exemple POINT(2.9555 48.3895). Le modèle vide porte les 51 colonnes du standard, "
+    "à remplir avec vos sites."
 )
-AIDE_EXEMPLE_CNIG = (
-    "Besoin du bon format ? Le fichier exemple contient trois sites fictifs à remplacer par les "
-    "vôtres ; il n'a de valeur que comme modèle."
-)
-BOUTON_MODELE_CNIG = "Télécharger un fichier exemple"
-AIDE_ERREUR_CNIG = "Les lignes en erreur sont écartées de l'envoi. Corrigez le fichier puis choisissez-le à nouveau. Standard : schema.data.gouv.fr (cnigfr/schema-friches)."
-SOUS_TITRE_ANALYSE_REELLE = "Comptez deux à cinq secondes par site, davantage pour un site de nombreuses parcelles."
+LIEN_MODELE_CNIG = "Télécharger un modèle de fichier vide"
+AIDE_ERREUR_CNIG = "Les sites KO sont écartés de l'analyse. Corrigez le fichier puis chargez-le de nouveau. Standard : schema.data.gouv.fr (cnigfr/schema-friches)."
+SOUS_TITRE_ANALYSE = "Cela peut prendre de quelques secondes à quelques minutes."
 AIDE_ERREUR_API = (
     "L'extension appelle l'API Mutafriches avec une origine dédiée, à faire autoriser par l'équipe "
-    "(contact@mutafriches.beta.gouv.fr). En attendant, le mode démonstration montre le parcours sur "
-    "des données figées."
+    "(contact@mutafriches.beta.gouv.fr). En attendant, le mode démonstration (Préférences › Options › "
+    "Mutafriches) montre le parcours sur des données figées."
 )
 AIDE_AUCUN_SITE = (
     "Vérifiez les identifiants de parcelles de votre fichier (14 caractères, parcelles existantes), puis "
@@ -233,10 +255,6 @@ AIDE_OPTION_DEV = "Donne accès à l'environnement de staging et aux réglages d
 AIDE_OPTION_INTERVALLE = (
     "L'API accepte 100 requêtes par minute et deux requêtes sont faites par site : ne pas descendre "
     "sous 1500 ms hors d'un serveur local."
-)
-MESSAGE_ANALYSE_LOT = (
-    "Pour chaque site, nous recueillons des informations localisées depuis plus de dix bases de "
-    "données nationales, puis calculons sa mutabilité pour sept usages."
 )
 
 # AnalyserPage et carte de sélection

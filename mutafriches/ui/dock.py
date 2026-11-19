@@ -5,13 +5,14 @@ from pathlib import Path
 from qgis.gui import QgsDockWidget
 from qgis.PyQt.QtCore import QPoint, Qt, QTimer
 from qgis.PyQt.QtGui import QPixmap
-from qgis.PyQt.QtWidgets import QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from qgis.PyQt.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
-from ..core.reglages import DEMONSTRATION, STAGING, url_personnalisee
+from ..core.reglages import STAGING, url_personnalisee
 from . import style
 from .pages import Page
 from .parcours import Etape, Parcours
 from .prototype import PageAccueil, PageImport, PageResultats
+from .widgets import bouton
 
 LOGO = Path(__file__).resolve().parent.parent / "icons" / "logo-mutafriches.png"
 
@@ -30,21 +31,24 @@ class DockMutafriches(QgsDockWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Bandeau permanent en démonstration, masqué quand les résultats viennent de l'API
-        self.bandeau = QLabel("Mode démonstration — données figées")
-        self.bandeau.setObjectName("mfDemo")
-        self.bandeau.setAccessibleName("Mode démonstration, données figées")
+        # Réservé à l'équipe : rappel que le service interrogé n'est pas la production
+        self.bandeau = QLabel()
+        self.bandeau.setObjectName("mfStaging")
         layout.addWidget(self.bandeau)
 
         entete = QWidget()
         entete.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        entete_layout = QVBoxLayout(entete)
+        entete_layout = QHBoxLayout(entete)
         entete_layout.setContentsMargins(16, 12, 16, 4)
         logo = QLabel()
         logo.setPixmap(QPixmap(str(LOGO)))
         logo.setAccessibleName("Mutafriches")
         logo.setToolTip("Mutafriches")
         entete_layout.addWidget(logo)
+        entete_layout.addStretch(1)
+        # À côté du logo plutôt qu'au pied : repartir d'un autre fichier n'est pas l'action principale
+        self.autre_inventaire = bouton("Analyser un autre inventaire", "lien", parcours.nouvelle_analyse)
+        entete_layout.addWidget(self.autre_inventaire, 0, Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(entete)
 
         self.pages: dict[int, Page] = {
@@ -77,32 +81,27 @@ class DockMutafriches(QgsDockWidget):
         self.defilement.verticalScrollBar().setValue(max(0, y - 12))
 
     def _bandeau(self) -> None:
-        """Rien en production ; un rappel permanent pour tout autre environnement."""
-        environnement = self.parcours.environnement
+        """Rien en production ni en démonstration ; un rappel permanent sur le staging ou une API libre."""
         personnalisee = url_personnalisee() if self.parcours.reel else ""
-        if environnement == DEMONSTRATION:
-            texte, nom = "Mode démonstration — données figées", "mfDemo"
-        elif personnalisee:
-            texte, nom = f"API personnalisée — {personnalisee}", "mfStaging"
-        elif environnement == STAGING:
-            texte, nom = "Environnement de test (staging) — pas la production", "mfStaging"
+        if personnalisee:
+            texte = f"API personnalisée — {personnalisee}"
+        elif self.parcours.environnement == STAGING:
+            texte = "Environnement de test (staging)"
         else:
-            texte, nom = "", "mfDemo"
+            texte = ""
         self.bandeau.setText(texte)
         self.bandeau.setAccessibleName(texte)
-        if self.bandeau.objectName() != nom:
-            self.bandeau.setObjectName(nom)
-            self.bandeau.style().unpolish(self.bandeau)
-            self.bandeau.style().polish(self.bandeau)
         self.bandeau.setVisible(bool(texte))
 
     def rafraichir(self) -> None:
         self._bandeau()
         etape = self.parcours.etape
+        self.autre_inventaire.setVisible(etape == Etape.RESULTATS)
         for numero, page in self.pages.items():
             visible = numero == etape
             page.contenu.setVisible(visible)
-            page.pied.setVisible(visible)
+            # Un pied sans contenu laisserait un liseré vide en bas du panneau
+            page.pied.setVisible(visible and page.pied_layout.count() > 0)
         self.pages[etape].rafraichir()
         if etape != self._etape_affichee:
             self._etape_affichee = etape

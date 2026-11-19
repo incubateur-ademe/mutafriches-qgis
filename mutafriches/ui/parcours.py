@@ -14,7 +14,13 @@ from qgis.core import (
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 
-from ..carto.couches import EMPRISE_FRANCE, ajouter_fond_osm, creer_couches, emprise_carte
+from ..carto.couches import (
+    EMPRISE_FRANCE,
+    ajouter_fond_osm,
+    avancer_criteres_de_terrain,
+    creer_couches,
+    emprise_carte,
+)
 from ..core import reglages
 from ..core.attributaire import (
     FICHIER_MODELE_CNIG,
@@ -34,6 +40,7 @@ from ..core.client_api import (
     ResultatSite,
 )
 from ..core.cnig import LectureCnig, lire_cnig
+from . import contenus
 from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 
 # Nom d'objet de la page « Mutafriches » des options de QGIS (ui/options.py)
@@ -106,17 +113,17 @@ class Parcours(QObject):
         self.change.emit()
 
     def enregistrer_modele(self, chemin: str) -> Path | None:
-        """Copie du modèle CNIG à remplir, là où l'utilisateur le demande."""
+        """Copie du modèle CNIG vide (colonnes seules), là où l'utilisateur le demande."""
         cible = Path(chemin)
         try:
             shutil.copyfile(FICHIER_MODELE_CNIG, cible)
         except OSError as erreur:
             # Dossier protégé ou disparu : un message, pas une trace Python
             self.iface.messageBar().pushCritical(
-                "Mutafriches", f"Fichier exemple non enregistré dans {cible.parent} : {erreur.strerror or erreur}."
+                "Mutafriches", f"Modèle de fichier non enregistré dans {cible.parent} : {erreur.strerror or erreur}."
             )
             return None
-        self.iface.messageBar().pushSuccess("Mutafriches", f"Fichier exemple enregistré : {cible}")
+        self.iface.messageBar().pushSuccess("Mutafriches", f"Modèle de fichier enregistré : {cible}")
         return cible
 
     def preparer_carte(self) -> None:
@@ -300,6 +307,15 @@ class Parcours(QObject):
         self.etape = Etape.RESULTATS
         self.change.emit()
         self.zoomer()
+        if self.attention:
+            # Le tableau de bord ne liste plus ces sites : l'utilisateur doit savoir qu'il en manque
+            n = len(self.attention)
+            self.iface.messageBar().pushWarning(
+                "Mutafriches",
+                f"{n} site{'s' if n > 1 else ''} non analysé{'s' if n > 1 else ''} : "
+                + " ; ".join(self.attention[:3])
+                + (f" ; et {n - 3} autres" if n > 3 else ""),
+            )
 
     # --- Étape 2 : résultats ------------------------------------------------------------------
 
@@ -328,6 +344,15 @@ class Parcours(QObject):
     def ouvrir_table_qualification(self) -> None:
         if self.couche_qualification is not None:
             self.iface.showAttributeTable(self.couche_qualification)
+
+    def ameliorer_fiabilite(self) -> None:
+        """Ouvre la table de qualification, où les critères de terrain à renseigner sont colorés."""
+        if self.couche_qualification is None:
+            return
+        # Sans cela, les critères à renseigner sont hors champ, à droite d'une quarantaine de colonnes
+        avancer_criteres_de_terrain(self.couche_qualification)
+        self.iface.showAttributeTable(self.couche_qualification)
+        self.iface.messageBar().pushInfo("Mutafriches", contenus.AIDE_AMELIORER_FIABILITE)
 
     @property
     def attention(self) -> list[str]:

@@ -16,10 +16,8 @@ AVERTISSEMENT = "#b34000"
 AVERTISSEMENT_FOND = "#ffe9e6"
 ERREUR = "#ce0500"
 ERREUR_FOND = "#ffe9e9"
-DEMO_FOND = "#fef7da"
-DEMO_TEXTE = "#716043"
-STAGING_FOND = "#fee7fc"
-STAGING_TEXTE = "#6e445a"
+STAGING_FOND = "#feecc2"
+STAGING_TEXTE = "#716043"
 
 # Couleurs des badges, d'après les variantes DSFR utilisées par l'application web
 BADGES = {
@@ -65,10 +63,8 @@ def feuille_de_style() -> str:
 #mfRacine QCheckBox::indicator:checked {{ background: {BLEU_FRANCE}; border-color: {BLEU_FRANCE}; }}
 #mfRacine QScrollArea, #mfPages, #mfPages > QWidget {{ background: #ffffff; border: none; }}
 
-QLabel#mfDemo {{
-  background: {DEMO_FOND}; color: {DEMO_TEXTE}; font-weight: bold; font-size: 12px;
-  padding: 6px 12px; border-bottom: 1px solid #e9d99f;
-}}
+QFrame#mfBulle {{ background: #ffffff; border: 1px solid {BORDURE}; }}
+QFrame#mfBulle QLabel {{ color: {TEXTE}; font-size: 12px; }}
 QLabel#mfStaging {{
   background: {STAGING_FOND}; color: {STAGING_TEXTE}; font-weight: bold; font-size: 12px;
   padding: 6px 12px; border-bottom: 1px solid {STAGING_TEXTE};

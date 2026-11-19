@@ -19,14 +19,13 @@ from qgis.PyQt.QtWidgets import (
 
 from ..carto.couches import COULEURS_USAGES
 from ..core.attributaire import ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
-from ..core.client_api import DEMONSTRATION, PRODUCTION
 from ..core.cnig import SiteCnig
 from ..core.referentiel import formater_note
 from . import contenus, style
-from .graphiques import anneau_avec_legende, tableau
+from .graphiques import tableau
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
-from .widgets import Encadre, badge, bouton, entete_champ, separateur, texte, vider
+from .widgets import ActionAide, Encadre, badge, bouton, entete_champ, lien, separateur, texte, texte_riche, vider
 
 MAX_LIGNES_AFFICHEES = 40
 
@@ -54,8 +53,10 @@ class PageAccueil(Page):
         libelle.setBuddy(self.consentement)
         ligne.addWidget(libelle, 1)
         self.corps.addLayout(ligne)
+        self.corps.addSpacing(6)
+        # Sous le formulaire, et non au pied du panneau : la suite se lit dans la continuité des champs
+        self.corps.addWidget(bouton("Suivant", "primaire", self._valider))
         self.corps.addStretch(1)
-        self.pied_layout.addWidget(bouton("Suivant", "primaire", self._valider))
 
     def _champ(self, libelle: str, aide: str) -> QLineEdit:
         etiquette = texte(libelle)
@@ -84,47 +85,57 @@ class PageImport(Page):
     def __init__(self, parcours: Parcours) -> None:
         super().__init__(parcours)
         self.corps.addWidget(texte(contenus.TITRE_IMPORT, "mfH2"))
-        self.corps.addWidget(texte(contenus.INTRO_IMPORT))
-        self.corps.addWidget(entete_champ("Fichier de sites (CSV ou GeoJSON)", contenus.AIDE_FICHIER))
+        self.corps.addWidget(
+            texte_riche(
+                contenus.INTRO_IMPORT.format(standard=lien(contenus.LIBELLE_STANDARD_CNIG, contenus.URL_STANDARD_CNIG))
+            )
+        )
+        self.corps.addWidget(
+            entete_champ(
+                "Fichier de sites (CSV ou GeoJSON)",
+                contenus.AIDE_FICHIER,
+                action=(contenus.LIEN_MODELE_CNIG, self._telecharger_modele),
+                aide_accolee=True,
+            )
+        )
         self.fichier = QgsFileWidget()
         self.fichier.setFilter("Fichiers CNIG Friches (*.csv *.geojson *.json)")
         self.fichier.setDialogTitle("Choisir le fichier de sites au format CNIG")
         self.fichier.fileChanged.connect(parcours.choisir_fichier)
         self.corps.addWidget(self.fichier)
+        # Juste sous le champ : l'envoi est la suite immédiate du choix du fichier
+        self.bouton_envoyer = bouton("Analyser mes sites", "primaire", parcours.envoyer)
+        self.corps.addWidget(self.bouton_envoyer)
         self.zone = QVBoxLayout()
         self.zone.setSpacing(8)
         self.corps.addLayout(self.zone)
         self.corps.addStretch(1)
-        self.corps.addWidget(separateur())
-        self.corps.addWidget(texte(contenus.AIDE_EXEMPLE_CNIG, "mfAide"))
-        self.corps.addWidget(bouton(contenus.BOUTON_MODELE_CNIG, "secondaire", self._telecharger_modele))
         self.utilisateur = texte("", "mfAide")
         ligne = QHBoxLayout()
         ligne.addWidget(self.utilisateur, 1)
         ligne.addWidget(bouton("Modifier", "lien", parcours.modifier_utilisateur))
         self.pied_layout.addLayout(ligne)
-        self.bouton_envoyer = bouton("Envoyer mes sites", "primaire", parcours.envoyer)
-        self.pied_layout.addWidget(self.bouton_envoyer)
-        self.bouton_mode = bouton(
-            "", "lien", lambda: parcours.changer_environnement(DEMONSTRATION if parcours.reel else PRODUCTION)
-        )
-        self.pied_layout.addWidget(self.bouton_mode, 0, Qt.AlignmentFlag.AlignCenter)
-        # Staging, adresse d'API et autres réglages : page « Mutafriches » des options de QGIS
-        self.pied_layout.addWidget(
-            bouton("Réglages", "lien", parcours.ouvrir_reglages), 0, Qt.AlignmentFlag.AlignCenter
-        )
+        # Démonstration, staging et autres réglages : page « Mutafriches » des options de QGIS.
+        # Sans bandeau ni lien, ce rappel est le seul signe que l'envoi ne part pas vers l'API.
+        self.rappel_demonstration = texte(contenus.RAPPEL_DEMONSTRATION, "mfAide")
+        self.pied_layout.addWidget(self.rappel_demonstration)
 
     def _telecharger_modele(self) -> None:
         # Dossier de départ explicite : sans lui la fenêtre s'ouvre à la racine du disque, en lecture seule
         dossier = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation) or str(Path.home())
         chemin, _ = QFileDialog.getSaveFileName(
             self.contenu,
-            "Enregistrer le fichier exemple CNIG",
+            "Enregistrer le modèle de fichier CNIG",
             str(Path(dossier) / "modele-friches-cnig.csv"),
             "CSV (*.csv)",
         )
         if chemin:
             self.parcours.enregistrer_modele(chemin)
+
+    def _recharger(self) -> None:
+        # Même fichier, relu sur le disque après correction
+        if self.parcours.fichier is not None:
+            self.parcours.choisir_fichier(str(self.parcours.fichier))
 
     def rafraichir(self) -> None:
         parcours = self.parcours
@@ -140,9 +151,8 @@ class PageImport(Page):
                     f"Analyse en cours : {traites} / {total} sites"
                     if parcours.reel
                     else f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
-                    contenus.SOUS_TITRE_ANALYSE_REELLE if parcours.reel else contenus.SOUS_TITRE_CHARGEMENT,
-                    contenus.MESSAGE_ANALYSE_LOT,
-                    parcours.avancement if parcours.reel else None,
+                    contenus.SOUS_TITRE_ANALYSE,
+                    avancement=parcours.avancement if parcours.reel else None,
                 )
             )
             self.zone.addWidget(bouton("Annuler l'analyse", "secondaire", parcours.annuler_analyse))
@@ -152,14 +162,6 @@ class PageImport(Page):
                 # L'aide dépend de la cause : accès à l'API, ou sites que l'API n'a pas su traiter
                 aide = contenus.AIDE_ERREUR_API if parcours.erreur_api.bloquante else contenus.AIDE_AUCUN_SITE
                 self.zone.addWidget(texte(aide, "mfAide"))
-                if parcours.erreur_api.bloquante:
-                    self.zone.addWidget(
-                        bouton(
-                            "Passer en mode démonstration",
-                            "secondaire",
-                            lambda: parcours.changer_environnement(DEMONSTRATION),
-                        )
-                    )
         elif lecture is not None and lecture.bloquants:
             self.zone.addWidget(
                 Encadre(
@@ -167,13 +169,14 @@ class PageImport(Page):
                 )
             )
             self.zone.addWidget(texte(contenus.AIDE_ERREUR_CNIG, "mfAide"))
+            self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         elif lecture is not None:
             ok, ko = lecture.sites_ok, lecture.sites_ko
             if ko:
                 self.zone.addWidget(
                     Encadre(
                         "avertissement" if ok else "erreur",
-                        f"{pluriel(len(ok), 'site')} prêt{'s' if len(ok) > 1 else ''}, {pluriel(len(ko), 'ligne')} en erreur",
+                        f"{pluriel(len(ok), 'site')} OK, {pluriel(len(ko), 'site')} KO (comportant des erreurs)",
                         contenus.AIDE_ERREUR_CNIG,
                     )
                 )
@@ -190,18 +193,26 @@ class PageImport(Page):
                 self.zone.addWidget(LigneCnig(site))
             if len(lecture.sites) > MAX_LIGNES_AFFICHEES:
                 self.zone.addWidget(texte(f"et {len(lecture.sites) - MAX_LIGNES_AFFICHEES} autres lignes", "mfAide"))
+            if ko:
+                # Sous la liste des erreurs : poursuivre avec les sites valides, ou corriger et recharger
+                analyser = bouton(
+                    f"Analyser {'les ' + str(len(ok)) + ' sites' if len(ok) > 1 else 'le site'} OK",
+                    "primaire",
+                    parcours.envoyer,
+                )
+                analyser.setEnabled(parcours.pret_a_envoyer)
+                self.zone.addWidget(analyser)
+                self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         utilisateur = parcours.utilisateur
         self.utilisateur.setText(f"{utilisateur.structure} · {utilisateur.mail}" if utilisateur.complet else "")
         self.utilisateur.setVisible(utilisateur.complet)
         n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
-        self.bouton_envoyer.setText(f"Envoyer mes {n} sites" if n > 1 else "Envoyer mes sites")
+        self.bouton_envoyer.setText(f"Analyser mes {n} sites" if n > 1 else "Analyser mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
-        self.bouton_mode.setText(
-            "Passer en mode démonstration (données figées)"
-            if parcours.reel
-            else "Passer en mode réel (API Mutafriches)"
-        )
-        self.bouton_mode.setVisible(not parcours.analyse_en_cours)
+        # Avec des sites KO, l'envoi se décide sous la liste des erreurs ; pendant l'analyse, seul « Annuler » reste
+        avec_ko = lecture is not None and not lecture.bloquants and bool(lecture.sites_ko)
+        self.bouton_envoyer.setVisible(not parcours.analyse_en_cours and not avec_ko)
+        self.rappel_demonstration.setVisible(not parcours.reel)
 
 
 class LigneCnig(QFrame):
@@ -227,7 +238,9 @@ class LigneCnig(QFrame):
 
 
 class Chiffre(QFrame):
-    def __init__(self, libelle: str, valeur: str, detail: str = "") -> None:
+    """Chiffre clé du tableau de bord, avec au besoin un lien d'action sous la valeur."""
+
+    def __init__(self, libelle: str, valeur: str, action: ActionAide | None = None) -> None:
         super().__init__()
         self.setObjectName("mfChiffre")
         layout = QVBoxLayout(self)
@@ -235,8 +248,9 @@ class Chiffre(QFrame):
         layout.setSpacing(2)
         layout.addWidget(texte(libelle, "mfAide"))
         layout.addWidget(texte(valeur, "mfNomSite"))
-        if detail:
-            layout.addWidget(texte(detail, "mfAide"))
+        if action is not None:
+            layout.addWidget(bouton(action[0], "lien", action[1]), 0, Qt.AlignmentFlag.AlignLeft)
+        layout.addStretch(1)
 
 
 class Barre(QWidget):
@@ -274,12 +288,10 @@ class PageResultats(Page):
         self.zone.setSpacing(10)
         self.corps.addLayout(self.zone)
         self.corps.addStretch(1)
-        ligne = QHBoxLayout()
-        ligne.addWidget(bouton("Table mutabilité", "secondaire", parcours.ouvrir_table_mutabilite))
-        ligne.addWidget(bouton("Table qualification", "secondaire", parcours.ouvrir_table_qualification))
-        self.pied_layout.addLayout(ligne)
+        # Pied fixe : les tables restent à portée quel que soit le défilement
+        self.pied_layout.addWidget(bouton("Voir table de mutabilité", "primaire", parcours.ouvrir_table_mutabilite))
         self.pied_layout.addWidget(
-            bouton("Analyser un autre inventaire", "lien", parcours.nouvelle_analyse), 0, Qt.AlignmentFlag.AlignCenter
+            bouton("Voir table de qualification", "secondaire", parcours.ouvrir_table_qualification)
         )
 
     def _titre(self, contenu: str, aide: str = "") -> None:
@@ -294,46 +306,51 @@ class PageResultats(Page):
         vider(self.zone)
         if s is None:
             return
-        self.zone.addWidget(texte(f"{s.commune} ({s.code_insee})", "mfSurTitre"))
         self.zone.addWidget(texte("Tableau de bord territorial", "mfH2"))
-        self.zone.addWidget(texte(s.provenance, "mfAide"))
 
-        # 1 et 2 : nombre de sites, fiabilité
+        # Nombre de sites, fiabilité et son levier d'amélioration
         grille = QGridLayout()
         grille.setSpacing(8)
-        grille.addWidget(
-            Chiffre("Sites analysés", str(s.nombre_sites), f"{len(s.sites_a_qualifier)} sans saisie terrain"), 0, 0
-        )
+        grille.addWidget(Chiffre("Sites analysés", str(s.nombre_sites)), 0, 0)
         grille.addWidget(
             Chiffre(
                 "Fiabilité moyenne",
                 f"{formater_note(s.fiabilite_moyenne)} / 10",
-                f"{s.par_fiabilite.get('Très fiable', 0)} très fiables sur {s.nombre_sites}",
+                (contenus.LIEN_AMELIORER_FIABILITE, parcours.ameliorer_fiabilite),
             ),
             0,
             1,
         )
         self.zone.addLayout(grille)
 
-        # 3 : jauges par usage le plus compatible
-        self._titre("Usage le plus compatible", "Nombre de sites dont c'est l'usage prioritaire.")
+        # Jauges par usage le plus compatible
+        self._titre(contenus.TITRE_REPARTITION, contenus.AIDE_REPARTITION)
         for usage in ORDRE_USAGES:
             self.zone.addWidget(
                 Barre(libelle_usage(usage), s.par_usage.get(usage, 0), s.nombre_sites, COULEURS_USAGES[usage])
             )
 
-        # 4 : répartition
-        self._titre("Répartition des usages les plus compatibles")
-        serie_usages = [(libelle_usage(u), s.par_usage.get(u, 0), COULEURS_USAGES[u]) for u in ORDRE_USAGES]
-        self.zone.addWidget(anneau_avec_legende(serie_usages, str(s.nombre_sites), "sites"))
-
-        # 5 : profils
+        # Sites à forte compatibilité, cliquables
         self._titre(
-            "Profils de sites",
-            "Écart entre le meilleur et le moins bon usage d'un même site. Grille de lecture du prototype, à valider.",
+            f"{contenus.TITRE_FORTE_COMPATIBILITE} ({len(s.sites_forte_compatibilite)})",
+            contenus.AIDE_FORTE_COMPATIBILITE,
         )
+        for site in s.sites_forte_compatibilite:
+            ligne = QHBoxLayout()
+            lien_site = bouton(site.nom, "lien", partial(parcours.mettre_en_avant, site))
+            lien_site.setAccessibleName(f"Voir sur la carte : {site.nom}")
+            ligne.addWidget(lien_site, 1)
+            ligne.addWidget(
+                badge(f"{libelle_usage(site.usage_prioritaire)} · {round(site.indice_max)} %", "tag"),
+                0,
+                Qt.AlignmentFlag.AlignTop,
+            )
+            self.zone.addLayout(ligne)
+
+        # Profils, du plus contrasté au plus plat
+        self._titre(contenus.TITRE_PROFILS, contenus.AIDE_PROFILS)
         lignes = []
-        for seuil, libelle, lecture in PROFILS_ECART:
+        for seuil, libelle, lecture in reversed(PROFILS_ECART):
             nombre = s.par_profil.get(libelle, 0)
             borne = "30 pts et plus" if seuil == float("inf") else f"< {int(seuil)} pts"
             lignes.append(
@@ -346,51 +363,6 @@ class PageResultats(Page):
                 ]
             )
         self.zone.addWidget(tableau(["Profil", "Écart", "Sites", "Part", "Lecture"], lignes, [3, 2, 1, 1, 4]))
-
-        # 6 : sites à forte compatibilité, cliquables
-        self._titre(
-            f"Sites à forte compatibilité ({len(s.sites_forte_compatibilite)})",
-            "Indice de l'usage prioritaire supérieur ou égal à 70 %. Cliquer un site le sélectionne et cadre la carte.",
-        )
-        for site in s.sites_forte_compatibilite:
-            ligne = QHBoxLayout()
-            lien = bouton(site.nom, "lien", partial(parcours.mettre_en_avant, site))
-            lien.setAccessibleName(f"Voir sur la carte : {site.nom}")
-            ligne.addWidget(lien, 1)
-            ligne.addWidget(
-                badge(f"{libelle_usage(site.usage_prioritaire)} · {round(site.indice_max)} %", "tag"),
-                0,
-                Qt.AlignmentFlag.AlignTop,
-            )
-            self.zone.addLayout(ligne)
-
-        # 7 : sites nécessitant une attention (lignes écartées, non retrouvés, peu fiables)
-        peu_fiables = [
-            x
-            for x in s.sites_a_qualifier
-            if x.fiabilite_niveau in ("Moyennement fiable", "Peu fiable", "Très peu fiable")
-        ]
-        attention = parcours.attention + [
-            f"{x.nom} : {x.fiabilite_niveau.lower()}, qualification à compléter" for x in peu_fiables
-        ]
-        self._titre("Sites nécessitant votre attention")
-        if attention:
-            n = len(attention)
-            self.zone.addWidget(
-                Encadre(
-                    "erreur",
-                    f"{pluriel(n, 'site')} à reprendre",
-                    "\n".join(attention[:6]) + (f"\net {n - 6} autres" if n > 6 else ""),
-                )
-            )
-        else:
-            self.zone.addWidget(
-                Encadre(
-                    "succes",
-                    "Aucun site à reprendre",
-                    "Toutes les lignes ont été analysées et aucune n'est peu fiable.",
-                )
-            )
         self.zone.addWidget(
             texte(parcours.avertissement if parcours.reel else f"Démonstration : {parcours.avertissement}", "mfAide")
         )
