@@ -39,11 +39,12 @@ précédente est remplacée).
 3. **Analyser mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
    par usage et indice ; Qualification, masquée), avec un fond OpenStreetMap si le projet était
    vide.
-4. Panneau résultats, tableau de bord territorial : alerte « sites nécessitant votre attention »
-   (lignes écartées, sites non retrouvés, sites peu fiables), chiffres clés, anneau des usages,
-   barres par usage avec indice moyen, anneau de fiabilité, profils de sites, niveaux de
-   compatibilité, sites à forte compatibilité (cliquer un site le sélectionne et cadre la carte).
-   Boutons **Table mutabilité**, **Table qualification**, lien **Analyser un autre inventaire**.
+4. Panneau résultats, tableau de bord territorial : nombre de sites, fiabilité moyenne et lien
+   **Améliorer la fiabilité** (table de qualification, critères de terrain inconnus en rouge),
+   répartition des usages les plus compatibles, sites à forte compatibilité (cliquer un site le
+   sélectionne et cadre la carte), profils des sites. Les sites non analysés sont signalés dans
+   la barre de messages de QGIS. Boutons **Voir table de mutabilité** et **Voir table de
+   qualification** ; lien **Analyser un autre inventaire** à côté du logo.
    Les tables s'ouvrent aussi depuis le panneau Couches : clic droit sur la couche, « Ouvrir la
    table d'attributs », ou F6 sur la couche sélectionnée.
 
@@ -86,6 +87,30 @@ en mode développeur, adresse d'API libre `http://127.0.0.1:8799`.
 L'accueil (structure, mail, consentement) n'est demandé qu'une fois. Pour le revoir : le lien
 **Modifier** en bas de la page d'envoi, ou **Effacer mes informations** dans les réglages.
 QGIS fermé, `./scripts/reinitialiser.sh` fait la même chose.
+
+## Tester de bout en bout (équipe)
+
+Deux inventaires de **vrais sites** de Montereau-Fault-Yonne sont joints à chaque release, pour
+jouer le parcours complet contre l'API :
+
+| Fichier | Sites | Durée indicative |
+|---|---|---|
+| [friches-cnig-test-montereau-5-sites.csv](https://github.com/incubateur-ademe/mutafriches-qgis/releases/latest/download/friches-cnig-test-montereau-5-sites.csv) | 5 | une vingtaine de secondes |
+| [friches-cnig-test-montereau.csv](https://github.com/incubateur-ademe/mutafriches-qgis/releases/latest/download/friches-cnig-test-montereau.csv) | 28 | deux à trois minutes |
+
+1. Préférences › Options › Mutafriches : cocher le mode développeur, choisir l'environnement
+   **Staging**. Le panneau affiche le bandeau « Environnement de test (staging) ».
+2. Charger l'un des deux fichiers, puis **Analyser mes N sites**.
+
+Ces fichiers sont réservés aux tests : envoyés en production, ils ajoutent leurs sites à la table
+attributaire publique de la commune et faussent les statistiques d'usage. Ils ne sont proposés
+ni dans le panneau ni dans le tutoriel web ; les utilisateurs partent du modèle de fichier vide.
+`scripts/package.sh` les produit dans `dist/` à partir de
+`mutafriches/demo/montereau/friches-cnig-montereau.csv` ; les joindre à la release :
+
+```bash
+gh release create vX.Y.Z dist/mutafriches-X.Y.Z.zip dist/friches-cnig-test-montereau*.csv
+```
 
 ## Captures
 

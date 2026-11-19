@@ -208,6 +208,9 @@ QGIS. Préciser la version et l'OS réellement testés.
 
 - SemVer dans `mutafriches/metadata.txt` (`version=`), bump dans un commit dédié
   `chore(release): vX.Y.Z`. Indépendant de la version de l'algorithme Mutafriches.
+- Une release GitHub joint le ZIP et les deux fichiers de test produits par `scripts/package.sh`
+  (`dist/friches-cnig-test-montereau*.csv`) : le README donne à l'équipe leurs liens stables
+  (`releases/latest/download/...`). Ne jamais les proposer aux utilisateurs ni dans le tutoriel web.
 
 ### Commits
 
