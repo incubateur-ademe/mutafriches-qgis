@@ -50,7 +50,7 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── exemple.py           # Couche de parcelles d'exemple (parcours site à site)
 │   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
-│   ├── accueil.py           # Utilisateur (structure, mail, consentement)
+│   ├── accueil.py           # Utilisateur (structure, mail, consentement, facultatifs)
 │   ├── options.py           # Page « Mutafriches » de Préférences › Options
 │   ├── parcours.py          # État : fichier CNIG, analyse réelle ou démonstration, résultats
 │   ├── prototype.py         # Pages Accueil, Import et Résultats (tableau de bord territorial)
@@ -210,7 +210,8 @@ QGIS. Préciser la version et l'OS réellement testés.
   `chore(release): vX.Y.Z`. Indépendant de la version de l'algorithme Mutafriches.
 - Une release GitHub joint le ZIP et les deux fichiers de test produits par `scripts/package.sh`
   (`dist/friches-cnig-test-montereau*.csv`) : le README donne à l'équipe leurs liens stables
-  (`releases/latest/download/...`). Ne jamais les proposer aux utilisateurs ni dans le tutoriel web.
+  (`releases/latest/download/...`). Le tutoriel web pointe sur le fichier de 5 sites (décision de
+  l'équipe) ; le panneau ne les propose pas.
 
 ### Commits
 

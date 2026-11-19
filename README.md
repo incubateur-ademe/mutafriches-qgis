@@ -27,7 +27,7 @@ précédente est remplacée).
 
 ## Tester en 3 minutes
 
-1. Ouvrir le panneau **Mutafriches** : il demande structure et mail (une fois). Sur un projet
+1. Ouvrir le panneau **Mutafriches** : il propose de renseigner structure et mail (facultatifs, une fois). Sur un projet
    vide, un fond OpenStreetMap cadré sur la France est ajouté ; un projet qui a déjà des couches
    n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
@@ -84,7 +84,7 @@ en mode développeur, adresse d'API libre `http://127.0.0.1:8799`.
 
 ### Revoir l'accueil
 
-L'accueil (structure, mail, consentement) n'est demandé qu'une fois. Pour le revoir : le lien
+L'accueil (structure, mail, consentement, tous facultatifs) n'est proposé qu'une fois. Pour le revoir : le lien
 **Modifier** en bas de la page d'envoi, ou **Effacer mes informations** dans les réglages.
 QGIS fermé, `./scripts/reinitialiser.sh` fait la même chose.
 
@@ -102,9 +102,9 @@ jouer le parcours complet contre l'API :
    **Staging**. Le panneau affiche le bandeau « Environnement de test (staging) ».
 2. Charger l'un des deux fichiers, puis **Analyser mes N sites**.
 
-Ces fichiers sont réservés aux tests : envoyés en production, ils ajoutent leurs sites à la table
-attributaire publique de la commune et faussent les statistiques d'usage. Ils ne sont proposés
-ni dans le panneau ni dans le tutoriel web ; les utilisateurs partent du modèle de fichier vide.
+Ces fichiers servent aux tests : envoyés en production, ils ajoutent leurs sites à la table
+attributaire publique de la commune et pèsent sur les statistiques d'usage. Le panneau ne les
+propose pas ; le tutoriel web donne le lien du fichier de 5 sites, pour un premier essai.
 `scripts/package.sh` les produit dans `dist/` à partir de
 `mutafriches/demo/montereau/friches-cnig-montereau.csv` ; les joindre à la release :
 
