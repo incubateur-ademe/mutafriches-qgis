@@ -5,7 +5,7 @@ Sorties (mutafriches/demo/montereau/) :
 - friches-cnig-montereau.csv : les mêmes sites au standard CNIG Friches (51 colonnes), fichier
   d'entrée d'exemple du prototype
 - friches-cnig-erreurs.csv : fichier avec plusieurs lignes en erreur, pour l'écran de contrôle
-- modele-cnig.csv : modèle à remplir, valeurs manifestement fictives (pas une vraie commune)
+- modele-cnig.csv : modèle à remplir, les 51 colonnes du standard sans aucune ligne
 
 Usage : python3 outils/figer_attributaire.py (réseau requis)
 """
@@ -174,31 +174,6 @@ if __name__ == "__main__":
     erreurs[8]["unite_fonciere_refcad"] = ""
     ecrire_csv(DOSSIER / "friches-cnig-erreurs.csv", COLONNES_CNIG, erreurs)
 
-    # Modèle à remplir : valeurs fictives impossibles à confondre avec un vrai inventaire
-    modele = []
-    for numero, (nom, type_site, parcelles) in enumerate(
-        [
-            ("Ancienne usine (exemple à remplacer)", "industrielle", "99999000ZZ0001|99999000ZZ0002"),
-            ("Friche commerciale (exemple à remplacer)", "commerciale", "99999000ZZ0010"),
-            ("Terrain nu (exemple à remplacer)", "autre", "99999000ZZ0020|99999000ZZ0021|99999000ZZ0022"),
-        ],
-        start=1,
-    ):
-        ligne = {c: (INCONNU if c in LISTES else "") for c in COLONNES_CNIG}
-        ligne.update(
-            {
-                "site_id": f"99999_{numero:03d}",
-                "site_nom": nom,
-                "site_type": type_site,
-                "site_identif_date": "2026-01-01",
-                "site_actu_date": "2026-01-01",
-                "comm_nom": "Commune-Exemple",
-                "comm_insee": "99999",
-                "unite_fonciere_refcad": parcelles,
-                "source_nom": "Votre structure",
-                "geompoint": "POINT(0.000000 0.000000)",
-            }
-        )
-        modele.append(ligne)
-    ecrire_csv(DOSSIER / "modele-cnig.csv", COLONNES_CNIG, modele)
+    # Modèle à remplir : les colonnes du standard, sans aucune ligne
+    ecrire_csv(DOSSIER / "modele-cnig.csv", COLONNES_CNIG, [])
     print(f"{len(entites)} sites figés dans {DOSSIER}")

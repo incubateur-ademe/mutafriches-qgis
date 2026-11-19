@@ -1,3 +1,4 @@
+import csv
 import unittest
 from pathlib import Path
 
@@ -39,23 +40,44 @@ class TestCnig(unittest.TestCase):
         self.assertEqual(erreurs[9], ["geompoint vide"])
         self.assertEqual(erreurs[10], ["unite_fonciere_refcad vide"])
 
-    def test_modele_fictif_refuse_tel_quel(self) -> None:
+    def _modele_avec(self, nom: str, **valeurs: str) -> Path:
+        """Le modèle vide, complété d'une ligne : ce que fait l'utilisateur dans son tableur."""
+        colonnes = FICHIER_MODELE_CNIG.read_text(encoding="utf-8-sig").strip().split(",")
+        ligne = {
+            "site_id": "77305_001",
+            "site_nom": "Friche de test",
+            "comm_insee": "77305",
+            "unite_fonciere_refcad": "77305000AB0160",
+            "geompoint": "POINT(2.9555 48.3895)",
+        } | valeurs
+        chemin = Path(RACINE) / "dist" / nom
+        chemin.parent.mkdir(exist_ok=True)
+        with chemin.open("w", encoding="utf-8", newline="") as sortie:
+            ecrivain = csv.DictWriter(sortie, fieldnames=colonnes)
+            ecrivain.writeheader()
+            ecrivain.writerow(ligne)
+        return chemin
+
+    def test_modele_vide_refuse_tel_quel(self) -> None:
         lecture = lire_cnig(FICHIER_MODELE_CNIG)
         self.assertEqual(len(lecture.colonnes), 51)
-        self.assertEqual((len(lecture.sites_ok), len(lecture.sites_ko)), (0, 3))
+        self.assertEqual(lecture.sites, [])
         self.assertFalse(lecture.valide)
-        self.assertTrue(all("fichier exemple" in s.erreurs[0] for s in lecture.sites_ko))
+        self.assertEqual([p.message for p in lecture.bloquants], ["Le fichier ne contient aucun site."])
 
     def test_modele_rempli_accepte(self) -> None:
-        # Un utilisateur qui remplace un site d'exemple par le sien voit sa ligne passer
-        chemin = Path(RACINE) / "dist" / "test-modele-rempli.csv"
-        chemin.parent.mkdir(exist_ok=True)
-        contenu = FICHIER_MODELE_CNIG.read_text(encoding="utf-8-sig")
-        contenu = contenu.replace("99999000ZZ0010", "77305000AB0160").replace(",99999,", ",77305,", 2)
-        chemin.write_text(contenu, encoding="utf-8")
-        lecture = lire_cnig(chemin)
+        lecture = lire_cnig(self._modele_avec("test-modele-rempli.csv"))
         self.assertTrue(lecture.valide)
         self.assertEqual([s.parcelles for s in lecture.sites_ok], [["77305000AB0160"]])
+
+    def test_ancien_fichier_exemple_refuse(self) -> None:
+        # Les fichiers exemple d'avant le modèle vide portaient des sites fictifs (commune 99999)
+        chemin = self._modele_avec(
+            "test-ancien-exemple.csv", comm_insee="99999", unite_fonciere_refcad="99999000ZZ0010"
+        )
+        lecture = lire_cnig(chemin)
+        self.assertFalse(lecture.valide)
+        self.assertIn("ancien fichier exemple", lecture.sites_ko[0].erreurs[0])
 
     def test_erreurs_ligne_a_ligne(self) -> None:
         chemin = Path(RACINE) / "dist" / "test-cnig.csv"
