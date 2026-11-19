@@ -1,7 +1,7 @@
 """Captures du tutoriel web, jouées dans une vraie session QGIS contre l'API réelle.
 
 Lancé par scripts/captures-tutoriel.sh. Parcours nominal seulement : installation, accueil,
-fichier exemple, contrôle, analyse, carte, tables, site sur la carte, sites à reprendre.
+modèle de fichier, contrôle, analyse, carte, tables, fiabilité, site sur la carte, réglages.
 Images en WebP, 1600 px de large, noms stables repris par la page web.
 """
 
@@ -14,12 +14,14 @@ from pathlib import Path
 import qgis.utils
 from qgis.core import QgsProject, QgsSettings
 from qgis.PyQt.QtCore import Qt, QTimer
-from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtGui import QPainter, QPixmap
 from qgis.PyQt.QtTest import QTest
 from qgis.PyQt.QtWidgets import QApplication, QCheckBox, QDockWidget, QLineEdit, QPushButton, QWidget
 
 SORTIE = Path(os.environ["MF_TUTORIEL_SORTIE"])
 RAPPORT = Path(os.environ["MF_TUTORIEL_RAPPORT"])
+# Captures hors tutoriel (bandeau de staging, réservé à l'équipe) : jamais dans la page web
+HORS_PAGE = Path(os.environ.get("MF_TUTORIEL_HORS_PAGE", str(RAPPORT.parent)))
 LARGEUR = 1600
 DELAI_ANALYSE_S = 600
 iface = qgis.utils.iface
@@ -48,14 +50,26 @@ def enregistrer(image: QPixmap, nom: str) -> None:
     rapport["captures"].append(chemin.name)  # type: ignore[union-attr]
 
 
-def capture(nom: str) -> None:
+def fenetre_principale(avec_bandeau: bool = False) -> QPixmap:
     taille = iface.mainWindow().size()
     if (taille.width(), taille.height()) != (1600, 1000):
         raise AssertionError(f"Fenêtre QGIS en {taille.width()}x{taille.height()}, 1600x1000 attendu")
     # Le tutoriel montre l'extension telle qu'en production : pas de bandeau d'environnement
-    dock().bandeau.hide()
+    dock().bandeau.setVisible(avec_bandeau)
     QApplication.processEvents()
-    enregistrer(iface.mainWindow().grab(), nom)
+    return iface.mainWindow().grab()
+
+
+def capture(nom: str) -> None:
+    enregistrer(fenetre_principale(), nom)
+
+
+def capture_hors_page(nom: str, avec_bandeau: bool) -> None:
+    image = fenetre_principale(avec_bandeau).scaledToWidth(LARGEUR, Qt.TransformationMode.SmoothTransformation)
+    HORS_PAGE.mkdir(parents=True, exist_ok=True)
+    if not image.save(str(HORS_PAGE / f"{nom}.png")):
+        raise RuntimeError(f"Capture non enregistrée : {nom}")
+    rapport["notes"].append(f"Hors tutoriel : {HORS_PAGE / (nom + '.png')}")  # type: ignore[union-attr]
 
 
 def cliquer(libelle: str) -> None:
@@ -173,8 +187,27 @@ def accueil() -> None:
 
 
 @etape(1000)
-def fichier_exemple() -> None:
-    capture("03-fichier-exemple")
+def modele_de_fichier() -> None:
+    from mutafriches.ui.widgets import BoutonAide
+
+    dock().bandeau.hide()
+    QApplication.processEvents()
+    aide = next(b for b in dock().pages[1].contenu.findChildren(BoutonAide) if b.isVisible())
+    QTest.mouseClick(aide, Qt.MouseButton.LeftButton)
+    QApplication.processEvents()
+    image = fenetre_principale()
+    if aide.bulle is None:
+        raise AssertionError("Infobulle du fichier de sites non ouverte")
+    # La bulle est une fenêtre à part, absente de la capture de la fenêtre principale :
+    # elle y est reportée à sa position réelle
+    position = aide.bulle.mapToGlobal(aide.bulle.rect().topLeft()) - iface.mainWindow().mapToGlobal(
+        iface.mainWindow().rect().topLeft()
+    )
+    peintre = QPainter(image)
+    peintre.drawPixmap(position, aide.bulle.grab())
+    peintre.end()
+    aide.bulle.close()
+    enregistrer(image, "03-modele-de-fichier")
 
 
 @etape()
@@ -195,7 +228,9 @@ def controle() -> None:
 @etape(1000)
 def envoyer() -> None:
     capture("05-fichier-pret")
-    cliquer("Envoyer mes 28 sites")
+    capture_hors_page("bandeau-staging-avec", avec_bandeau=True)
+    capture_hors_page("bandeau-staging-sans", avec_bandeau=False)
+    cliquer("Analyser mes 28 sites")
     contexte["captures_analyse"] = 0
     contexte["depart"] = 0
 
@@ -228,12 +263,10 @@ def resultats() -> None:
     rapport["notes"].append(f"{p.synthese.nombre_sites} sites analysés, {len(p.echecs)} en échec : {p.echecs[:3]}")  # type: ignore[union-attr]
     capture("07-carte-et-tableau-de-bord")
     barre = dock().defilement.verticalScrollBar()
-    barre.setValue(int(barre.maximum() * 0.55))
-    capture("08-tableau-de-bord-profils")
     barre.setValue(barre.maximum())
-    capture("09-tableau-de-bord-sites")
+    capture("08-tableau-de-bord-profils")
     barre.setValue(0)
-    cliquer("Table mutabilité")
+    cliquer("Voir table de mutabilité")
 
 
 @etape(2000)
@@ -243,7 +276,7 @@ def table_mutabilite() -> None:
         iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
         capture("10-table-mutabilite")
         table.close()
-    cliquer("Table qualification")
+    cliquer("Voir table de qualification")
 
 
 @etape(2000)
@@ -253,6 +286,18 @@ def table_qualification() -> None:
         iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
         capture("11-table-qualification")
         table.close()
+    cliquer("Améliorer la fiabilité")
+
+
+@etape(2000)
+def ameliorer_la_fiabilite() -> None:
+    table = table_ancree("Qualification")
+    if table is None:
+        raise AssertionError("Table de qualification non ouverte par « Améliorer la fiabilité »")
+    iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
+    capture("13-ameliorer-la-fiabilite")
+    table.close()
+    iface.messageBar().clearWidgets()
     barre = dock().defilement.verticalScrollBar()
     barre.setValue(barre.maximum())
     premier = parcours().synthese.sites_forte_compatibilite
@@ -264,27 +309,6 @@ def table_qualification() -> None:
 def site_sur_la_carte() -> None:
     capture("12-site-sur-la-carte")
     parcours().couche_mutabilite.removeSelection()
-    cliquer("Analyser un autre inventaire")
-
-
-@etape()
-def envoyer_erreurs() -> None:
-    from mutafriches.core.attributaire import FICHIER_CNIG_ERREURS
-
-    parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
-    cliquer("Envoyer mes 4 sites")
-    contexte["captures_analyse"] = 1
-    contexte["depart"] = 0
-
-
-etapes.append((1000, attendre_resultats))
-
-
-@etape(4000)
-def sites_a_reprendre() -> None:
-    barre = dock().defilement.verticalScrollBar()
-    barre.setValue(barre.maximum())
-    capture("13-sites-a-reprendre")
 
 
 @etape(1000)
@@ -308,7 +332,7 @@ def reglages() -> None:
 
     QTimer.singleShot(2000, lambda: garder(saisir))
     cliquer("Analyser un autre inventaire")
-    cliquer("Réglages")
+    parcours().ouvrir_reglages()
     reglages_extension.DEV.setValue(True)
     QgsSettings().remove("plugins/mutafriches/utilisateur")
 
