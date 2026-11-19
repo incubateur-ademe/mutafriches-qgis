@@ -467,7 +467,7 @@ def staging() -> None:
     page = plugin().options.createWidget(None)
     contexte["page"] = page
     controler(
-        "page d'options : staging proposé en mode développeur",
+        "page d'options : staging proposé, réglages d'API visibles en mode développeur",
         page.dev.isChecked() and page.environnement.findData("staging") >= 0 and not page.url.isHidden(),
     )
     # Sans adresse libre, le staging pointe sur son URL publique
@@ -518,8 +518,8 @@ def options_sans_mode_developpeur() -> None:
     page = contexte["page"]
     page.dev.setChecked(False)
     controler(
-        "sans mode développeur : ni staging ni réglages d'API",
-        page.environnement.findData("staging") < 0 and page.url.isHidden() and page.intervalle.isHidden(),
+        "sans mode développeur : staging toujours proposé, réglages d'API masqués",
+        page.environnement.findData("staging") >= 0 and page.url.isHidden() and page.intervalle.isHidden(),
     )
     page.dev.setChecked(True)
     page.url.setText(str(contexte["url"]))

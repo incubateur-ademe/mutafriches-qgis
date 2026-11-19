@@ -58,19 +58,19 @@ menu Extensions › Mutafriches (ADR-0004). Le panneau n'a ni lien de réglages 
 
 | Bloc | Réglages |
 |---|---|
-| Service | Environnement : production (défaut) ou démonstration |
+| Service | Environnement : production (défaut), staging ou démonstration |
 | Vos informations | Structure, mail, consentement ; « Effacer mes informations » fait revenir l'accueil |
 | Carte | Ajouter ou non le fond OpenStreetMap à l'ouverture d'un projet vide |
-| Développement | Mode développeur : staging, adresse d'API libre, origine envoyée, délai entre sites |
+| Développement | Mode développeur : adresse d'API libre, origine envoyée, délai entre sites |
 
 | Environnement | API | Bandeau |
 |---|---|---|
 | Production | `https://mutafriches.beta.gouv.fr` | aucun |
-| Staging (mode développeur) | `https://mutafriches.incubateur.ademe.dev` | « Environnement de test (staging) » |
+| Staging | `https://mutafriches.incubateur.ademe.dev` | « Environnement de test (staging) » |
 | Démonstration | aucune, table figée de Montereau | aucun ; le tableau de bord précise « Démonstration » et la provenance figée |
 
-Changer de service vide les résultats et retire les deux couches Mutafriches du projet. Sans
-mode développeur, le staging et l'adresse libre sont ignorés même s'ils sont enregistrés.
+Changer de service vide les résultats et retire les deux couches Mutafriches du projet. Le staging se
+choisit sans mode développeur ; l'adresse libre, elle, est ignorée sans lui même si elle est enregistrée.
 `MUTAFRICHES_DEV=1` au lancement de QGIS active aussi le mode développeur. Les réglages sont
 enregistrés sous `plugins/mutafriches/` et visibles dans Options › Avancé.
 
@@ -98,8 +98,7 @@ jouer le parcours complet contre l'API :
 | [friches-cnig-test-montereau-5-sites.csv](https://github.com/incubateur-ademe/mutafriches-qgis/releases/latest/download/friches-cnig-test-montereau-5-sites.csv) | 5 | une vingtaine de secondes |
 | [friches-cnig-test-montereau.csv](https://github.com/incubateur-ademe/mutafriches-qgis/releases/latest/download/friches-cnig-test-montereau.csv) | 28 | deux à trois minutes |
 
-1. Préférences › Options › Mutafriches : cocher le mode développeur, choisir l'environnement
-   **Staging**. Le panneau affiche le bandeau « Environnement de test (staging) ».
+1. Préférences › Options › Mutafriches : choisir l'environnement **Staging**. Le panneau affiche le bandeau « Environnement de test (staging) ».
 2. Charger l'un des deux fichiers, puis **Analyser mes N sites**.
 
 Ces fichiers servent aux tests : envoyés en production, ils ajoutent leurs sites à la table

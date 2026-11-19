@@ -37,7 +37,7 @@ ENVIRONNEMENT = QgsSettingsEntryString(
     "environnement",
     _api,
     PRODUCTION,
-    "Service interrogé : production, staging (équipe) ou demonstration (données figées).",
+    "Service interrogé : production, staging (environnement de test) ou demonstration (données figées).",
 )
 URL = QgsSettingsEntryString(
     "url", _api, "", "Adresse d'API libre (serveur local, tests). Vide : adresse de l'environnement choisi."
@@ -52,7 +52,10 @@ INTERVALLE_MS = QgsSettingsEntryInteger(
     "Délai entre deux sites, en millisecondes. Ne pas descendre sous 1500 sur une API réelle (limite de débit).",
 )
 DEV = QgsSettingsEntryBool(
-    "dev", _racine, False, "Mode développeur : donne accès au staging et aux réglages d'API dans les options."
+    "dev",
+    _racine,
+    False,
+    "Mode développeur : donne accès aux réglages d'API (adresse libre, origine, délai) dans les options.",
 )
 STRUCTURE = QgsSettingsEntryString(
     "structure", _utilisateur, "", "Structure de l'utilisateur, saisie facultative à l'accueil."
@@ -108,9 +111,6 @@ def migrer_anciens_reglages() -> int:
 
 def environnement() -> str:
     valeur = ENVIRONNEMENT.value()
-    # Le staging n'est accessible qu'à l'équipe : sans mode développeur, retour à la production
-    if valeur == STAGING and not mode_developpeur():
-        return PRODUCTION
     return valeur if valeur in ENVIRONNEMENTS else PRODUCTION
 
 

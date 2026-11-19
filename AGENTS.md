@@ -263,8 +263,8 @@ jamais en `--force`.
 - **Réglages** : tous déclarés dans `core/reglages.py` (ADR-0004), jamais de clé `QgsSettings`
   en dur ailleurs ; tout nouveau réglage y entre avec sa description, puis dans `ui/options.py`
   s'il doit être modifiable. Ne jamais exposer un seuil ou un paramètre de calcul.
-- Trois environnements : production, staging, démonstration. Le staging et l'adresse d'API
-  libre ne sont lus qu'en mode développeur ; tout changement d'environnement doit vider les
+- Trois environnements : production, staging, démonstration. Le staging se choisit dans les
+  options sans mode développeur (depuis la 0.3.2) ; l'adresse d'API libre n'est lue qu'en mode développeur ; tout changement d'environnement doit vider les
   résultats et retirer les couches (`canvas.refreshAllLayers()` ensuite, sinon la carte garde
   le dernier rendu).
 - QGIS interrompt lui-même une requête de plus de 60 s (« Operation canceled ») : c'est un

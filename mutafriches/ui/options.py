@@ -19,7 +19,7 @@ from qgis.PyQt.QtWidgets import (
 
 from ..core import reglages
 from ..core.client_api import LIBELLES_ENVIRONNEMENTS, URLS
-from ..core.reglages import DEMONSTRATION, PRODUCTION, STAGING
+from ..core.reglages import DEMONSTRATION, PRODUCTION
 from . import contenus
 from .accueil import FORMAT_MAIL
 from .parcours import NOM_PAGE_OPTIONS, Parcours
@@ -133,15 +133,12 @@ class PageOptions(QgsOptionsPageWidget):
         self.environnement.blockSignals(True)
         self.environnement.clear()
         for cle, libelle in LIBELLES_ENVIRONNEMENTS.items():
-            # Le staging est réservé à l'équipe
-            if cle != STAGING or self.dev.isChecked():
-                self.environnement.addItem(libelle, cle)
+            self.environnement.addItem(libelle, cle)
         position = self.environnement.findData(courant)
         self.environnement.setCurrentIndex(position if position >= 0 else self.environnement.findData(PRODUCTION))
         self.environnement.blockSignals(False)
 
     def _mode_dev_change(self, actif: bool) -> None:
-        self._remplir_environnements(str(self.environnement.currentData() or PRODUCTION))
         for widget in (*self._champs_dev, *self._libelles_dev):
             widget.setVisible(actif)
         self._afficher_adresse()
