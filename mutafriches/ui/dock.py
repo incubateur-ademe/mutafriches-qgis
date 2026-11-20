@@ -3,8 +3,9 @@
 from pathlib import Path
 
 from qgis.gui import QgsDockWidget
-from qgis.PyQt.QtCore import QPoint, Qt, QTimer
-from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtCore import QPoint, QRectF, Qt, QTimer
+from qgis.PyQt.QtGui import QPainter, QPixmap
+from qgis.PyQt.QtSvg import QSvgRenderer
 from qgis.PyQt.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from ..core.reglages import STAGING, url_personnalisee
@@ -14,7 +15,22 @@ from .parcours import Etape, Parcours
 from .prototype import PageAccueil, PageImport, PageResultats
 from .widgets import bouton
 
-LOGO = Path(__file__).resolve().parent.parent / "icons" / "logo-mutafriches.png"
+LOGO = Path(__file__).resolve().parent.parent / "icons" / "logo-mutafriches.svg"
+# Largeur d'affichage du logo, en pixels logiques (proportions du fichier officiel : 595 × 342)
+LARGEUR_LOGO = 110
+
+
+def pixmap_logo(ratio: float) -> QPixmap:
+    """Logo officiel rendu à la densité de l'écran : net sur Retina, sans PNG à maintenir."""
+    rendu = QSvgRenderer(str(LOGO))
+    taille = rendu.defaultSize().scaled(LARGEUR_LOGO, 1000, Qt.AspectRatioMode.KeepAspectRatio)
+    image = QPixmap(round(taille.width() * ratio), round(taille.height() * ratio))
+    image.fill(Qt.GlobalColor.transparent)
+    peintre = QPainter(image)
+    rendu.render(peintre, QRectF(0, 0, image.width(), image.height()))
+    peintre.end()
+    image.setDevicePixelRatio(ratio)
+    return image
 
 
 class DockMutafriches(QgsDockWidget):
@@ -41,7 +57,7 @@ class DockMutafriches(QgsDockWidget):
         entete_layout = QHBoxLayout(entete)
         entete_layout.setContentsMargins(16, 12, 16, 4)
         logo = QLabel()
-        logo.setPixmap(QPixmap(str(LOGO)))
+        logo.setPixmap(pixmap_logo(self.devicePixelRatioF()))
         logo.setAccessibleName("Mutafriches")
         logo.setToolTip("Mutafriches")
         entete_layout.addWidget(logo)
