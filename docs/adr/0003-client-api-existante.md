@@ -18,7 +18,7 @@ L'extension appelle l'API telle qu'elle est :
   (`{identifiants}`) puis `POST /evaluation/calculer` (`{donneesEnrichies, donneesComplementaires}`).
   Séquentiel, un site toutes les 1,5 s au plus (limite de 100 requêtes par minute et par IP),
   attente et nouvel essai sur un 429, annulation possible, erreur site par site.
-- **Origine conventionnelle** `https://qgis.mutafriches.beta.gouv.fr`, posée dans l'en-tête
+- **Origine conventionnelle** (remplacée par le domaine déclaré, ADR-0005) `https://qgis.mutafriches.beta.gouv.fr`, posée dans l'en-tête
   `Origin` et à déclarer dans `ALLOWED_INTEGRATOR_ORIGINS` (procédure intégrateur de Mutafriches).
   Elle sert d'identifiant `integrateur` dans les statistiques. Tant qu'elle n'est pas déclarée,
   l'API répond 403 : l'extension l'explique et propose le mode démonstration.
