@@ -50,7 +50,7 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── exemple.py           # Couche de parcelles d'exemple (parcours site à site)
 │   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
-│   ├── accueil.py           # Utilisateur (structure, mail, consentement, facultatifs)
+│   ├── accueil.py           # Utilisateur (prénom, nom, structure, mail, consentement, facultatifs)
 │   ├── options.py           # Page « Mutafriches » de Préférences › Options
 │   ├── parcours.py          # État : fichier CNIG, analyse réelle ou démonstration, résultats
 │   ├── prototype.py         # Pages Accueil, Import et Résultats (tableau de bord territorial)

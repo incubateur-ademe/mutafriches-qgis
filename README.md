@@ -27,7 +27,7 @@ précédente est remplacée).
 
 ## Tester en 3 minutes
 
-1. Ouvrir le panneau **Mutafriches** : il propose de renseigner structure et mail (facultatifs, une fois). Sur un projet
+1. Ouvrir le panneau **Mutafriches** : il propose de renseigner prénom, nom, structure et mail (facultatifs, une fois). Sur un projet
    vide, un fond OpenStreetMap cadré sur la France est ajouté ; un projet qui a déjà des couches
    n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
@@ -59,7 +59,7 @@ menu Extensions › Mutafriches (ADR-0004). Le panneau n'a ni lien de réglages 
 | Bloc | Réglages |
 |---|---|
 | Service | Environnement : production (défaut), staging ou démonstration |
-| Vos informations | Structure, mail, consentement ; « Effacer mes informations » fait revenir l'accueil |
+| Vos informations | Prénom, nom, structure, mail, consentement ; « Effacer mes informations » fait revenir l'accueil |
 | Carte | Ajouter ou non le fond OpenStreetMap à l'ouverture d'un projet vide |
 | Développement | Mode développeur : adresse d'API libre, origine envoyée, délai entre sites |
 
@@ -84,7 +84,7 @@ en mode développeur, adresse d'API libre `http://127.0.0.1:8799`.
 
 ### Revoir l'accueil
 
-L'accueil (structure, mail, consentement, tous facultatifs) n'est proposé qu'une fois. Pour le revoir : le lien
+L'accueil (prénom, nom, structure, mail, consentement, tous facultatifs) n'est proposé qu'une fois. Pour le revoir : le lien
 **Modifier** en bas de la page d'envoi, ou **Effacer mes informations** dans les réglages.
 QGIS fermé, `./scripts/reinitialiser.sh` fait la même chose.
 
