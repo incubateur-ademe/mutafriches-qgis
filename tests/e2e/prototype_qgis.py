@@ -324,6 +324,31 @@ def resultats() -> None:
         and dock().autre_inventaire.isVisible(),
         libelles,
     )
+    # Lien suivi : intercepté au lieu d'ouvrir le navigateur du poste
+    from qgis.PyQt.QtCore import QObject, QUrl, pyqtSlot
+    from qgis.PyQt.QtGui import QDesktopServices
+
+    class Capteur(QObject):
+        def __init__(self) -> None:
+            super().__init__()
+            self.urls: list[str] = []
+
+        @pyqtSlot(QUrl)
+        def ouvrir(self, url: QUrl) -> None:
+            self.urls.append(url.toString())
+
+    capteur = Capteur()
+    contexte["capteur"] = capteur
+    QDesktopServices.setUrlHandler("https", capteur, "ouvrir")
+    try:
+        cliquer("Comprendre les résultats")
+    finally:
+        QDesktopServices.unsetUrlHandler("https")
+    controler(
+        "comprendre les résultats : doc web de production, visite marquée qgis",
+        capteur.urls == ["https://mutafriches.beta.gouv.fr/comprendre-les-analyses?source=qgis&ref=tableau-de-bord"],
+        capteur.urls,
+    )
     textes = [e.text() for e in dock().pages[2].contenu.findChildren(QLabel) if e.isVisible()]
     controler(
         "tableau de bord : ni commune, ni provenance, ni bloc « attention »",
@@ -512,6 +537,11 @@ def staging() -> None:
         "adresse et bandeau de staging",
         url_api() == URLS["staging"] and "staging" in dock().bandeau.text() and dock().bandeau.isVisible(),
         (url_api(), dock().bandeau.text()),
+    )
+    controler(
+        "comprendre les résultats en staging : doc web du staging",
+        p.url_comprendre_resultats().startswith(URLS["staging"] + "/comprendre-les-analyses?source=qgis"),
+        p.url_comprendre_resultats(),
     )
 
 

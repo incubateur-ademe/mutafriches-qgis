@@ -372,6 +372,10 @@ class PageResultats(Page):
         if s is None:
             return
         self.zone.addWidget(texte("Tableau de bord territorial", "mfH2"))
+        # Dès le haut du tableau de bord : la démarche de l'algorithme se lit avant les chiffres
+        comprendre = bouton(contenus.LIEN_COMPRENDRE_RESULTATS, "secondaire", parcours.comprendre_resultats)
+        comprendre.setToolTip(contenus.AIDE_COMPRENDRE_RESULTATS)
+        self.zone.addWidget(comprendre)
 
         # Nombre de sites, fiabilité et son levier d'amélioration
         grille = QGridLayout()

@@ -230,6 +230,11 @@ AIDE_PROFILS = (
     "comme mieux qualifiés que ceux au profil plat."
 )
 LIEN_AMELIORER_FIABILITE = "Améliorer la fiabilité"
+LIEN_COMPRENDRE_RESULTATS = "Comprendre les résultats"
+AIDE_COMPRENDRE_RESULTATS = (
+    "Ouvre la page « Comprendre les analyses » du site Mutafriches : définition de chaque critère "
+    "et sources des données utilisées."
+)
 AIDE_AMELIORER_FIABILITE = (
     "Critères de terrain en rouge : inconnus. Renseignez-les dans votre fichier CNIG, puis relancez l'analyse."
 )
