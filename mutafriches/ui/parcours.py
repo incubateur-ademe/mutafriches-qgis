@@ -1,6 +1,7 @@
 """État du parcours : utilisateur, envoi des sites CNIG, analyse par l'API ou table figée."""
 
 import shutil
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
@@ -38,8 +39,10 @@ from ..core.client_api import (
     AnalyseInventaire,
     ErreurApi,
     ResultatSite,
+    url_api,
 )
 from ..core.cnig import LectureCnig, lire_cnig
+from ..core.declaration import DeclarationIntegrateur, ErreurDeclaration, origine_declaree, oublier
 from . import contenus
 from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 
@@ -73,10 +76,14 @@ class Parcours(QObject):
         self.erreur_api: ErreurApi | None = None
         self.echecs: list[str] = []
         self._analyse: AnalyseInventaire | None = None
+        self._declaration: DeclarationIntegrateur | None = None
+        self.declaration_en_cours = False
+        self.erreurs_accueil: dict[str, str] = {}
+        self.erreur_declaration = ""
         self.canvas = iface.mapCanvas()
         self.utilisateur: Utilisateur = charger_utilisateur()
-        # L'accueil n'est proposé qu'une fois : ensuite le panneau s'ouvre sur l'envoi des sites
-        self.etape = Etape.IMPORT if reglages.accueil_vu() else Etape.ACCUEIL
+        # L'accueil n'est proposé que tant que la déclaration est incomplète
+        self.etape = Etape.IMPORT if self.utilisateur.valide else Etape.ACCUEIL
         self.fichier: Path | None = None
         self.lecture: LectureCnig | None = None
         self.analyse_en_cours = False
@@ -91,19 +98,57 @@ class Parcours(QObject):
 
     # --- Accueil ------------------------------------------------------------------------------
 
-    def valider_accueil(self, structure: str, mail: str, consentement: bool, prenom: str = "", nom: str = "") -> bool:
-        utilisateur = Utilisateur(structure, mail, consentement, prenom, nom)
-        if not utilisateur.valide:
+    def valider_accueil(self, utilisateur: Utilisateur) -> bool:
+        """Enregistre la saisie ; en mode réel, déclare aussitôt la structure à l'API."""
+        self.erreurs_accueil = utilisateur.erreurs()
+        self.erreur_declaration = ""
+        if self.erreurs_accueil:
+            self.change.emit()
             return False
-        self.utilisateur = utilisateur
         enregistrer_utilisateur(utilisateur)
-        self.etape = Etape.IMPORT
-        self.change.emit()
+        # Relu tel qu'enregistré (domaine ramené à son hôte) : même empreinte au prochain lancement
+        self.utilisateur = charger_utilisateur()
+        if not self.reel:
+            self._aller_a_l_import()
+            return True
+        self._declarer(lambda _origine: self._aller_a_l_import(), self._declaration_refusee_a_l_accueil)
         return True
 
+    def _aller_a_l_import(self) -> None:
+        self.etape = Etape.IMPORT
+        self.change.emit()
+
+    def _declaration_refusee_a_l_accueil(self, erreur: ErreurDeclaration) -> None:
+        self.erreur_declaration = erreur.message
+        self.change.emit()
+
     def modifier_utilisateur(self) -> None:
+        self.erreurs_accueil = {}
+        self.erreur_declaration = ""
         self.etape = Etape.ACCUEIL
         self.change.emit()
+
+    def _declarer(self, suite: Callable[[str], None], echec: Callable[[ErreurDeclaration], None]) -> None:
+        """Origine de la structure pour l'API courante : mémorisée, ou obtenue en la déclarant."""
+        url = url_api(self.environnement)
+        declaration = self.utilisateur.declaration()
+        connue = origine_declaree(url, declaration)
+        if connue:
+            suite(connue)
+            return
+
+        def termine(origine: str, erreur: ErreurDeclaration | None) -> None:
+            self._declaration = None
+            self.declaration_en_cours = False
+            if erreur is not None:
+                echec(erreur)
+            else:
+                suite(origine)
+
+        self.declaration_en_cours = True
+        self._declaration = DeclarationIntegrateur(url, declaration, self.version, termine)
+        self.change.emit()
+        self._declaration.demarrer()
 
     # --- Étape 1 : fichier CNIG -------------------------------------------------------------
 
@@ -177,7 +222,7 @@ class Parcours(QObject):
         """Appelé par la page d'options : relit les réglages et met le panneau en accord."""
         self.environnement = reglages.environnement()
         self.utilisateur = charger_utilisateur()
-        if not reglages.accueil_vu():
+        if not self.utilisateur.valide:
             self.etape = Etape.ACCUEIL
         elif self.etape == Etape.ACCUEIL:
             self.etape = Etape.IMPORT
@@ -206,27 +251,49 @@ class Parcours(QObject):
     def envoyer(self) -> None:
         if not self.pret_a_envoyer or self.lecture is None:
             return
+        # Informations d'une version où elles étaient facultatives : à compléter avant d'appeler l'API
+        if self.reel and not self.utilisateur.valide:
+            self.erreurs_accueil = self.utilisateur.erreurs()
+            self.erreur_declaration = contenus.ACCUEIL_A_COMPLETER
+            self.etape = Etape.ACCUEIL
+            self.change.emit()
+            return
         self.analyse_en_cours = True
         self.erreur_api = None
         self.echecs = []
         self.avancement = (0, len(self.lecture.sites_ok))
         self.change.emit()
         if self.reel:
-            self._analyse = AnalyseInventaire(
-                self.lecture.sites_ok,
-                self._progression,
-                self._analyse_terminee,
-                self.version,
-                environnement=self.environnement,
-            )
-            self._analyse.demarrer()
+            self._declarer(self._analyser, self._declaration_refusee_a_l_envoi)
             return
         self._timer = QTimer()
         self._timer.setSingleShot(True)
         self._timer.timeout.connect(self._resultats_recus)
         self._timer.start(DELAI_ANALYSE_MS)
 
+    def _analyser(self, origine: str) -> None:
+        if not self.analyse_en_cours or self.lecture is None:
+            return
+        self._analyse = AnalyseInventaire(
+            self.lecture.sites_ok,
+            self._progression,
+            self._analyse_terminee,
+            origine,
+            self.version,
+            environnement=self.environnement,
+        )
+        self._analyse.demarrer()
+
+    def _declaration_refusee_a_l_envoi(self, erreur: ErreurDeclaration) -> None:
+        self.analyse_en_cours = False
+        self.erreur_api = ErreurApi(f"{contenus.DECLARATION_REFUSEE} {erreur.message}", bloquante=True)
+        self.change.emit()
+
     def annuler_analyse(self) -> None:
+        if self._declaration is not None:
+            self._declaration.annuler()
+            self._declaration = None
+            self.declaration_en_cours = False
         if self._analyse is not None:
             self._analyse.annuler()
             self._analyse = None
@@ -248,6 +315,9 @@ class Parcours(QObject):
         reussis = [r for r in resultats if r.ok]
         # Accès refusé ou API injoignable sans aucun résultat : on reste sur l'import, avec le motif
         if erreur is not None and not reussis:
+            if erreur.acces_refuse:
+                # Domaine révoqué ou registre vidé : la prochaine analyse redéclare
+                oublier(url_api(self.environnement))
             self.erreur_api = erreur
             self.change.emit()
             return

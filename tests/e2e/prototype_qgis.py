@@ -144,34 +144,46 @@ def ouvrir_panneau() -> None:
 
 @etape(1500)
 def accueil() -> None:
-    from qgis.PyQt.QtWidgets import QCheckBox
-
     iface.mainWindow().resizeDocks([dock()], [440], Qt.Orientation.Horizontal)
     iface.messageBar().clearWidgets()
     controler("panneau ouvert sur l'accueil", dock().isVisible() and parcours().etape == 0)
     capture("01-accueil")
     page = dock().pages[0]
     page.mail.setText("sig-sans-arobase")
+    page.domaine.setText("intranet")
     cliquer("Suivant")
-    controler("accueil refusé avec un mail invalide", parcours().etape == 0 and page.erreur.isVisible())
+    QApplication.processEvents()
+    visibles = sorted(cle for cle, erreur in page.erreurs.items() if erreur.isVisible())
+    controler(
+        "accueil refusé : chaque champ obligatoire ou invalide signalé",
+        parcours().etape == 0 and visibles == ["domaine", "mail", "nom", "prenom", "structure", "type_structure"],
+        visibles,
+    )
     capture("01b-accueil-erreur")
     page.prenom.setText("Camille")
     page.nom.setText("Martin")
     page.structure.setText("CC du Pays de Montereau")
+    page.type_structure.setCurrentIndex(page.type_structure.findData("collectivite"))
+    page.domaine.setText("https://www.cc-montereau.fr/")
     page.mail.setText("sig@exemple.fr")
-    page.contenu.findChild(QCheckBox).setChecked(True)
-    page.erreur.setVisible(False)
     capture("02-accueil-rempli")
     cliquer("Suivant")
 
 
-@etape(800)
+@etape(1500)
 def panneau_vide() -> None:
+    from mutafriches.core import reglages
+    from mutafriches.core.client_api import url_api
+    from mutafriches.core.declaration import origine_declaree
+
     controler(
-        "utilisateur enregistré",
+        "structure déclarée à l'API locale, utilisateur enregistré",
         parcours().etape == 1
         and parcours().utilisateur.structure == "CC du Pays de Montereau"
-        and parcours().utilisateur.resume.startswith("Camille Martin · "),
+        and parcours().utilisateur.resume.startswith("Camille Martin · ")
+        and parcours().utilisateur.domaine == "www.cc-montereau.fr"
+        and origine_declaree(url_api(), parcours().utilisateur.declaration()) == "https://www.cc-montereau.fr",
+        reglages.DECLARATIONS.value(),
     )
     controler("bouton Analyser inactif", not any(b.isEnabled() for b in boutons("Analyser mes")))
     controler("accueil : pas de pied vide", not dock().pages[0].pied.isVisible())
@@ -254,7 +266,11 @@ def origine_refusee() -> None:
         "mode réel par défaut sur l'API locale, signalée au bandeau",
         parcours().reel and "API personnalisée" in dock().bandeau.text(),
     )
-    QgsSettings().setValue("plugins/mutafriches/api/origine", "https://autre.exemple.fr")
+    from mutafriches.core.client_api import url_api
+    from mutafriches.core.declaration import memoriser
+
+    # Origine mémorisée que l'API ne connaît pas (domaine révoqué, registre vidé)
+    memoriser(url_api(), parcours().utilisateur.declaration(), "https://autre.exemple.fr")
     cliquer("Analyser mes 28 sites")
 
 
@@ -267,7 +283,13 @@ def acces_refuse() -> None:
         erreur,
     )
     capture("05b-acces-refuse")
-    QgsSettings().remove("plugins/mutafriches/api/origine")
+    from mutafriches.core.client_api import url_api
+    from mutafriches.core.declaration import origine_declaree
+
+    controler(
+        "origine refusée oubliée : la prochaine analyse redéclare",
+        origine_declaree(url_api(), parcours().utilisateur.declaration()) == "",
+    )
     cliquer("Analyser mes 28 sites")
 
 
@@ -537,17 +559,21 @@ def options_sans_mode_developpeur() -> None:
         and not reglages.FOND_OSM.value(),
         (parcours().environnement, parcours().utilisateur.structure),
     )
+    page.domaine.setText("sans-extension")
+    page.apply()
+    controler(
+        "options : saisie invalide signalée et non enregistrée",
+        not page.erreur_saisie.isHidden() and parcours().utilisateur.domaine == "www.cc-montereau.fr",
+        parcours().utilisateur.domaine,
+    )
     page._effacer_utilisateur()
     page.apply()
     controler(
-        "informations effacées : le panneau revient à l'accueil",
-        parcours().etape == 0 and not parcours().utilisateur.renseigne,
+        "informations effacées : le panneau revient à l'accueil, déclarations oubliées",
+        parcours().etape == 0 and not parcours().utilisateur.resume and reglages.DECLARATIONS.value() == "",
     )
     cliquer("Suivant")
-    controler(
-        "accueil passé sans structure ni mail : tout est facultatif",
-        parcours().etape == 1 and reglages.accueil_vu() and bool(boutons("Me présenter")),
-    )
+    controler("accueil vide refusé : la déclaration est obligatoire", parcours().etape == 0)
     reglages.effacer_utilisateur()
     reglages.FOND_OSM.remove()
     reglages.ENVIRONNEMENT.remove()

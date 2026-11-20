@@ -15,6 +15,7 @@ from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 
 from . import reglages
 from .cnig import SiteCnig, complementaires_depuis_cnig
+from .declaration import EN_TETE_CLIENT, en_tete_client
 from .reglages import DEMONSTRATION, PRODUCTION, STAGING
 
 __all__ = [
@@ -74,11 +75,12 @@ class ResultatSite:
 
 
 class ErreurApi(Exception):
-    def __init__(self, message: str, bloquante: bool = False) -> None:
+    def __init__(self, message: str, bloquante: bool = False, acces_refuse: bool = False) -> None:
         super().__init__(message)
         self.message = message
         # Une erreur bloquante (accès refusé, API injoignable) arrête tout l'inventaire
         self.bloquante = bloquante
+        self.acces_refuse = acces_refuse
 
 
 def message_http(statut: int, corps: bytes, erreur_reseau: str, delai_depasse: bool = False) -> ErreurApi:
@@ -88,8 +90,10 @@ def message_http(statut: int, corps: bytes, erreur_reseau: str, delai_depasse: b
         return ErreurApi(MESSAGE_DELAI)
     if statut == 403:
         return ErreurApi(
-            "Accès refusé par l'API Mutafriches : l'origine de l'extension n'y est pas encore autorisée.",
+            "Accès refusé par l'API Mutafriches : le domaine de votre structure n'y est pas autorisé. "
+            "Vérifiez-le dans vos informations, puis relancez l'analyse.",
             bloquante=True,
+            acces_refuse=True,
         )
     if statut == 0:
         return ErreurApi(f"API Mutafriches injoignable ({erreur_reseau}).", bloquante=True)
@@ -114,6 +118,7 @@ class AnalyseInventaire(QObject):
         sites: list[SiteCnig],
         progression: Callable[[int, int], None],
         termine: Callable[[list[ResultatSite], ErreurApi | None], None],
+        origine: str,
         version_extension: str = "",
         intervalle_ms: int | None = None,
         environnement: str = "",
@@ -123,8 +128,10 @@ class AnalyseInventaire(QObject):
         self.progression = progression
         self.termine = termine
         self.url = url_api(environnement)
-        self.origine = reglages.origine()
+        # Origine obtenue en déclarant la structure (core/declaration.py)
+        self.origine = origine
         self.agent = f"mutafriches-qgis/{version_extension or 'dev'}"
+        self.client = en_tete_client(version_extension)
         self.intervalle_ms = reglages.intervalle_ms() if intervalle_ms is None else intervalle_ms
         self.resultats: list[ResultatSite] = []
         self._reponse: QNetworkReply | None = None
@@ -202,8 +209,9 @@ class AnalyseInventaire(QObject):
         requete = QNetworkRequest(QUrl(self.url + chemin))
         requete.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")
         requete.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader, self.agent)
-        # L'API identifie un intégrateur serveur à son en-tête Origin
+        # L'API identifie la structure à son Origin, et l'extension à l'en-tête client (ADR-0055)
         requete.setRawHeader(b"Origin", self.origine.encode("utf-8"))
+        requete.setRawHeader(EN_TETE_CLIENT.encode("ascii"), self.client.encode("utf-8"))
         requete.setTransferTimeout(DELAI_REQUETE_MS)
         reponse = QgsNetworkAccessManager.instance().post(requete, json.dumps(corps).encode("utf-8"))
         self._reponse = reponse

@@ -7,11 +7,12 @@ from qgis.gui import QgsFileWidget
 from qgis.PyQt.QtCore import QStandardPaths, Qt
 from qgis.PyQt.QtGui import QResizeEvent
 from qgis.PyQt.QtWidgets import (
-    QCheckBox,
+    QComboBox,
     QFileDialog,
     QFrame,
     QGridLayout,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QVBoxLayout,
     QWidget,
@@ -20,8 +21,10 @@ from qgis.PyQt.QtWidgets import (
 from ..carto.couches import COULEURS_USAGES
 from ..core.attributaire import ORDRE_USAGES, PROFILS_ECART, Synthese, libelle_usage
 from ..core.cnig import SiteCnig
+from ..core.declaration import TYPES_STRUCTURE
 from ..core.referentiel import formater_note
 from . import contenus, style
+from .accueil import Utilisateur
 from .graphiques import tableau
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
@@ -31,75 +34,112 @@ MAX_LIGNES_AFFICHEES = 40
 
 
 class PageAccueil(Page):
-    """Qui est l'utilisateur : demandé une fois, dans le panneau, avant l'envoi des sites."""
+    """Déclaration de la structure : demandée une fois, dans le panneau, avant l'envoi des sites."""
 
     def __init__(self, parcours: Parcours) -> None:
         super().__init__(parcours)
         self.corps.addWidget(texte(contenus.TITRE_ACCUEIL, "mfTitre"))
         self.corps.addWidget(texte(contenus.INTRO_ACCUEIL))
         self.corps.addSpacing(6)
+        self.erreurs: dict[str, QLabel] = {}
+        # Ordre et libellés du formulaire de déclaration web
+        self.structure = self._champ("structure", contenus.LIBELLE_STRUCTURE)
+        self.type_structure = QComboBox()
+        self.type_structure.addItem(contenus.CHOIX_VIDE, "")
+        for cle, libelle in TYPES_STRUCTURE.items():
+            self.type_structure.addItem(libelle, cle)
+        self._ajouter("type_structure", contenus.LIBELLE_TYPE_STRUCTURE, self.type_structure)
+        self.domaine = self._champ("domaine", contenus.LIBELLE_DOMAINE, contenus.AIDE_DOMAINE)
         # Prénom et nom côte à côte : deux champs courts, une ligne de moins dans un panneau étroit
         identite = QHBoxLayout()
         identite.setSpacing(8)
-        self.prenom = self._champ("Prénom (facultatif)", "Camille", identite)
-        self.nom = self._champ("Nom (facultatif)", "Martin", identite)
+        self.prenom = self._champ("prenom", contenus.LIBELLE_PRENOM, ligne=identite)
+        self.nom = self._champ("nom", contenus.LIBELLE_NOM, ligne=identite)
         self.corps.addLayout(identite)
-        self.structure = self._champ("Votre structure (facultatif)", "Collectivité, agence, bureau d'études…")
-        self.mail = self._champ("Votre mail (facultatif)", "prenom.nom@exemple.fr")
-        self.erreur = texte(contenus.ERREUR_MAIL_ACCUEIL, "mfErreurChamp")
+        self.mail = self._champ("mail", contenus.LIBELLE_MAIL, contenus.AIDE_MAIL)
+        self.erreur = Encadre("erreur")
         self.erreur.setVisible(False)
         self.corps.addWidget(self.erreur)
-        # Une case sans texte et un libellé à part : QCheckBox ne sait pas passer à la ligne
-        self.consentement = QCheckBox()
-        self.consentement.setAccessibleName(contenus.CONSENTEMENT_ACCUEIL)
-        ligne = QHBoxLayout()
-        ligne.setSpacing(8)
-        ligne.addWidget(self.consentement, 0, Qt.AlignmentFlag.AlignTop)
-        libelle = texte(contenus.CONSENTEMENT_ACCUEIL)
-        libelle.setBuddy(self.consentement)
-        ligne.addWidget(libelle, 1)
-        self.corps.addLayout(ligne)
         self.corps.addSpacing(6)
         # Sous le formulaire, et non au pied du panneau : la suite se lit dans la continuité des champs
-        self.corps.addWidget(bouton("Suivant", "primaire", self._valider))
+        self.suivant = bouton("Suivant", "primaire", self._valider)
+        self.corps.addWidget(self.suivant)
+        self.corps.addWidget(
+            texte_riche(
+                contenus.MENTION_ACCUEIL.format(
+                    lien=lien(contenus.LIBELLE_CONFIDENTIALITE, contenus.URL_CONFIDENTIALITE)
+                ),
+                "mfAide",
+            )
+        )
         self.corps.addStretch(1)
 
-    def _champ(self, libelle: str, aide: str, ligne: QHBoxLayout | None = None) -> QLineEdit:
+    def _champ(self, cle: str, libelle: str, aide: str = "", ligne: QHBoxLayout | None = None) -> QLineEdit:
+        champ = QLineEdit()
+        self._ajouter(cle, libelle, champ, aide, ligne)
+        champ.returnPressed.connect(self._valider)
+        return champ
+
+    def _ajouter(
+        self, cle: str, libelle: str, champ: QWidget, aide: str = "", ligne: QHBoxLayout | None = None
+    ) -> None:
         etiquette = texte(libelle)
         etiquette.setStyleSheet("font-weight: bold;")
-        champ = QLineEdit()
-        champ.setPlaceholderText(aide)
         champ.setAccessibleName(libelle)
         etiquette.setBuddy(champ)
         colonne = QVBoxLayout()
-        colonne.setSpacing(self.corps.spacing())
+        colonne.setSpacing(4)
         colonne.addWidget(etiquette)
+        if aide:
+            colonne.addWidget(texte(aide, "mfAide"))
         colonne.addWidget(champ)
+        erreur = texte("", "mfErreurChamp")
+        erreur.setVisible(False)
+        colonne.addWidget(erreur)
+        self.erreurs[cle] = erreur
+        # Le champ corrigé perd son erreur tout de suite ; « Suivant » refait le contrôle complet
+        signal = champ.currentIndexChanged if isinstance(champ, QComboBox) else champ.textChanged
+        signal.connect(lambda *_: erreur.setVisible(False))
         # « ligne or self.corps » ne convient pas : une mise en page encore vide est fausse en Python
         if ligne is None:
             self.corps.addLayout(colonne)
         else:
             ligne.addLayout(colonne, 1)
-        return champ
+
+    def saisie(self) -> Utilisateur:
+        return Utilisateur(
+            prenom=self.prenom.text(),
+            nom=self.nom.text(),
+            structure=self.structure.text(),
+            type_structure=str(self.type_structure.currentData() or ""),
+            domaine=self.domaine.text(),
+            mail=self.mail.text(),
+        )
 
     def _valider(self) -> None:
-        ok = self.parcours.valider_accueil(
-            self.structure.text(),
-            self.mail.text(),
-            self.consentement.isChecked(),
-            self.prenom.text(),
-            self.nom.text(),
-        )
-        self.erreur.setVisible(not ok)
+        if not self.parcours.declaration_en_cours:
+            self.parcours.valider_accueil(self.saisie())
 
     def rafraichir(self) -> None:
-        utilisateur = self.parcours.utilisateur
-        self.prenom.setText(utilisateur.prenom)
-        self.nom.setText(utilisateur.nom)
-        self.structure.setText(utilisateur.structure)
-        self.mail.setText(utilisateur.mail)
-        self.consentement.setChecked(utilisateur.consentement)
-        self.erreur.setVisible(False)
+        parcours = self.parcours
+        # Pendant la déclaration, la saisie en cours d'envoi reste affichée
+        if not parcours.declaration_en_cours and not parcours.erreurs_accueil and not parcours.erreur_declaration:
+            utilisateur = parcours.utilisateur
+            self.prenom.setText(utilisateur.prenom)
+            self.nom.setText(utilisateur.nom)
+            self.structure.setText(utilisateur.structure)
+            position = self.type_structure.findData(utilisateur.type_structure)
+            self.type_structure.setCurrentIndex(max(position, 0))
+            self.domaine.setText(utilisateur.domaine)
+            self.mail.setText(utilisateur.mail)
+        for cle, etiquette in self.erreurs.items():
+            message = parcours.erreurs_accueil.get(cle, "")
+            etiquette.setText(message)
+            etiquette.setVisible(bool(message))
+        self.erreur.definir("erreur", "", parcours.erreur_declaration)
+        self.erreur.setVisible(bool(parcours.erreur_declaration))
+        self.suivant.setText(contenus.ENVOI_DECLARATION if parcours.declaration_en_cours else "Suivant")
+        self.suivant.setEnabled(not parcours.declaration_en_cours)
 
 
 class PageImport(Page):
@@ -166,7 +206,9 @@ class PageImport(Page):
         self.fichier.setFilePath(str(parcours.fichier) if parcours.fichier else "")
         self.fichier.blockSignals(False)
         vider(self.zone)
-        if parcours.analyse_en_cours and lecture is not None:
+        if parcours.declaration_en_cours:
+            self.zone.addWidget(Chargement("Déclaration de votre structure en cours...", ""))
+        elif parcours.analyse_en_cours and lecture is not None:
             traites, total = parcours.avancement
             self.zone.addWidget(
                 Chargement(
@@ -227,8 +269,8 @@ class PageImport(Page):
                 self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         utilisateur = parcours.utilisateur
         self.utilisateur.setText(utilisateur.resume)
-        # Rien de saisi à l'accueil : le lien y ramène, sans laisser un « Modifier » orphelin
-        self.lien_utilisateur.setText("Modifier" if utilisateur.renseigne else "Me présenter")
+        # Rien de saisi à l'accueil (démonstration) : le lien y ramène, sans « Modifier » orphelin
+        self.lien_utilisateur.setText("Modifier" if utilisateur.resume else "Me présenter")
         n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Analyser mes {n} sites" if n > 1 else "Analyser mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)

@@ -1,7 +1,8 @@
 """Serveur HTTP factice de l'API Mutafriches, pour les tests et le parcours E2E.
 
 Rejoue la table attributaire figée de Montereau sous la forme des vraies réponses de
-POST /enrichissement et POST /evaluation/calculer. Contrôle l'en-tête Origin comme l'API.
+POST /enrichissement et POST /evaluation/calculer. Tient un registre des intégrateurs
+(POST /api/integrateurs/declarations) et contrôle l'en-tête Origin comme l'API.
 
 Usage : python3 tests/serveur_factice.py [port]
 """
@@ -15,7 +16,16 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 TABLE = RACINE / "mutafriches" / "demo" / "montereau" / "attributaire-77305.geojson"
-ORIGINE_AUTORISEE = "https://qgis.mutafriches.beta.gouv.fr"
+ORIGINE_HISTORIQUE = "https://qgis.mutafriches.beta.gouv.fr"
+# Registre des intégrateurs : origines actives, déclarations reçues, en-têtes client des appels
+ORIGINES_AUTORISEES: set[str] = {ORIGINE_HISTORIQUE}
+DECLARATIONS: list[dict] = []
+CLIENTS: list[str] = []
+# Domaine dont la déclaration est refusée comme révoquée
+DOMAINE_REVOQUE = "revoque.fr"
+# Faux : API d'avant le registre (404 sur la déclaration), comme la production avant déploiement
+REGISTRE = {"actif": True}
+CHAMPS_DECLARATION = ("canal", "structure", "typeStructure", "domaine", "prenom", "nom", "email")
 USAGES = ("residentiel", "equipements", "culture", "tertiaire", "industrie", "renaturation", "photovoltaique")
 # Parcelle dont l'enrichissement échoue, pour tester un échec site par site
 PARCELLE_EN_ECHEC = "77305000ZZ9999"
@@ -70,6 +80,24 @@ def enrichissement(identifiants: list[str]) -> tuple[int, dict]:
     return 200, reponse
 
 
+def declarer(donnees: dict) -> tuple[int, dict]:
+    if not REGISTRE["actif"]:
+        return 404, {"statusCode": 404, "message": "Cannot POST /api/integrateurs/declarations"}
+    manquants = [c for c in CHAMPS_DECLARATION if not str(donnees.get(c) or "").strip()]
+    if manquants or donnees.get("canal") != "qgis":
+        return 400, {"statusCode": 400, "message": [f"{c} manquant" for c in manquants] or ["Canal invalide"]}
+    hote = str(donnees["domaine"]).strip().lower().removeprefix("https://").split("/")[0]
+    if "." not in hote:
+        return 400, {"statusCode": 400, "message": "Domaine invalide"}
+    origine = f"https://{hote}"
+    DECLARATIONS.append(donnees)
+    if hote == DOMAINE_REVOQUE:
+        return 200, {"canal": "qgis", "statut": "revoque", "origine": origine, "dejaDeclare": True}
+    deja = origine in ORIGINES_AUTORISEES
+    ORIGINES_AUTORISEES.add(origine)
+    return 200, {"canal": "qgis", "statut": "actif", "origine": origine, "dejaDeclare": deja}
+
+
 def mutabilite(donnees: dict) -> tuple[int, dict]:
     complementaires = donnees.get("donneesComplementaires") or {}
     if len([v for v in complementaires.values() if v]) < 9:
@@ -113,7 +141,11 @@ class Gestionnaire(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         donnees = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0)) or 0) or b"{}")
-        if self.headers.get("Origin") != ORIGINE_AUTORISEE:
+        if self.path.startswith("/api/integrateurs/declarations"):
+            self._repondre(*declarer(donnees))
+            return
+        CLIENTS.append(self.headers.get("X-Mutafriches-Client") or "")
+        if self.headers.get("Origin") not in ORIGINES_AUTORISEES:
             self._repondre(403, {"statusCode": 403, "message": "Origin required"})
         elif self.path.startswith("/enrichissement"):
             self._repondre(*enrichissement(donnees.get("identifiants") or []))

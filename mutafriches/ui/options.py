@@ -19,9 +19,10 @@ from qgis.PyQt.QtWidgets import (
 
 from ..core import reglages
 from ..core.client_api import LIBELLES_ENVIRONNEMENTS, URLS
+from ..core.declaration import TYPES_STRUCTURE
 from ..core.reglages import DEMONSTRATION, PRODUCTION
 from . import contenus
-from .accueil import FORMAT_MAIL
+from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 from .parcours import NOM_PAGE_OPTIONS, Parcours
 from .widgets import bouton, texte
 
@@ -65,18 +66,24 @@ class PageOptions(QgsOptionsPageWidget):
         page.addWidget(service)
 
         informations, formulaire = _groupe("Vos informations")
-        self.prenom = QLineEdit()
-        _champ(formulaire, "Prénom", self.prenom)
-        self.nom = QLineEdit()
-        _champ(formulaire, "Nom", self.nom)
         self.structure = QLineEdit()
-        _champ(formulaire, "Structure", self.structure)
+        _champ(formulaire, contenus.LIBELLE_STRUCTURE, self.structure)
+        self.type_structure = QComboBox()
+        self.type_structure.addItem(contenus.CHOIX_VIDE, "")
+        for cle, libelle in TYPES_STRUCTURE.items():
+            self.type_structure.addItem(libelle, cle)
+        _champ(formulaire, contenus.LIBELLE_TYPE_STRUCTURE, self.type_structure)
+        self.domaine = QLineEdit()
+        self.domaine.setPlaceholderText(contenus.AIDE_DOMAINE)
+        _champ(formulaire, contenus.LIBELLE_DOMAINE, self.domaine)
+        self.prenom = QLineEdit()
+        _champ(formulaire, contenus.LIBELLE_PRENOM, self.prenom)
+        self.nom = QLineEdit()
+        _champ(formulaire, contenus.LIBELLE_NOM, self.nom)
         self.mail = QLineEdit()
-        _champ(formulaire, "Adresse mail", self.mail)
-        self.consentement = QCheckBox(contenus.CONSENTEMENT_ACCUEIL)
-        formulaire.addRow("", self.consentement)
-        self.erreur_mail = texte("Adresse mail invalide : elle ne sera pas enregistrée.", "mfErreurChamp")
-        formulaire.addRow("", self.erreur_mail)
+        _champ(formulaire, contenus.LIBELLE_MAIL, self.mail, contenus.AIDE_MAIL)
+        self.erreur_saisie = texte("", "mfErreurChamp")
+        formulaire.addRow("", self.erreur_saisie)
         aide_informations = texte(contenus.AIDE_OPTION_INFORMATIONS, "mfAide")
         aide_informations.setMinimumWidth(LARGEUR_AIDE)
         formulaire.addRow("", aide_informations)
@@ -100,14 +107,12 @@ class PageOptions(QgsOptionsPageWidget):
         _champ(
             formulaire, "Adresse d'API libre", self.url, "Serveur local ou de test, par exemple http://127.0.0.1:8799."
         )
-        self.origine = QLineEdit()
-        _champ(formulaire, "Origine envoyée", self.origine, "En-tête Origin, à faire autoriser côté Mutafriches.")
         self.intervalle = QSpinBox()
         self.intervalle.setRange(0, 60_000)
         self.intervalle.setSingleStep(100)
         self.intervalle.setSuffix(" ms")
         _champ(formulaire, "Délai entre deux sites", self.intervalle, contenus.AIDE_OPTION_INTERVALLE)
-        self._champs_dev = [self.url, self.origine, self.intervalle]
+        self._champs_dev = [self.url, self.intervalle]
         self._libelles_dev = [formulaire.labelForField(c) for c in self._champs_dev]
         page.addWidget(developpement)
         page.addStretch(1)
@@ -116,24 +121,27 @@ class PageOptions(QgsOptionsPageWidget):
         self.dev.toggled.connect(self._mode_dev_change)
         self.environnement.currentIndexChanged.connect(lambda *_: self._afficher_adresse())
         self.url.textChanged.connect(lambda *_: self._afficher_adresse())
-        self.mail.textChanged.connect(lambda *_: self._controler_mail())
+        for champ in (self.structure, self.domaine, self.prenom, self.nom, self.mail):
+            champ.textChanged.connect(lambda *_: self._controler_saisie())
+        self.type_structure.currentIndexChanged.connect(lambda *_: self._controler_saisie())
 
     # --- Chargement et affichage ----------------------------------------------------------------
 
     def _charger(self) -> None:
         self.dev.setChecked(reglages.DEV.value())
         self._remplir_environnements(reglages.environnement())
-        self.prenom.setText(reglages.PRENOM.value())
-        self.nom.setText(reglages.NOM.value())
-        self.structure.setText(reglages.STRUCTURE.value())
-        self.mail.setText(reglages.MAIL.value())
-        self.consentement.setChecked(reglages.CONSENTEMENT.value())
+        utilisateur = charger_utilisateur()
+        self.prenom.setText(utilisateur.prenom)
+        self.nom.setText(utilisateur.nom)
+        self.structure.setText(utilisateur.structure)
+        self.type_structure.setCurrentIndex(max(self.type_structure.findData(utilisateur.type_structure), 0))
+        self.domaine.setText(utilisateur.domaine)
+        self.mail.setText(utilisateur.mail)
         self.fond_osm.setChecked(reglages.FOND_OSM.value())
         self.url.setText(reglages.URL.value())
-        self.origine.setText(reglages.origine())
         self.intervalle.setValue(reglages.intervalle_ms())
         self._mode_dev_change(self.dev.isChecked())
-        self._controler_mail()
+        self._controler_saisie()
 
     def _remplir_environnements(self, courant: str) -> None:
         self.environnement.blockSignals(True)
@@ -157,9 +165,27 @@ class PageOptions(QgsOptionsPageWidget):
         else:
             self.adresse.setText(f"API interrogée : {libre or URLS[environnement]}")
 
-    def _controler_mail(self) -> None:
-        saisie = self.mail.text().strip()
-        self.erreur_mail.setVisible(bool(saisie) and not FORMAT_MAIL.match(saisie))
+    def _saisie(self) -> Utilisateur:
+        return Utilisateur(
+            prenom=self.prenom.text(),
+            nom=self.nom.text(),
+            structure=self.structure.text(),
+            type_structure=str(self.type_structure.currentData() or ""),
+            domaine=self.domaine.text(),
+            mail=self.mail.text(),
+        )
+
+    def _vide(self) -> bool:
+        saisie = self._saisie()
+        return not any(v.strip() for v in (saisie.prenom, saisie.nom, saisie.structure, saisie.domaine, saisie.mail))
+
+    def _controler_saisie(self) -> None:
+        # Une saisie incomplète n'est pas enregistrée : la déclaration en cours reste valable
+        erreurs = [] if self._vide() else list(self._saisie().erreurs().values())
+        self.erreur_saisie.setText(
+            " ".join(erreurs[:1] + (["Ces informations ne seront pas enregistrées."] if erreurs else []))
+        )
+        self.erreur_saisie.setVisible(bool(erreurs))
 
     def _effacer_utilisateur(self) -> None:
         self._utilisateur_efface = True
@@ -167,12 +193,13 @@ class PageOptions(QgsOptionsPageWidget):
         self.nom.clear()
         self.structure.clear()
         self.mail.clear()
-        self.consentement.setChecked(False)
+        self.domaine.clear()
+        self.type_structure.setCurrentIndex(0)
 
     # --- Enregistrement -------------------------------------------------------------------------
 
     def apply(self) -> None:
-        service_avant = (reglages.environnement(), reglages.url_personnalisee(), reglages.origine())
+        service_avant = (reglages.environnement(), reglages.url_personnalisee())
         reglages.DEV.setValue(self.dev.isChecked())
         reglages.ENVIRONNEMENT.setValue(str(self.environnement.currentData() or PRODUCTION))
         reglages.FOND_OSM.setValue(self.fond_osm.isChecked())
@@ -182,22 +209,16 @@ class PageOptions(QgsOptionsPageWidget):
             if adresse and not adresse.startswith(("http://", "https://")):
                 adresse = ""
             reglages.URL.setValue(adresse)
-            reglages.ORIGINE.setValue(self.origine.text().strip() or reglages.ORIGINE_DEFAUT)
             reglages.INTERVALLE_MS.setValue(self.intervalle.value())
-        mail = self.mail.text().strip()
-        saisies = [champ.text().strip() for champ in (self.prenom, self.nom, self.structure)]
-        if self._utilisateur_efface and not any(saisies) and not mail:
+        if self._utilisateur_efface and self._vide():
             reglages.effacer_utilisateur()
-        elif not mail or FORMAT_MAIL.match(mail):
-            reglages.PRENOM.setValue(saisies[0])
-            reglages.NOM.setValue(saisies[1])
-            reglages.STRUCTURE.setValue(self.structure.text().strip())
-            reglages.MAIL.setValue(mail)
-            reglages.CONSENTEMENT.setValue(self.consentement.isChecked())
+        elif self._saisie().valide:
+            # Une saisie modifiée est redéclarée à la prochaine analyse (core/declaration.py)
+            enregistrer_utilisateur(self._saisie())
         self._utilisateur_efface = False
         parcours = self._parcours()
         if parcours is not None:
-            service_apres = (reglages.environnement(), reglages.url_personnalisee(), reglages.origine())
+            service_apres = (reglages.environnement(), reglages.url_personnalisee())
             parcours.reglages_modifies(service_change=service_apres != service_avant)
 
 

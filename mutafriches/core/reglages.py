@@ -19,9 +19,9 @@ PRODUCTION = "production"
 STAGING = "staging"
 DEMONSTRATION = "demonstration"
 ENVIRONNEMENTS = (PRODUCTION, STAGING, DEMONSTRATION)
-# Origine conventionnelle de l'extension, à déclarer dans ALLOWED_INTEGRATOR_ORIGINS sur chaque
-# environnement : elle sert d'identifiant d'intégrateur (docs/acces-api-integrateur.md de Mutafriches)
-ORIGINE_DEFAUT = "https://qgis.mutafriches.beta.gouv.fr"
+# Origine commune aux versions d'avant la déclaration par structure : toujours acceptée, elle ne
+# sert plus qu'avec une API sans registre des intégrateurs (core/declaration.py)
+ORIGINE_HISTORIQUE = "https://qgis.mutafriches.beta.gouv.fr"
 # Deux requêtes par site et 100 requêtes par minute et par IP : un site toutes les 1,5 s au plus
 INTERVALLE_DEFAUT_MS = 1500
 VARIABLE_DEV = "MUTAFRICHES_DEV"
@@ -42,8 +42,11 @@ ENVIRONNEMENT = QgsSettingsEntryString(
 URL = QgsSettingsEntryString(
     "url", _api, "", "Adresse d'API libre (serveur local, tests). Vide : adresse de l'environnement choisi."
 )
-ORIGINE = QgsSettingsEntryString(
-    "origine", _api, ORIGINE_DEFAUT, "En-tête Origin envoyé à l'API : identifie l'extension côté Mutafriches."
+DECLARATIONS = QgsSettingsEntryString(
+    "declarations",
+    _api,
+    "",
+    "Origine obtenue en déclarant la structure, par adresse d'API (JSON). Vide : déclaration à la prochaine analyse.",
 )
 INTERVALLE_MS = QgsSettingsEntryInteger(
     "intervalle_ms",
@@ -55,22 +58,19 @@ DEV = QgsSettingsEntryBool(
     "dev",
     _racine,
     False,
-    "Mode développeur : donne accès aux réglages d'API (adresse libre, origine, délai) dans les options.",
+    "Mode développeur : donne accès aux réglages d'API (adresse libre, délai) dans les options.",
 )
-PRENOM = QgsSettingsEntryString("prenom", _utilisateur, "", "Prénom de l'utilisateur, saisie facultative à l'accueil.")
-NOM = QgsSettingsEntryString("nom", _utilisateur, "", "Nom de l'utilisateur, saisie facultative à l'accueil.")
-STRUCTURE = QgsSettingsEntryString(
-    "structure", _utilisateur, "", "Structure de l'utilisateur, saisie facultative à l'accueil."
+# Déclaration de la structure (ADR-0055 de Mutafriches) : prénom, nom et mail partent chez Brevo
+PRENOM = QgsSettingsEntryString("prenom", _utilisateur, "", "Prénom du déclarant.")
+NOM = QgsSettingsEntryString("nom", _utilisateur, "", "Nom du déclarant.")
+STRUCTURE = QgsSettingsEntryString("structure", _utilisateur, "", "Nom de la structure déclarée.")
+TYPE_STRUCTURE = QgsSettingsEntryString(
+    "type_structure", _utilisateur, "", "Type de la structure (collectivite, bureau_etudes…)."
 )
-MAIL = QgsSettingsEntryString(
-    "mail", _utilisateur, "", "Adresse mail de l'utilisateur, saisie facultative à l'accueil."
+DOMAINE = QgsSettingsEntryString(
+    "domaine", _utilisateur, "", "Domaine de la structure, envoyé dans l'en-tête Origin (ma-collectivite.fr)."
 )
-CONSENTEMENT = QgsSettingsEntryBool(
-    "consentement", _utilisateur, False, "Accord pour être contacté par l'équipe Mutafriches."
-)
-ACCUEIL_VU = QgsSettingsEntryBool(
-    "accueil_vu", _utilisateur, False, "L'accueil a été passé : il n'est plus proposé à l'ouverture du panneau."
-)
+MAIL = QgsSettingsEntryString("mail", _utilisateur, "", "Adresse e-mail de contact du déclarant.")
 FOND_OSM = QgsSettingsEntryBool(
     "fond_osm", _carte, True, "Ajouter un fond OpenStreetMap à l'ouverture du panneau sur un projet vide."
 )
@@ -79,12 +79,18 @@ FOND_OSM = QgsSettingsEntryBool(
 _ANCIENNES_CLES: tuple[tuple[str, QgsSettingsEntryString | QgsSettingsEntryBool | QgsSettingsEntryInteger], ...] = (
     ("mutafriches/api/environnement", ENVIRONNEMENT),
     ("mutafriches/api/url", URL),
-    ("mutafriches/api/origine", ORIGINE),
     ("mutafriches/api/intervalle_ms", INTERVALLE_MS),
     ("mutafriches/dev", DEV),
     ("mutafriches/utilisateur/structure", STRUCTURE),
     ("mutafriches/utilisateur/mail", MAIL),
-    ("mutafriches/utilisateur/consentement", CONSENTEMENT),
+)
+# Réglages retirés : origine libre (remplacée par la déclaration), consentement et accueil passé
+_CLES_OBSOLETES = (
+    "mutafriches/api/origine",
+    "mutafriches/utilisateur/consentement",
+    "plugins/mutafriches/api/origine",
+    "plugins/mutafriches/utilisateur/consentement",
+    "plugins/mutafriches/utilisateur/accueil_vu",
 )
 
 
@@ -105,6 +111,8 @@ def migrer_anciens_reglages() -> int:
                 entree.setValue(str(valeur))
             reprises += 1
         reglages.remove(ancienne)
+    for obsolete in _CLES_OBSOLETES:
+        reglages.remove(obsolete)
     # La démonstration s'appelait « demo » avant les environnements
     if ENVIRONNEMENT.value() not in ENVIRONNEMENTS:
         ENVIRONNEMENT.remove()
@@ -124,21 +132,12 @@ def url_personnalisee() -> str:
     return URL.value().strip().rstrip("/") if mode_developpeur() else ""
 
 
-def origine() -> str:
-    return ORIGINE.value().strip() or ORIGINE_DEFAUT
-
-
 def intervalle_ms() -> int:
     return max(0, INTERVALLE_MS.value())
 
 
-def accueil_vu() -> bool:
-    # Informations déjà enregistrées : accueil passé avec une version d'avant ce réglage
-    return ACCUEIL_VU.value() or any(e.value().strip() for e in (PRENOM, NOM, STRUCTURE, MAIL))
-
-
 def effacer_utilisateur() -> None:
-    for entree in (PRENOM, NOM, STRUCTURE, MAIL, CONSENTEMENT, ACCUEIL_VU):
+    for entree in (PRENOM, NOM, STRUCTURE, TYPE_STRUCTURE, DOMAINE, MAIL, DECLARATIONS):
         entree.remove()
 
 

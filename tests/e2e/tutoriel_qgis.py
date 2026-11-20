@@ -16,7 +16,7 @@ from qgis.core import QgsProject, QgsSettings
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtGui import QPainter, QPixmap
 from qgis.PyQt.QtTest import QTest
-from qgis.PyQt.QtWidgets import QApplication, QCheckBox, QDockWidget, QPushButton, QWidget
+from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QPushButton, QWidget
 
 SORTIE = Path(os.environ["MF_TUTORIEL_SORTIE"])
 RAPPORT = Path(os.environ["MF_TUTORIEL_RAPPORT"])
@@ -181,8 +181,9 @@ def accueil() -> None:
     page.prenom.setText("Camille")
     page.nom.setText("Martin")
     page.structure.setText("CC du Pays de Montereau")
+    page.type_structure.setCurrentIndex(page.type_structure.findData("collectivite"))
+    page.domaine.setText("cc-montereau.fr")
     page.mail.setText("sig@exemple.fr")
-    page.contenu.findChild(QCheckBox).setChecked(True)
     capture("02-se-presenter")
     cliquer("Suivant")
 
