@@ -185,7 +185,9 @@ def accueil() -> None:
     page.domaine.setText("cc-montereau.fr")
     page.mail.setText("sig@exemple.fr")
     capture("02-se-presenter")
-    cliquer("Suivant")
+    # Reprise de cette seule capture (MF_TUTORIEL_ETAPES=4) : aucune déclaration envoyée à l'API
+    if etapes[-1][1] is not accueil:
+        cliquer("Suivant")
 
 
 @etape(1000)
