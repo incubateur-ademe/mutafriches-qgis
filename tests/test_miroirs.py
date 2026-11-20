@@ -12,6 +12,13 @@ from _qgis import RACINE
 
 from mutafriches.core.attributaire import NIVEAUX_FIABILITE
 from mutafriches.core.cnig import CHAMPS_COMPLEMENTAIRES, COLONNES_CNIG
+from mutafriches.core.declaration import (
+    EN_TETE_CLIENT,
+    FORMAT_NOM_DOMAINE,
+    PREFIXE_CLIENT_QGIS,
+    TYPES_STRUCTURE,
+    hote_de_domaine,
+)
 from mutafriches.core.referentiel import CLES_TERRAIN, USAGES
 
 DEPOT = Path(os.environ.get("MUTAFRICHES_DEPOT") or Path(RACINE).parent / "mutafriches")
@@ -56,6 +63,31 @@ class TestMiroirs(unittest.TestCase):
     def test_niveaux_de_fiabilite(self) -> None:
         corps = bloc("evaluation/constants/fiabilite.constants.ts", "NIVEAUX_FIABILITE")
         self.assertEqual(list(NIVEAUX_FIABILITE), re.findall(r'text:\s*"([^"]*)"', corps))
+
+    def test_types_de_structure(self) -> None:
+        corps = bloc("integration/declaration-integrateur.ts", "TYPE_STRUCTURE_LABELS")
+        self.assertEqual(TYPES_STRUCTURE, dict(re.findall(r'(\w+):\s*"([^"]*)"', corps)))
+
+    def test_en_tete_client_et_format_de_domaine(self) -> None:
+        source = (TYPES / "integration" / "declaration-integrateur.ts").read_text(encoding="utf-8")
+        self.assertIn(f'EN_TETE_CLIENT_MUTAFRICHES = "{EN_TETE_CLIENT}"', source)
+        self.assertIn(f'PREFIXE_CLIENT_QGIS = "{PREFIXE_CLIENT_QGIS}"', source)
+        format_ts = re.search(r"FORMAT_NOM_DOMAINE =\s*/(.+)/;", source)
+        assert format_ts is not None
+        self.assertEqual(FORMAT_NOM_DOMAINE.pattern, format_ts.group(1))
+
+    def test_regle_de_domaine_sur_les_cas_de_shared_types(self) -> None:
+        spec = (TYPES / "integration" / "declaration-integrateur.spec.ts").read_text(encoding="utf-8")
+        # Deux tableaux de cas, chacun clos par « ])( » : saisies acceptées, puis refusées
+        acceptes, refuses = spec.split("])(")[:2]
+        paires = re.findall(r'\["([^"]*)", "([^"]*)"\]', acceptes)
+        self.assertGreater(len(paires), 5)
+        for saisie, hote in paires:
+            self.assertEqual(hote_de_domaine(saisie), hote, saisie)
+        cas_refuses = re.findall(r'\["([^"]*)", "[^"]*"\]', refuses)
+        self.assertGreater(len(cas_refuses), 15)
+        for saisie in [*cas_refuses, "a" * 64 + ".fr"]:
+            self.assertIsNone(hote_de_domaine(saisie), saisie)
 
 
 if __name__ == "__main__":

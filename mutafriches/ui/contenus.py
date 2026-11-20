@@ -191,9 +191,30 @@ ETAPES: dict[int, tuple[str, str, list[Element]]] = {
 
 # Prototype V0 : accueil, envoi des sites, résultats
 TITRE_ACCUEIL = "Bienvenue dans Mutafriches !"
-INTRO_ACCUEIL = "Vous pouvez nous dire qui vous êtes : ces informations sont facultatives et restent sur votre poste."
-ERREUR_MAIL_ACCUEIL = "Adresse mail invalide : corrigez-la ou laissez le champ vide."
-CONSENTEMENT_ACCUEIL = "J'accepte d'être contacté par l'équipe Mutafriches (ADEME) à des fins d'amélioration du service"
+INTRO_ACCUEIL = (
+    "Pour analyser vos sites, déclarez votre structure : c'est son domaine qui identifie vos appels "
+    "à l'API Mutafriches. La déclaration est faite une fois, sans attendre l'équipe."
+)
+# Libellés, aides et mention : miroir du formulaire de déclaration web (FormulaireDeclaration)
+LIBELLE_STRUCTURE = "Nom de votre structure"
+LIBELLE_TYPE_STRUCTURE = "Type de structure"
+LIBELLE_DOMAINE = "Domaine de votre structure"
+AIDE_DOMAINE = "Par exemple ma-collectivite.fr"
+LIBELLE_PRENOM = "Votre prénom"
+LIBELLE_NOM = "Votre nom"
+LIBELLE_MAIL = "Adresse e-mail de contact"
+AIDE_MAIL = "Pour vous informer des évolutions du service et vous recontacter"
+CHOIX_VIDE = "Sélectionner une option"
+URL_CONFIDENTIALITE = "https://mutafriches.beta.gouv.fr/politique-de-confidentialite"
+# {lien} : lien vers la politique de confidentialité
+MENTION_ACCUEIL = (
+    "Vos prénom, nom et adresse e-mail sont conservés dans notre outil d'e-mailing, pas dans la "
+    "base de Mutafriches. {lien}"
+)
+LIBELLE_CONFIDENTIALITE = "Politique de confidentialité"
+ENVOI_DECLARATION = "Envoi en cours…"
+ACCUEIL_A_COMPLETER = "Complétez vos informations : elles sont désormais nécessaires pour analyser vos sites."
+DECLARATION_REFUSEE = "Votre structure n'a pas pu être déclarée à l'API Mutafriches."
 TITRE_IMPORT = "Trouver le bon usage pour vos friches"
 # Tableau de bord territorial
 TITRE_REPARTITION = "Répartition des usages les plus compatibles"
@@ -233,9 +254,9 @@ LIEN_MODELE_CNIG = "Télécharger un modèle de fichier vide"
 AIDE_ERREUR_CNIG = "Les sites KO sont écartés de l'analyse. Corrigez le fichier puis chargez-le de nouveau. Standard : schema.data.gouv.fr (cnigfr/schema-friches)."
 SOUS_TITRE_ANALYSE = "Cela peut prendre de quelques secondes à quelques minutes."
 AIDE_ERREUR_API = (
-    "L'extension appelle l'API Mutafriches avec une origine dédiée, à faire autoriser par l'équipe "
-    "(contact@mutafriches.beta.gouv.fr). En attendant, le mode démonstration (Préférences › Options › "
-    "Mutafriches) montre le parcours sur des données figées."
+    "L'extension appelle l'API Mutafriches avec le domaine déclaré de votre structure. En cas de "
+    "blocage, écrivez à contact@mutafriches.beta.gouv.fr. En attendant, le mode démonstration "
+    "(Préférences › Options › Mutafriches) montre le parcours sur des données figées."
 )
 AIDE_AUCUN_SITE = (
     "Vérifiez les identifiants de parcelles de votre fichier (14 caractères, parcelles existantes), puis "
@@ -248,7 +269,10 @@ AIDE_OPTION_ENVIRONNEMENT = (
     "test de l'équipe, signalé par un bandeau. Démonstration : aucun appel réseau, résultats figés "
     "d'un inventaire d'exemple."
 )
-AIDE_OPTION_INFORMATIONS = "Ces informations restent sur votre poste : elles ne sont pas transmises à Mutafriches."
+AIDE_OPTION_INFORMATIONS = (
+    "Déclaration de votre structure, envoyée à Mutafriches à la prochaine analyse si elle change. Vos "
+    "prénom, nom et adresse e-mail sont conservés dans l'outil d'e-mailing de Mutafriches, pas dans sa base."
+)
 AIDE_OPTION_FOND = (
     "À l'ouverture du panneau sur un projet sans couche, un fond de carte OpenStreetMap est ajouté. "
     "Décochez si votre structure n'autorise pas les fonds de carte externes."

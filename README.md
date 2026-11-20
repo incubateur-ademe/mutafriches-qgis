@@ -9,7 +9,7 @@ qualification, une carte symbolisée par usage et un tableau de bord territorial
 panneau. Objectif : captures d'écran.
 
 > **Deux modes.** En mode réel (défaut, ADR-0003), chaque site est enrichi puis évalué par l'API
-> Mutafriches existante ; l'origine de l'extension doit y être autorisée. En mode démonstration,
+> Mutafriches existante, au nom de la structure déclarée à l'accueil. En mode démonstration,
 > les résultats sont ceux de la table attributaire de Montereau-Fault-Yonne gelée dans le plugin.
 
 Seule version testée : **QGIS 3.44.14 sous macOS (Apple Silicon)**.
@@ -27,7 +27,8 @@ précédente est remplacée).
 
 ## Tester en 3 minutes
 
-1. Ouvrir le panneau **Mutafriches** : il propose de renseigner structure et mail (facultatifs, une fois). Sur un projet
+1. Ouvrir le panneau **Mutafriches** : il demande de déclarer sa structure (nom, type, domaine, prénom,
+   nom et e-mail, obligatoires, une fois). Sur un projet
    vide, un fond OpenStreetMap cadré sur la France est ajouté ; un projet qui a déjà des couches
    n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
@@ -59,9 +60,9 @@ menu Extensions › Mutafriches (ADR-0004). Le panneau n'a ni lien de réglages 
 | Bloc | Réglages |
 |---|---|
 | Service | Environnement : production (défaut), staging ou démonstration |
-| Vos informations | Structure, mail, consentement ; « Effacer mes informations » fait revenir l'accueil |
+| Vos informations | Structure, type, domaine, prénom, nom, e-mail ; « Effacer mes informations » fait revenir l'accueil |
 | Carte | Ajouter ou non le fond OpenStreetMap à l'ouverture d'un projet vide |
-| Développement | Mode développeur : adresse d'API libre, origine envoyée, délai entre sites |
+| Développement | Mode développeur : adresse d'API libre, délai entre sites |
 
 | Environnement | API | Bandeau |
 |---|---|---|
@@ -74,19 +75,23 @@ choisit sans mode développeur ; l'adresse libre, elle, est ignorée sans lui m�
 `MUTAFRICHES_DEV=1` au lancement de QGIS active aussi le mode développeur. Les réglages sont
 enregistrés sous `plugins/mutafriches/` et visibles dans Options › Avancé.
 
-L'extension pose l'en-tête `Origin: https://qgis.mutafriches.beta.gouv.fr`, autorisé sur les
-deux API. Un site prend deux à cinq secondes ; un site dont la réponse dépasse le délai réseau
+L'extension déclare la structure au registre des intégrateurs de Mutafriches
+(`POST /api/integrateurs/declarations`, canal `qgis`, ADR-0005), une fois par environnement, puis
+appelle l'API avec le domaine déclaré dans `Origin` et `X-Mutafriches-Client: qgis/<version>`.
+Prénom, nom et e-mail sont conservés dans l'outil d'e-mailing de Mutafriches (Brevo), pas dans
+sa base. Une API sans registre (production avant déploiement) reçoit l'origine historique
+`https://qgis.mutafriches.beta.gouv.fr`. Un site prend deux à cinq secondes ; un site dont la réponse dépasse le délai réseau
 de QGIS (60 s par défaut) est retenté une fois, puis listé en échec sans interrompre les
-suivants. Structure et mail restent dans le profil QGIS, rien n'est transmis.
+suivants.
 
 Pour jouer le mode réel sans appeler Mutafriches : `python3 tests/serveur_factice.py 8799`, puis,
 en mode développeur, adresse d'API libre `http://127.0.0.1:8799`.
 
 ### Revoir l'accueil
 
-L'accueil (structure, mail, consentement, tous facultatifs) n'est proposé qu'une fois. Pour le revoir : le lien
+L'accueil (déclaration de la structure) n'est proposé que tant qu'elle est incomplète. Pour le revoir : le lien
 **Modifier** en bas de la page d'envoi, ou **Effacer mes informations** dans les réglages.
-QGIS fermé, `./scripts/reinitialiser.sh` fait la même chose.
+QGIS fermé, `./scripts/reinitialiser.sh` fait la même chose et oublie les déclarations faites.
 
 ## Tester de bout en bout (équipe)
 

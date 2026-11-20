@@ -22,9 +22,9 @@ dans le panneau, visible seulement après cette manipulation.
 | Bloc | Réglages | Public |
 |---|---|---|
 | Service | Environnement : production ou démonstration | Tous |
-| Vos informations | Structure, mail, consentement, bouton « Effacer » | Tous |
+| Vos informations | Déclaration de la structure (ADR-0005), bouton « Effacer » | Tous |
 | Carte | Fond OpenStreetMap à l'ouverture d'un projet vide | Tous |
-| Développement | Mode développeur ; adresse d'API libre, origine, délai entre sites | Équipe |
+| Développement | Mode développeur ; adresse d'API libre, délai entre sites (origine retirée, ADR-0005) | Équipe |
 
 - **Mode développeur** : une case de la page (ou `MUTAFRICHES_DEV=1`). Sans lui, l'adresse
   libre est ignorée même si elle est enregistrée : un réglage oublié ne peut pas détourner les

@@ -10,8 +10,8 @@ fiabilité associé, directement dans QGIS.
 L'utilisateur se présente, envoie un inventaire au **standard CNIG Friches**, et reçoit deux
 couches attributaires (mutabilité, qualification), une carte symbolisée par usage et un tableau
 de bord territorial dans le panneau. En mode réel, chaque site est enrichi puis évalué par l'API
-(`POST /enrichissement`, `POST /evaluation/calculer`), site par site, avec l'origine
-conventionnelle de l'extension, en production ou en staging. En démonstration, les résultats
+(`POST /enrichissement`, `POST /evaluation/calculer`), site par site, avec le domaine de la
+structure déclarée à l'accueil (ADR-0005), en production ou en staging. En démonstration, les résultats
 sont la table attributaire de Montereau figée. Suite prévue : `docs/plan-implementation-reelle.md`. Le parcours site à
 site (ADR-0001) reste dans le code, hors panneau.
 
@@ -41,6 +41,7 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── cnig.py              # Lecture et contrôle d'un fichier CNIG Friches (51 colonnes)
 │   ├── reglages.py          # Réglages déclarés dans l'arbre de QGIS (plugins/mutafriches/...)
 │   ├── client_api.py        # Appels réels : enrichissement puis calcul, site par site
+│   ├── declaration.py       # Déclaration de la structure au registre des intégrateurs (ADR-0005)
 │   ├── attributaire.py      # Ligne attributaire (API ou table figée), appariement, synthèse
 │   ├── modele.py            # Site analysé (parcours site à site, hors panneau)
 │   ├── service.py           # Interface du service (enrichir / évaluer), erreurs
@@ -50,7 +51,7 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── exemple.py           # Couche de parcelles d'exemple (parcours site à site)
 │   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
-│   ├── accueil.py           # Utilisateur (structure, mail, consentement, facultatifs)
+│   ├── accueil.py           # Déclarant : structure, type, domaine, prénom, nom, e-mail (obligatoires)
 │   ├── options.py           # Page « Mutafriches » de Préférences › Options
 │   ├── parcours.py          # État : fichier CNIG, analyse réelle ou démonstration, résultats
 │   ├── prototype.py         # Pages Accueil, Import et Résultats (tableau de bord territorial)
@@ -253,8 +254,16 @@ jamais en `--force`.
 
 ### API réelle
 
-- L'API exige `Origin` en liste blanche même pour un client serveur : 403 « Origin required »
-  sinon. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
+- L'API exige un `Origin` déclaré au registre des intégrateurs (table `integrateurs`, ADR-0055 de
+  Mutafriches) : 403 sinon. L'extension déclare le domaine de la structure (canal `qgis`) puis
+  l'envoie avec `X-Mutafriches-Client: qgis/<version>` (`core/declaration.py`, ADR-0005).
+- Déclaration limitée à **5 appels par heure et par IP** : ne jamais redéclarer une saisie
+  inchangée (empreinte mémorisée par adresse d'API), ni en boucle dans un test contre le staging.
+  Un domaine déclaré sur le staging ne vaut pas en production.
+- Une API sans registre (404 sur la déclaration) reçoit l'origine historique
+  `https://qgis.mutafriches.beta.gouv.fr`, toujours acceptée.
+- Prénom, nom et e-mail partent chez Brevo, jamais en base : ne pas les journaliser ni les
+  transmettre ailleurs. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
 - 100 requêtes par minute et par IP, deux requêtes par site : ne pas paralléliser.
 - L'API répond **500 « Erreur lors de l'enrichissement »** quand aucune parcelle du site
   n'existe au cadastre : c'est un échec du site, à expliquer en clair, jamais « Erreur 500 ».
@@ -330,7 +339,7 @@ jamais en `--force`.
 
 - Réseau : passer par `QgsNetworkAccessManager` / `QgsBlockingNetworkRequest` (proxy et
   authentification QGIS), gérer débit, annulation, erreurs partielles.
-- Canal analytique QGIS : un en-tête `Origin` n'identifie ni n'authentifie un intégrateur ;
-  côté API, `?integrateur=` n'est lu qu'en iframe. Ne pas assimiler un traitement de masse à
+- Canal analytique QGIS : le domaine déclaré identifie une structure, il n'authentifie
+  personne (déclaration libre). Ne pas assimiler un traitement de masse à
   `PREFETCH` (réservé à la pré-chauffe automatique du cache).
 - Entrées futures : clic avec résolution cadastrale, couche existante, saisie de références.

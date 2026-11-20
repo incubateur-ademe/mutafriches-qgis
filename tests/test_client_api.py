@@ -9,9 +9,28 @@ from mutafriches.core import reglages
 from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE, site_depuis_api, synthese
 from mutafriches.core.client_api import AnalyseInventaire, ErreurApi, ResultatSite, url_api
 from mutafriches.core.cnig import SiteCnig, complementaires_depuis_cnig, lire_cnig
+from mutafriches.core.declaration import (
+    Declaration,
+    DeclarationIntegrateur,
+    ErreurDeclaration,
+    hote_de_domaine,
+    origine_declaree,
+)
+from mutafriches.ui.accueil import Utilisateur
+
+DECLARATION = Declaration(
+    structure="CC du Pays de Montereau",
+    type_structure="collectivite",
+    domaine="cc-montereau.fr",
+    prenom="Camille",
+    nom="Martin",
+    email="sig@exemple.fr",
+)
 
 
-def analyser(sites: list[SiteCnig]) -> tuple[list[ResultatSite], ErreurApi | None, list[tuple[int, int]]]:
+def analyser(
+    sites: list[SiteCnig], origine: str = reglages.ORIGINE_HISTORIQUE
+) -> tuple[list[ResultatSite], ErreurApi | None, list[tuple[int, int]]]:
     boucle = QEventLoop()
     sortie: dict[str, object] = {}
     etapes: list[tuple[int, int]] = []
@@ -20,7 +39,7 @@ def analyser(sites: list[SiteCnig]) -> tuple[list[ResultatSite], ErreurApi | Non
         sortie["resultats"], sortie["erreur"] = resultats, erreur
         boucle.quit()
 
-    analyse = AnalyseInventaire(sites, lambda a, b: etapes.append((a, b)), termine, "test", intervalle_ms=0)
+    analyse = AnalyseInventaire(sites, lambda a, b: etapes.append((a, b)), termine, origine, "test", intervalle_ms=0)
     analyse.demarrer()
     QTimer.singleShot(20000, boucle.quit)
     boucle.exec()
@@ -38,11 +57,10 @@ class TestClientApi(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         cls.serveur.shutdown()
-        for entree in (reglages.URL, reglages.ORIGINE, reglages.DEV):
+        for entree in (reglages.URL, reglages.DEV):
             entree.remove()
 
     def setUp(self) -> None:
-        reglages.ORIGINE.remove()
         self.sites = lire_cnig(FICHIER_CNIG_EXEMPLE).sites_ok
 
     def test_inventaire_analyse_site_par_site(self) -> None:
@@ -63,6 +81,8 @@ class TestClientApi(unittest.TestCase):
         self.assertIsNotNone(site.geometrie)
         s = synthese([site], {"provenance": "API"})
         self.assertEqual((s.commune, s.provenance), ("Montereau-Fault-Yonne", "API"))
+        # L'extension se nomme à l'API, qui préfixe ses statistiques de « qgis: » (ADR-0055)
+        self.assertEqual(serveur_factice.CLIENTS[-1], "qgis/test")
 
     def test_echec_d_un_site_sans_arreter_les_autres(self) -> None:
         inconnu = SiteCnig("X", "Site inconnu", "77305", [serveur_factice.PARCELLE_EN_ECHEC], 99)
@@ -95,11 +115,10 @@ class TestClientApi(unittest.TestCase):
         self.assertNotIn("500", resultats[0].erreur)
 
     def test_origine_non_autorisee_arrete_l_inventaire(self) -> None:
-        reglages.ORIGINE.setValue("https://autre.exemple.fr")
-        resultats, erreur, _ = analyser(self.sites[:3])
+        resultats, erreur, _ = analyser(self.sites[:3], "https://autre.exemple.fr")
         self.assertEqual(resultats, [])
         self.assertIsNotNone(erreur)
-        self.assertTrue(erreur.bloquante)
+        self.assertTrue(erreur.bloquante and erreur.acces_refuse)
         self.assertIn("Accès refusé", erreur.message)
 
     def test_api_injoignable(self) -> None:
@@ -110,6 +129,103 @@ class TestClientApi(unittest.TestCase):
             reglages.URL.setValue(f"http://127.0.0.1:{self.serveur.server_address[1]}")
         self.assertEqual(resultats, [])
         self.assertTrue(erreur is not None and erreur.bloquante)
+
+
+def declarer(url: str, declaration: Declaration = DECLARATION) -> tuple[str, ErreurDeclaration | None]:
+    boucle = QEventLoop()
+    sortie: dict[str, object] = {}
+
+    def termine(origine: str, erreur: ErreurDeclaration | None) -> None:
+        sortie["origine"], sortie["erreur"] = origine, erreur
+        boucle.quit()
+
+    appel = DeclarationIntegrateur(url, declaration, "test", termine)
+    appel.demarrer()
+    QTimer.singleShot(10000, boucle.quit)
+    boucle.exec()
+    return str(sortie.get("origine", "")), sortie.get("erreur")  # type: ignore[return-value]
+
+
+class TestDeclaration(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.serveur = serveur_factice.demarrer()
+        cls.url = f"http://127.0.0.1:{cls.serveur.server_address[1]}"
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.serveur.shutdown()
+
+    def setUp(self) -> None:
+        reglages.DECLARATIONS.remove()
+        serveur_factice.REGISTRE["actif"] = True
+
+    tearDown = setUp
+
+    def test_declaration_puis_analyse_avec_le_domaine(self) -> None:
+        origine, erreur = declarer(self.url)
+        self.assertIsNone(erreur)
+        self.assertEqual(origine, "https://cc-montereau.fr")
+        envoyee = serveur_factice.DECLARATIONS[-1]
+        self.assertEqual((envoyee["canal"], envoyee["typeStructure"]), ("qgis", "collectivite"))
+        self.assertEqual(origine_declaree(self.url, DECLARATION), origine)
+        # Une saisie modifiée n'a plus d'origine connue : elle sera redéclarée
+        autre = Declaration(**{**DECLARATION.__dict__, "nom": "Durand"})
+        self.assertEqual(origine_declaree(self.url, autre), "")
+        self.assertEqual(origine_declaree("https://autre-api.fr", DECLARATION), "")
+
+    def test_domaine_revoque(self) -> None:
+        origine, erreur = declarer(self.url, Declaration(**{**DECLARATION.__dict__, "domaine": "revoque.fr"}))
+        self.assertEqual(origine, "")
+        self.assertIsNotNone(erreur)
+        self.assertIn("suspendu", erreur.message)
+        self.assertEqual(reglages.DECLARATIONS.value(), "")
+
+    def test_api_sans_registre_garde_l_origine_historique(self) -> None:
+        serveur_factice.REGISTRE["actif"] = False
+        origine, erreur = declarer(self.url)
+        self.assertIsNone(erreur)
+        self.assertEqual(origine, reglages.ORIGINE_HISTORIQUE)
+        self.assertEqual(origine_declaree(self.url, DECLARATION), "")
+
+    def test_refus_explique(self) -> None:
+        origine, erreur = declarer(self.url, Declaration(**{**DECLARATION.__dict__, "prenom": ""}))
+        self.assertEqual(origine, "")
+        self.assertIsNotNone(erreur)
+        self.assertIn("prenom manquant", erreur.message)
+        _, injoignable = declarer("http://127.0.0.1:9")
+        self.assertIsNotNone(injoignable)
+        self.assertIn("injoignable", injoignable.message)
+
+
+class TestSaisieDeclaration(unittest.TestCase):
+    def test_hote_de_domaine(self) -> None:
+        # Cas de declaration-integrateur.spec.ts (shared-types)
+        for saisie, hote in (
+            ("exemple.fr", "exemple.fr"),
+            ("  https://www.Exemple.fr/outil?x=1 ", "www.exemple.fr"),
+            ("xn--bcher-kva.example", "xn--bcher-kva.example"),
+            ("intranet", None),
+            ("http://exemple.fr", None),
+            ("exemple.fr:8080", None),
+            ("user@exemple.fr", None),
+            ("192.168.0.1", None),
+            ("exemple.f", None),
+            ("-exemple.fr", None),
+            ("", None),
+        ):
+            self.assertEqual(hote_de_domaine(saisie), hote, saisie)
+
+    def test_tout_est_obligatoire(self) -> None:
+        self.assertEqual(
+            set(Utilisateur().erreurs()), {"structure", "type_structure", "domaine", "prenom", "nom", "mail"}
+        )
+        complet = Utilisateur(
+            "Camille", "Martin", "CC du Pays de Montereau", "collectivite", "cc-montereau.fr", "sig@exemple.fr"
+        )
+        self.assertTrue(complet.valide)
+        self.assertEqual(complet.resume, "Camille Martin · CC du Pays de Montereau · cc-montereau.fr")
+        self.assertEqual(complet.declaration().corps()["email"], "sig@exemple.fr")
 
 
 class TestReglages(unittest.TestCase):
