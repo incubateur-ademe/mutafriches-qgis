@@ -13,7 +13,8 @@ from qgis.core import (
     QgsVectorLayer,
 )
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
+from qgis.PyQt.QtCore import QObject, QTimer, QUrl, pyqtSignal
+from qgis.PyQt.QtGui import QDesktopServices
 
 from ..carto.couches import (
     EMPRISE_FRANCE,
@@ -36,6 +37,8 @@ from ..core.client_api import (
     DEMONSTRATION,
     LIBELLES_ENVIRONNEMENTS,
     PRODUCTION,
+    STAGING,
+    URLS,
     AnalyseInventaire,
     ErreurApi,
     ResultatSite,
@@ -46,6 +49,9 @@ from ..core.declaration import DeclarationIntegrateur, ErreurDeclaration, origin
 from . import contenus
 from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 
+# Page de l'interface web qui explique critères et sources. `source` et `ref` sont lus par son suivi
+# d'événements (source_campagne, ADR-0012 de Mutafriches) : ses consultations depuis QGIS s'y comptent
+CHEMIN_COMPRENDRE = "/comprendre-les-analyses?source=qgis&ref=tableau-de-bord"
 # Nom d'objet de la page « Mutafriches » des options de QGIS (ui/options.py)
 NOM_PAGE_OPTIONS = "mutafrichesOptions"
 # Attente simulée en mode démonstration
@@ -414,6 +420,13 @@ class Parcours(QObject):
     def ouvrir_table_qualification(self) -> None:
         if self.couche_qualification is not None:
             self.iface.showAttributeTable(self.couche_qualification)
+
+    def url_comprendre_resultats(self) -> str:
+        # Le staging a sa propre interface ; démonstration et adresse libre renvoient à la production
+        return URLS[STAGING if self.environnement == STAGING else PRODUCTION] + CHEMIN_COMPRENDRE
+
+    def comprendre_resultats(self) -> None:
+        QDesktopServices.openUrl(QUrl(self.url_comprendre_resultats()))
 
     def ameliorer_fiabilite(self) -> None:
         """Ouvre la table de qualification, où les critères de terrain à renseigner sont colorés."""

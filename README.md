@@ -40,7 +40,9 @@ précédente est remplacée).
 3. **Analyser mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
    par usage et indice ; Qualification, masquée), avec un fond OpenStreetMap si le projet était
    vide.
-4. Panneau résultats, tableau de bord territorial : nombre de sites, fiabilité moyenne et lien
+4. Panneau résultats, tableau de bord territorial : bouton **Comprendre les résultats** (page
+   « Comprendre les analyses » du site, critères et sources ; l'URL porte `?source=qgis`, lu par
+   le suivi d'événements du site), nombre de sites, fiabilité moyenne et lien
    **Améliorer la fiabilité** (table de qualification, critères de terrain inconnus en rouge),
    répartition des usages les plus compatibles, sites à forte compatibilité (cliquer un site le
    sélectionne et cadre la carte), profils des sites. Les sites non analysés sont signalés dans
