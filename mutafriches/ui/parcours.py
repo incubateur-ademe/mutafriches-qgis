@@ -91,8 +91,8 @@ class Parcours(QObject):
 
     # --- Accueil ------------------------------------------------------------------------------
 
-    def valider_accueil(self, structure: str, mail: str, consentement: bool) -> bool:
-        utilisateur = Utilisateur(structure, mail, consentement)
+    def valider_accueil(self, structure: str, mail: str, consentement: bool, prenom: str = "", nom: str = "") -> bool:
+        utilisateur = Utilisateur(structure, mail, consentement, prenom, nom)
         if not utilisateur.valide:
             return False
         self.utilisateur = utilisateur

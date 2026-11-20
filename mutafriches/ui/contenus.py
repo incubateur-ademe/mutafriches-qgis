@@ -191,7 +191,7 @@ ETAPES: dict[int, tuple[str, str, list[Element]]] = {
 
 # Prototype V0 : accueil, envoi des sites, résultats
 TITRE_ACCUEIL = "Bienvenue dans Mutafriches !"
-INTRO_ACCUEIL = "Vous pouvez nous dire qui vous êtes : ces informations sont facultatives et restent sur votre poste."
+INTRO_ACCUEIL = "Vous pouvez nous dire qui vous êtes : ces informations sont facultatives et restent, pour l'instant, sur votre poste."
 ERREUR_MAIL_ACCUEIL = "Adresse mail invalide : corrigez-la ou laissez le champ vide."
 CONSENTEMENT_ACCUEIL = "J'accepte d'être contacté par l'équipe Mutafriches (ADEME) à des fins d'amélioration du service"
 TITRE_IMPORT = "Trouver le bon usage pour vos friches"

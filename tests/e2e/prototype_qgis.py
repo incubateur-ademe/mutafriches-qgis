@@ -144,20 +144,21 @@ def ouvrir_panneau() -> None:
 
 @etape(1500)
 def accueil() -> None:
-    from qgis.PyQt.QtWidgets import QCheckBox, QLineEdit
+    from qgis.PyQt.QtWidgets import QCheckBox
 
     iface.mainWindow().resizeDocks([dock()], [440], Qt.Orientation.Horizontal)
     iface.messageBar().clearWidgets()
     controler("panneau ouvert sur l'accueil", dock().isVisible() and parcours().etape == 0)
     capture("01-accueil")
     page = dock().pages[0]
-    champs = page.contenu.findChildren(QLineEdit)
-    champs[1].setText("sig-sans-arobase")
+    page.mail.setText("sig-sans-arobase")
     cliquer("Suivant")
     controler("accueil refusé avec un mail invalide", parcours().etape == 0 and page.erreur.isVisible())
     capture("01b-accueil-erreur")
-    champs[0].setText("CC du Pays de Montereau")
-    champs[1].setText("sig@exemple.fr")
+    page.prenom.setText("Camille")
+    page.nom.setText("Martin")
+    page.structure.setText("CC du Pays de Montereau")
+    page.mail.setText("sig@exemple.fr")
     page.contenu.findChild(QCheckBox).setChecked(True)
     page.erreur.setVisible(False)
     capture("02-accueil-rempli")
@@ -168,7 +169,9 @@ def accueil() -> None:
 def panneau_vide() -> None:
     controler(
         "utilisateur enregistré",
-        parcours().etape == 1 and parcours().utilisateur.structure == "CC du Pays de Montereau",
+        parcours().etape == 1
+        and parcours().utilisateur.structure == "CC du Pays de Montereau"
+        and parcours().utilisateur.resume.startswith("Camille Martin · "),
     )
     controler("bouton Analyser inactif", not any(b.isEnabled() for b in boutons("Analyser mes")))
     controler("accueil : pas de pied vide", not dock().pages[0].pied.isVisible())

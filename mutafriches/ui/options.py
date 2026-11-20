@@ -65,6 +65,10 @@ class PageOptions(QgsOptionsPageWidget):
         page.addWidget(service)
 
         informations, formulaire = _groupe("Vos informations")
+        self.prenom = QLineEdit()
+        _champ(formulaire, "Prénom", self.prenom)
+        self.nom = QLineEdit()
+        _champ(formulaire, "Nom", self.nom)
         self.structure = QLineEdit()
         _champ(formulaire, "Structure", self.structure)
         self.mail = QLineEdit()
@@ -77,7 +81,7 @@ class PageOptions(QgsOptionsPageWidget):
         aide_informations.setMinimumWidth(LARGEUR_AIDE)
         formulaire.addRow("", aide_informations)
         effacer = bouton("Effacer mes informations", "secondaire", self._effacer_utilisateur)
-        effacer.setToolTip("Le panneau redemandera votre structure et votre mail à sa prochaine ouverture.")
+        effacer.setToolTip("Le panneau vous proposera de nouveau de vous présenter à sa prochaine ouverture.")
         formulaire.addRow("", effacer)
         page.addWidget(informations)
 
@@ -119,6 +123,8 @@ class PageOptions(QgsOptionsPageWidget):
     def _charger(self) -> None:
         self.dev.setChecked(reglages.DEV.value())
         self._remplir_environnements(reglages.environnement())
+        self.prenom.setText(reglages.PRENOM.value())
+        self.nom.setText(reglages.NOM.value())
         self.structure.setText(reglages.STRUCTURE.value())
         self.mail.setText(reglages.MAIL.value())
         self.consentement.setChecked(reglages.CONSENTEMENT.value())
@@ -157,6 +163,8 @@ class PageOptions(QgsOptionsPageWidget):
 
     def _effacer_utilisateur(self) -> None:
         self._utilisateur_efface = True
+        self.prenom.clear()
+        self.nom.clear()
         self.structure.clear()
         self.mail.clear()
         self.consentement.setChecked(False)
@@ -177,9 +185,12 @@ class PageOptions(QgsOptionsPageWidget):
             reglages.ORIGINE.setValue(self.origine.text().strip() or reglages.ORIGINE_DEFAUT)
             reglages.INTERVALLE_MS.setValue(self.intervalle.value())
         mail = self.mail.text().strip()
-        if self._utilisateur_efface and not self.structure.text().strip() and not mail:
+        saisies = [champ.text().strip() for champ in (self.prenom, self.nom, self.structure)]
+        if self._utilisateur_efface and not any(saisies) and not mail:
             reglages.effacer_utilisateur()
         elif not mail or FORMAT_MAIL.match(mail):
+            reglages.PRENOM.setValue(saisies[0])
+            reglages.NOM.setValue(saisies[1])
             reglages.STRUCTURE.setValue(self.structure.text().strip())
             reglages.MAIL.setValue(mail)
             reglages.CONSENTEMENT.setValue(self.consentement.isChecked())

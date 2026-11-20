@@ -38,6 +38,12 @@ class PageAccueil(Page):
         self.corps.addWidget(texte(contenus.TITRE_ACCUEIL, "mfTitre"))
         self.corps.addWidget(texte(contenus.INTRO_ACCUEIL))
         self.corps.addSpacing(6)
+        # Prénom et nom côte à côte : deux champs courts, une ligne de moins dans un panneau étroit
+        identite = QHBoxLayout()
+        identite.setSpacing(8)
+        self.prenom = self._champ("Prénom (facultatif)", "Camille", identite)
+        self.nom = self._champ("Nom (facultatif)", "Martin", identite)
+        self.corps.addLayout(identite)
         self.structure = self._champ("Votre structure (facultatif)", "Collectivité, agence, bureau d'études…")
         self.mail = self._champ("Votre mail (facultatif)", "prenom.nom@exemple.fr")
         self.erreur = texte(contenus.ERREUR_MAIL_ACCUEIL, "mfErreurChamp")
@@ -58,23 +64,38 @@ class PageAccueil(Page):
         self.corps.addWidget(bouton("Suivant", "primaire", self._valider))
         self.corps.addStretch(1)
 
-    def _champ(self, libelle: str, aide: str) -> QLineEdit:
+    def _champ(self, libelle: str, aide: str, ligne: QHBoxLayout | None = None) -> QLineEdit:
         etiquette = texte(libelle)
         etiquette.setStyleSheet("font-weight: bold;")
         champ = QLineEdit()
         champ.setPlaceholderText(aide)
         champ.setAccessibleName(libelle)
         etiquette.setBuddy(champ)
-        self.corps.addWidget(etiquette)
-        self.corps.addWidget(champ)
+        colonne = QVBoxLayout()
+        colonne.setSpacing(self.corps.spacing())
+        colonne.addWidget(etiquette)
+        colonne.addWidget(champ)
+        # « ligne or self.corps » ne convient pas : une mise en page encore vide est fausse en Python
+        if ligne is None:
+            self.corps.addLayout(colonne)
+        else:
+            ligne.addLayout(colonne, 1)
         return champ
 
     def _valider(self) -> None:
-        ok = self.parcours.valider_accueil(self.structure.text(), self.mail.text(), self.consentement.isChecked())
+        ok = self.parcours.valider_accueil(
+            self.structure.text(),
+            self.mail.text(),
+            self.consentement.isChecked(),
+            self.prenom.text(),
+            self.nom.text(),
+        )
         self.erreur.setVisible(not ok)
 
     def rafraichir(self) -> None:
         utilisateur = self.parcours.utilisateur
+        self.prenom.setText(utilisateur.prenom)
+        self.nom.setText(utilisateur.nom)
         self.structure.setText(utilisateur.structure)
         self.mail.setText(utilisateur.mail)
         self.consentement.setChecked(utilisateur.consentement)

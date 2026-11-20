@@ -57,6 +57,8 @@ DEV = QgsSettingsEntryBool(
     False,
     "Mode développeur : donne accès aux réglages d'API (adresse libre, origine, délai) dans les options.",
 )
+PRENOM = QgsSettingsEntryString("prenom", _utilisateur, "", "Prénom de l'utilisateur, saisie facultative à l'accueil.")
+NOM = QgsSettingsEntryString("nom", _utilisateur, "", "Nom de l'utilisateur, saisie facultative à l'accueil.")
 STRUCTURE = QgsSettingsEntryString(
     "structure", _utilisateur, "", "Structure de l'utilisateur, saisie facultative à l'accueil."
 )
@@ -131,12 +133,12 @@ def intervalle_ms() -> int:
 
 
 def accueil_vu() -> bool:
-    # Structure ou mail déjà enregistrés : accueil passé avec une version d'avant ce réglage
-    return ACCUEIL_VU.value() or bool(STRUCTURE.value().strip() or MAIL.value().strip())
+    # Informations déjà enregistrées : accueil passé avec une version d'avant ce réglage
+    return ACCUEIL_VU.value() or any(e.value().strip() for e in (PRENOM, NOM, STRUCTURE, MAIL))
 
 
 def effacer_utilisateur() -> None:
-    for entree in (STRUCTURE, MAIL, CONSENTEMENT, ACCUEIL_VU):
+    for entree in (PRENOM, NOM, STRUCTURE, MAIL, CONSENTEMENT, ACCUEIL_VU):
         entree.remove()
 
 
