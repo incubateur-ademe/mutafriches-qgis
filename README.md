@@ -28,7 +28,8 @@ précédente est remplacée).
 ## Tester en 3 minutes
 
 1. Ouvrir le panneau **Mutafriches** : il demande de déclarer sa structure (nom, type, domaine, prénom,
-   nom et e-mail, obligatoires, une fois). Sur un projet
+   nom et e-mail, obligatoires, une fois), avec une case facultative, décochée par défaut, pour
+   accepter d'être contacté (retours d'expérience, évolutions du service). Sur un projet
    vide, un fond OpenStreetMap cadré sur la France est ajouté ; un projet qui a déjà des couches
    n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
@@ -62,7 +63,7 @@ menu Extensions › Mutafriches (ADR-0004). Le panneau n'a ni lien de réglages 
 | Bloc | Réglages |
 |---|---|
 | Service | Environnement : production (défaut), staging ou démonstration |
-| Vos informations | Structure, type, domaine, prénom, nom, e-mail ; « Effacer mes informations » fait revenir l'accueil |
+| Vos informations | Structure, type, domaine, prénom, nom, e-mail, accord pour être contacté ; « Effacer mes informations » fait revenir l'accueil |
 | Carte | Ajouter ou non le fond OpenStreetMap à l'ouverture d'un projet vide |
 | Développement | Mode développeur : adresse d'API libre, délai entre sites |
 
@@ -81,7 +82,8 @@ L'extension déclare la structure au registre des intégrateurs de Mutafriches
 (`POST /api/integrateurs/declarations`, canal `qgis`, ADR-0005), une fois par environnement, puis
 appelle l'API avec le domaine déclaré dans `Origin` et `X-Mutafriches-Client: qgis/<version>`.
 Prénom, nom et e-mail sont conservés dans l'outil d'e-mailing de Mutafriches (Brevo), pas dans
-sa base. Une API sans registre (production avant déploiement) reçoit l'origine historique
+sa base. L'e-mail, obligatoire, sert au suivi de l'accès ; être sollicité demande la case
+d'accord, transmise en `accepteContact: true` seulement si elle est cochée. Une API sans registre (production avant déploiement) reçoit l'origine historique
 `https://qgis.mutafriches.beta.gouv.fr`. Un site prend deux à cinq secondes ; un site dont la réponse dépasse le délai réseau
 de QGIS (60 s par défaut) est retenté une fois, puis listé en échec sans interrompre les
 suivants.

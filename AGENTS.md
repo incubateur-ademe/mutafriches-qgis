@@ -263,7 +263,11 @@ jamais en `--force`.
 - Une API sans registre (404 sur la déclaration) reçoit l'origine historique
   `https://qgis.mutafriches.beta.gouv.fr`, toujours acceptée.
 - Prénom, nom et e-mail partent chez Brevo, jamais en base : ne pas les journaliser ni les
-  transmettre ailleurs. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
+  transmettre ailleurs.
+- L'e-mail obligatoire ne vaut pas consentement : la case « J'accepte d'être contacté·e… »
+  (`accepteContact`, attribut Brevo `ACCEPTE_CONTACT`) est facultative, jamais pré-cochée, et ne
+  bloque rien. La clé n'est envoyée que si elle vaut `true` (empreinte des déclarations
+  antérieures inchangée) ; la décocher ne renvoie rien, l'API ne retire jamais un accord. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
 - 100 requêtes par minute et par IP, deux requêtes par site : ne pas paralléliser.
 - L'API répond **500 « Erreur lors de l'enrichissement »** quand aucune parcelle du site
   n'existe au cadastre : c'est un échec du site, à expliquer en clair, jamais « Erreur 500 ».
