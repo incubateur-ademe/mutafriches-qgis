@@ -20,6 +20,7 @@ from mutafriches.core.declaration import (
     hote_de_domaine,
 )
 from mutafriches.core.referentiel import CLES_TERRAIN, USAGES
+from mutafriches.ui import contenus
 
 DEPOT = Path(os.environ.get("MUTAFRICHES_DEPOT") or Path(RACINE).parent / "mutafriches")
 TYPES = DEPOT / "packages" / "shared-types" / "src"
@@ -88,6 +89,14 @@ class TestMiroirs(unittest.TestCase):
         self.assertGreater(len(cas_refuses), 15)
         for saisie in [*cas_refuses, "a" * 64 + ".fr"]:
             self.assertIsNone(hote_de_domaine(saisie), saisie)
+
+    def test_libelle_du_consentement(self) -> None:
+        source = DEPOT / "apps" / "ui" / "src" / "features" / "integrer" / "data" / "declaration-integrateur.ts"
+        texte_source = source.read_text(encoding="utf-8") if source.is_file() else ""
+        trouve = re.search(r'LIBELLE_CONSENTEMENT_CONTACT =\s*"([^"]*)"', texte_source)
+        if trouve is None:
+            self.skipTest("LIBELLE_CONSENTEMENT_CONTACT absent : PR 285 de Mutafriches pas encore fusionnée")
+        self.assertEqual(contenus.LIBELLE_ACCEPTE_CONTACT, trouve.group(1))
 
 
 if __name__ == "__main__":

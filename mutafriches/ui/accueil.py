@@ -18,6 +18,8 @@ class Utilisateur:
     type_structure: str = ""
     domaine: str = ""
     mail: str = ""
+    # Facultatif, jamais coché par défaut : l'e-mail obligatoire ne vaut pas accord pour être sollicité
+    accepte_contact: bool = False
 
     def erreurs(self) -> dict[str, str]:
         """Miroir de validerDeclaration (formulaire web) : tout est obligatoire pour l'API."""
@@ -55,6 +57,7 @@ class Utilisateur:
             prenom=self.prenom,
             nom=self.nom,
             email=self.mail,
+            accepte_contact=self.accepte_contact,
         )
 
 
@@ -66,6 +69,7 @@ def charger_utilisateur() -> Utilisateur:
         type_structure=reglages.TYPE_STRUCTURE.value(),
         domaine=reglages.DOMAINE.value(),
         mail=reglages.MAIL.value(),
+        accepte_contact=reglages.ACCEPTE_CONTACT.value(),
     )
 
 
@@ -77,3 +81,4 @@ def enregistrer_utilisateur(utilisateur: Utilisateur) -> None:
     # Une adresse collée (https://www.exemple.fr/outil) est ramenée à son hôte, celui qui est déclaré
     reglages.DOMAINE.setValue(hote_de_domaine(utilisateur.domaine) or utilisateur.domaine.strip())
     reglages.MAIL.setValue(utilisateur.mail.strip())
+    reglages.ACCEPTE_CONTACT.setValue(utilisateur.accepte_contact)

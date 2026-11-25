@@ -71,6 +71,13 @@ DOMAINE = QgsSettingsEntryString(
     "domaine", _utilisateur, "", "Domaine de la structure, envoyé dans l'en-tête Origin (ma-collectivite.fr)."
 )
 MAIL = QgsSettingsEntryString("mail", _utilisateur, "", "Adresse e-mail de contact du déclarant.")
+# Distinct de l'e-mail, obligatoire : accord facultatif pour être sollicité (ACCEPTE_CONTACT chez Brevo)
+ACCEPTE_CONTACT = QgsSettingsEntryBool(
+    "accepte_contact",
+    _utilisateur,
+    False,
+    "Accord pour être contacté (retours d'expérience, évolutions du service). Jamais coché par défaut.",
+)
 FOND_OSM = QgsSettingsEntryBool(
     "fond_osm", _carte, True, "Ajouter un fond OpenStreetMap à l'ouverture du panneau sur un projet vide."
 )
@@ -84,7 +91,8 @@ _ANCIENNES_CLES: tuple[tuple[str, QgsSettingsEntryString | QgsSettingsEntryBool 
     ("mutafriches/utilisateur/structure", STRUCTURE),
     ("mutafriches/utilisateur/mail", MAIL),
 )
-# Réglages retirés : origine libre (remplacée par la déclaration), consentement et accueil passé
+# Réglages retirés : origine libre (remplacée par la déclaration), consentement des 0.3.x (libellé et
+# finalité différents : jamais repris comme accord de contact) et accueil passé
 _CLES_OBSOLETES = (
     "mutafriches/api/origine",
     "mutafriches/utilisateur/consentement",
@@ -137,7 +145,7 @@ def intervalle_ms() -> int:
 
 
 def effacer_utilisateur() -> None:
-    for entree in (PRENOM, NOM, STRUCTURE, TYPE_STRUCTURE, DOMAINE, MAIL, DECLARATIONS):
+    for entree in (PRENOM, NOM, STRUCTURE, TYPE_STRUCTURE, DOMAINE, MAIL, ACCEPTE_CONTACT, DECLARATIONS):
         entree.remove()
 
 

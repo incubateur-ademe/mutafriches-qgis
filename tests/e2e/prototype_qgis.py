@@ -166,7 +166,15 @@ def accueil() -> None:
     page.type_structure.setCurrentIndex(page.type_structure.findData("collectivite"))
     page.domaine.setText("https://www.cc-montereau.fr/")
     page.mail.setText("sig@exemple.fr")
+    case = page.accepte_contact.case
+    controler("consentement : case décochée par défaut", not case.isChecked() and case.isVisible())
+    # Le libellé, long, coche sa case comme le texte d'une case ordinaire
+    QTest.mouseClick(page.accepte_contact.libelle, Qt.MouseButton.LeftButton)
+    coche = case.isChecked()
+    QTest.mouseClick(page.accepte_contact.libelle, Qt.MouseButton.LeftButton)
+    controler("consentement : le libellé coche et décoche la case", coche and not case.isChecked())
     capture("02-accueil-rempli")
+    # Déclaration sans accord : la case est facultative
     cliquer("Suivant")
 
 
@@ -182,6 +190,7 @@ def panneau_vide() -> None:
         and parcours().utilisateur.structure == "CC du Pays de Montereau"
         and parcours().utilisateur.resume.startswith("Camille Martin · ")
         and parcours().utilisateur.domaine == "www.cc-montereau.fr"
+        and not parcours().utilisateur.accepte_contact
         and origine_declaree(url_api(), parcours().utilisateur.declaration()) == "https://www.cc-montereau.fr",
         reglages.DECLARATIONS.value(),
     )

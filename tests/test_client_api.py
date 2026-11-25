@@ -1,4 +1,5 @@
 import unittest
+from dataclasses import replace
 
 import serveur_factice
 from _qgis import RACINE  # noqa: F401  (initialise QGIS)
@@ -173,6 +174,30 @@ class TestDeclaration(unittest.TestCase):
         autre = Declaration(**{**DECLARATION.__dict__, "nom": "Durand"})
         self.assertEqual(origine_declaree(self.url, autre), "")
         self.assertEqual(origine_declaree("https://autre-api.fr", DECLARATION), "")
+
+    def test_consentement_envoye_seulement_s_il_est_donne(self) -> None:
+        declarer(self.url)
+        self.assertNotIn("accepteContact", serveur_factice.DECLARATIONS[-1])
+        # Cocher la case après une déclaration : nouvel envoi, avec l'accord en booléen
+        accord = replace(DECLARATION, accepte_contact=True)
+        self.assertEqual(origine_declaree(self.url, accord), "")
+        origine, erreur = declarer(self.url, accord)
+        self.assertIsNone(erreur)
+        self.assertIs(serveur_factice.DECLARATIONS[-1]["accepteContact"], True)
+        self.assertEqual(origine_declaree(self.url, accord), origine)
+        # La décocher ne renvoie rien : l'API ne retire jamais un accord donné
+        self.assertEqual(origine_declaree(self.url, DECLARATION), origine)
+        # Une autre modification, case décochée, est envoyée sans la clé
+        autre = replace(DECLARATION, nom="Durand")
+        self.assertEqual(origine_declaree(self.url, autre), "")
+
+    def test_empreinte_inchangee_sans_consentement(self) -> None:
+        # Les déclarations d'avant la case ne sont pas renvoyées : corps identique sans accord
+        self.assertEqual(
+            set(DECLARATION.corps()), {"canal", "structure", "typeStructure", "domaine", "prenom", "nom", "email"}
+        )
+        # Valeur calculée avec le code de la v0.4.1 (`git show v0.4.1:mutafriches/core/declaration.py`)
+        self.assertEqual(DECLARATION.empreinte, "273118f02169c9f6")
 
     def test_domaine_revoque(self) -> None:
         origine, erreur = declarer(self.url, Declaration(**{**DECLARATION.__dict__, "domaine": "revoque.fr"}))

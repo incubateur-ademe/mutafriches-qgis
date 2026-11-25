@@ -203,7 +203,13 @@ AIDE_DOMAINE = "Par exemple ma-collectivite.fr"
 LIBELLE_PRENOM = "Votre prénom"
 LIBELLE_NOM = "Votre nom"
 LIBELLE_MAIL = "Adresse e-mail de contact"
-AIDE_MAIL = "Pour vous informer des évolutions du service et vous recontacter"
+AIDE_MAIL = "Pour le suivi de votre accès et les échanges sur le fonctionnement du service"
+# Miroir de LIBELLE_CONSENTEMENT_CONTACT (formulaire de déclaration web, PR 285 de Mutafriches)
+LIBELLE_ACCEPTE_CONTACT = (
+    "J'accepte d'être contacté·e pour partager mes retours d'expérience et être informé·e des "
+    "évolutions du service Mutafriches (ADEME)"
+)
+AIDE_ACCEPTE_CONTACT = "Facultatif, sans effet sur votre accès au service"
 CHOIX_VIDE = "Sélectionner une option"
 URL_CONFIDENTIALITE = "https://mutafriches.beta.gouv.fr/politique-de-confidentialite"
 # {lien} : lien vers la politique de confidentialité

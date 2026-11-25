@@ -24,7 +24,7 @@ from ..core.reglages import DEMONSTRATION, PRODUCTION
 from . import contenus
 from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
 from .parcours import NOM_PAGE_OPTIONS, Parcours
-from .widgets import bouton, texte
+from .widgets import CaseACocher, bouton, texte
 
 # Largeur minimale des textes d'aide : sans elle, le formulaire les replie sur quelques mots
 LARGEUR_AIDE = 520
@@ -82,6 +82,9 @@ class PageOptions(QgsOptionsPageWidget):
         _champ(formulaire, contenus.LIBELLE_NOM, self.nom)
         self.mail = QLineEdit()
         _champ(formulaire, contenus.LIBELLE_MAIL, self.mail, contenus.AIDE_MAIL)
+        self.accepte_contact = CaseACocher(contenus.LIBELLE_ACCEPTE_CONTACT, contenus.AIDE_ACCEPTE_CONTACT)
+        self.accepte_contact.setMinimumWidth(LARGEUR_AIDE)
+        formulaire.addRow("", self.accepte_contact)
         self.erreur_saisie = texte("", "mfErreurChamp")
         formulaire.addRow("", self.erreur_saisie)
         aide_informations = texte(contenus.AIDE_OPTION_INFORMATIONS, "mfAide")
@@ -137,6 +140,7 @@ class PageOptions(QgsOptionsPageWidget):
         self.type_structure.setCurrentIndex(max(self.type_structure.findData(utilisateur.type_structure), 0))
         self.domaine.setText(utilisateur.domaine)
         self.mail.setText(utilisateur.mail)
+        self.accepte_contact.case.setChecked(utilisateur.accepte_contact)
         self.fond_osm.setChecked(reglages.FOND_OSM.value())
         self.url.setText(reglages.URL.value())
         self.intervalle.setValue(reglages.intervalle_ms())
@@ -173,6 +177,7 @@ class PageOptions(QgsOptionsPageWidget):
             type_structure=str(self.type_structure.currentData() or ""),
             domaine=self.domaine.text(),
             mail=self.mail.text(),
+            accepte_contact=self.accepte_contact.case.isChecked(),
         )
 
     def _vide(self) -> bool:
@@ -193,6 +198,7 @@ class PageOptions(QgsOptionsPageWidget):
         self.nom.clear()
         self.structure.clear()
         self.mail.clear()
+        self.accepte_contact.case.setChecked(False)
         self.domaine.clear()
         self.type_structure.setCurrentIndex(0)
 

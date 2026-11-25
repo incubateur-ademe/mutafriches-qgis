@@ -28,7 +28,19 @@ from .accueil import Utilisateur
 from .graphiques import tableau
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
-from .widgets import ActionAide, Encadre, badge, bouton, entete_champ, lien, separateur, texte, texte_riche, vider
+from .widgets import (
+    ActionAide,
+    CaseACocher,
+    Encadre,
+    badge,
+    bouton,
+    entete_champ,
+    lien,
+    separateur,
+    texte,
+    texte_riche,
+    vider,
+)
 
 MAX_LIGNES_AFFICHEES = 40
 
@@ -57,6 +69,9 @@ class PageAccueil(Page):
         self.nom = self._champ("nom", contenus.LIBELLE_NOM, ligne=identite)
         self.corps.addLayout(identite)
         self.mail = self._champ("mail", contenus.LIBELLE_MAIL, contenus.AIDE_MAIL)
+        # Sous l'e-mail, décochée par défaut et facultative : n'empêche jamais la déclaration
+        self.accepte_contact = CaseACocher(contenus.LIBELLE_ACCEPTE_CONTACT, contenus.AIDE_ACCEPTE_CONTACT)
+        self.corps.addWidget(self.accepte_contact)
         self.erreur = Encadre("erreur")
         self.erreur.setVisible(False)
         self.corps.addWidget(self.erreur)
@@ -114,6 +129,7 @@ class PageAccueil(Page):
             type_structure=str(self.type_structure.currentData() or ""),
             domaine=self.domaine.text(),
             mail=self.mail.text(),
+            accepte_contact=self.accepte_contact.case.isChecked(),
         )
 
     def _valider(self) -> None:
@@ -132,6 +148,7 @@ class PageAccueil(Page):
             self.type_structure.setCurrentIndex(max(position, 0))
             self.domaine.setText(utilisateur.domaine)
             self.mail.setText(utilisateur.mail)
+            self.accepte_contact.case.setChecked(utilisateur.accepte_contact)
         for cle, etiquette in self.erreurs.items():
             message = parcours.erreurs_accueil.get(cle, "")
             etiquette.setText(message)

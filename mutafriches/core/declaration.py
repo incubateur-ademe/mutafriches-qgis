@@ -8,7 +8,7 @@ import hashlib
 import json
 import re
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from qgis.core import QgsNetworkAccessManager
@@ -71,9 +71,10 @@ class Declaration:
     prenom: str
     nom: str
     email: str
+    accepte_contact: bool = False
 
     def corps(self) -> Json:
-        return {
+        corps: Json = {
             "canal": CANAL_QGIS,
             "structure": self.structure.strip(),
             "typeStructure": self.type_structure,
@@ -82,6 +83,11 @@ class Declaration:
             "nom": self.nom.strip(),
             "email": self.email.strip(),
         }
+        # Clé posée seulement sur accord : sans elle, l'empreinte des déclarations d'avant la case est
+        # inchangée et personne n'est redéclaré ; l'API lit son absence comme un refus
+        if self.accepte_contact:
+            corps["accepteContact"] = True
+        return corps
 
     @property
     def empreinte(self) -> str:
@@ -103,7 +109,9 @@ def _connues() -> dict[str, dict[str, str]]:
 def origine_declaree(url: str, declaration: Declaration) -> str:
     """Origine déjà obtenue pour cette API et cette saisie, sinon chaîne vide."""
     connue = _connues().get(url) or {}
-    return str(connue.get("origine", "")) if connue.get("empreinte") == declaration.empreinte else ""
+    # Décocher la case après un accord ne renvoie rien : l'API ne retire jamais un accord donné
+    valables = {declaration.empreinte, replace(declaration, accepte_contact=True).empreinte}
+    return str(connue.get("origine", "")) if connue.get("empreinte") in valables else ""
 
 
 def memoriser(url: str, declaration: Declaration, origine: str) -> None:
