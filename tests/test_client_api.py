@@ -244,13 +244,18 @@ class TestSaisieDeclaration(unittest.TestCase):
             self.assertEqual(hote_de_domaine(saisie), hote, saisie)
 
     def test_tout_est_obligatoire(self) -> None:
-        self.assertEqual(
-            set(Utilisateur().erreurs()), {"structure", "type_structure", "domaine", "prenom", "nom", "mail"}
-        )
-        complet = Utilisateur(
+        coordonnees = {"structure", "type_structure", "domaine", "prenom", "nom", "mail"}
+        self.assertEqual(set(Utilisateur().erreurs_coordonnees()), coordonnees)
+        self.assertEqual(set(Utilisateur().erreurs()), coordonnees | {"accepte_contact"})
+        sans_accord = Utilisateur(
             "Camille", "Martin", "CC du Pays de Montereau", "collectivite", "cc-montereau.fr", "sig@exemple.fr"
         )
+        # L'API n'exige que les coordonnées ; l'extension exige aussi l'accord de contact
+        self.assertEqual(set(sans_accord.erreurs()), {"accepte_contact"})
+        self.assertFalse(sans_accord.valide)
+        complet = replace(sans_accord, accepte_contact=True)
         self.assertTrue(complet.valide)
+        self.assertIs(complet.declaration().corps()["accepteContact"], True)
         self.assertEqual(complet.resume, "Camille Martin · CC du Pays de Montereau · cc-montereau.fr")
         self.assertEqual(complet.declaration().corps()["email"], "sig@exemple.fr")
 
@@ -326,7 +331,7 @@ class TestReglages(unittest.TestCase):
         self.assertFalse(coordonnees_verrouillees(complet))
         memoriser(url_api(), complet.declaration(), "https://cc-montereau.fr")
         self.assertTrue(coordonnees_verrouillees(complet))
-        # L'accord de contact, donné après coup, ne rouvre pas la saisie
+        # Structure déclarée avant que l'accord soit exigé : verrouillée avec ou sans la case
         self.assertTrue(coordonnees_verrouillees(replace(complet, accepte_contact=True)))
         self.assertFalse(coordonnees_verrouillees(replace(complet, domaine="autre-structure.fr")))
         # Un refus d'accès de l'API oublie la déclaration : la saisie redevient modifiable

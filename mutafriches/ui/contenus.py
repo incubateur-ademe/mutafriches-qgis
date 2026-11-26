@@ -209,7 +209,10 @@ LIBELLE_ACCEPTE_CONTACT = (
     "J'accepte d'être contacté·e pour partager mes retours d'expérience et être informé·e des "
     "évolutions du service Mutafriches (ADEME)"
 )
-AIDE_ACCEPTE_CONTACT = "Facultatif, sans effet sur votre accès au service"
+AIDE_ACCEPTE_CONTACT = "Obligatoire pour utiliser l'extension"
+LIBELLE_ACCORD_DONNE = "Accord pour être contacté"
+ACCORD_DONNE = "Donné"
+ACCORD_ABSENT = "Non donné : à cocher dans le panneau Mutafriches"
 CHOIX_VIDE = "Sélectionner une option"
 URL_CONFIDENTIALITE = "https://mutafriches.beta.gouv.fr/politique-de-confidentialite"
 # {lien} : lien vers la politique de confidentialité
@@ -225,6 +228,7 @@ ACCUEIL_NON_MODIFIABLE = (
     "sont plus modifiables dans l'extension."
 )
 ACCUEIL_A_COMPLETER = "Complétez vos informations : elles sont désormais nécessaires pour analyser vos sites."
+ACCORD_A_DONNER = "Cochez la case d'accord : elle est désormais nécessaire pour analyser vos sites."
 DECLARATION_REFUSEE = "Votre structure n'a pas pu être déclarée à l'API Mutafriches."
 TITRE_IMPORT = "Trouver le bon usage pour vos friches"
 # Tableau de bord territorial

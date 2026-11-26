@@ -80,6 +80,9 @@ class Parcours(QObject):
         self.utilisateur: Utilisateur = charger_utilisateur()
         # L'accueil n'est proposé que tant que la déclaration est incomplète
         self.etape = Etape.IMPORT if self.utilisateur.valide else Etape.ACCUEIL
+        if not self.utilisateur.valide and not self.utilisateur.erreurs_coordonnees():
+            # Coordonnées d'une version où l'accord était facultatif : dire pourquoi l'accueil revient
+            self.erreur_declaration = contenus.ACCORD_A_DONNER
         self.fichier: Path | None = None
         self.lecture: LectureCnig | None = None
         self.analyse_en_cours = False
@@ -191,8 +194,7 @@ class Parcours(QObject):
         return self.lecture is not None and self.lecture.valide and not self.analyse_en_cours
 
     def reglages_modifies(self) -> None:
-        """Appelé par la page d'options : relit l'accord de contact et met le panneau en accord."""
-        self.utilisateur = charger_utilisateur()
+        """Appelé par la page d'options : rien n'y change les coordonnées, le panneau se redessine."""
         self.change.emit()
 
     def ouvrir_reglages(self) -> None:
@@ -204,7 +206,10 @@ class Parcours(QObject):
         # Informations d'une version où elles étaient facultatives : à compléter avant d'appeler l'API
         if not self.utilisateur.valide:
             self.erreurs_accueil = self.utilisateur.erreurs()
-            self.erreur_declaration = contenus.ACCUEIL_A_COMPLETER
+            # Coordonnées complètes d'une version où l'accord était facultatif : seule la case manque
+            self.erreur_declaration = (
+                contenus.ACCUEIL_A_COMPLETER if self.utilisateur.erreurs_coordonnees() else contenus.ACCORD_A_DONNER
+            )
             self.etape = Etape.ACCUEIL
             self.change.emit()
             return

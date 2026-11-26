@@ -159,8 +159,9 @@ def accueil() -> None:
     QApplication.processEvents()
     visibles = sorted(cle for cle, erreur in page.erreurs.items() if erreur.isVisible())
     controler(
-        "accueil refusé : chaque champ obligatoire ou invalide signalé",
-        parcours().etape == 0 and visibles == ["domaine", "mail", "nom", "prenom", "structure", "type_structure"],
+        "accueil refusé : chaque champ obligatoire ou invalide signalé, accord compris",
+        parcours().etape == 0
+        and visibles == ["accepte_contact", "domaine", "mail", "nom", "prenom", "structure", "type_structure"],
         visibles,
     )
     capture("01b-accueil-erreur")
@@ -177,8 +178,20 @@ def accueil() -> None:
     coche = case.isChecked()
     QTest.mouseClick(page.accepte_contact.libelle, Qt.MouseButton.LeftButton)
     controler("consentement : le libellé coche et décoche la case", coche and not case.isChecked())
+    # Coordonnées complètes sans accord : refusé, seule la case est signalée
+    cliquer("Suivant")
+    QApplication.processEvents()
+    visibles = sorted(cle for cle, erreur in page.erreurs.items() if erreur.isVisible())
+    controler(
+        "accord de contact obligatoire : accueil refusé sans la case",
+        parcours().etape == 0 and visibles == ["accepte_contact"],
+        visibles,
+    )
+    QTest.mouseClick(page.accepte_contact.libelle, Qt.MouseButton.LeftButton)
+    controler(
+        "case cochée : son erreur disparaît", case.isChecked() and not page.erreurs["accepte_contact"].isVisible()
+    )
     capture("02-accueil-rempli")
-    # Déclaration sans accord : la case est facultative
     cliquer("Suivant")
 
 
@@ -194,7 +207,7 @@ def panneau_vide() -> None:
         and parcours().utilisateur.structure == "CC du Pays de Montereau"
         and parcours().utilisateur.resume.startswith("Camille Martin · ")
         and parcours().utilisateur.domaine == "www.cc-montereau.fr"
-        and not parcours().utilisateur.accepte_contact
+        and parcours().utilisateur.accepte_contact
         and origine_declaree(url_api(), parcours().utilisateur.declaration()) == "https://www.cc-montereau.fr",
         reglages.DECLARATIONS.value(),
     )
@@ -515,15 +528,15 @@ def reglages_en_lecture_seule() -> None:
         and page.type_structure.text() == "Collectivité territoriale"
         and page.domaine.text() == "www.cc-montereau.fr"
         and page.mail.text() == "sig@exemple.fr"
+        and page.accepte_contact.text() == contenus.ACCORD_DONNE
         and page.aide_informations.text() == contenus.AIDE_OPTION_INFORMATIONS,
-        (page.structure.text(), page.domaine.text(), page.aide_informations.text()),
+        (page.structure.text(), page.domaine.text(), page.accepte_contact.text(), page.aide_informations.text()),
     )
-    # L'accord de contact et le fond de carte restent les seuls réglages modifiables
-    page.accepte_contact.case.setChecked(True)
+    # Le fond de carte est le seul réglage modifiable
     page.fond_osm.setChecked(False)
     page.apply()
     controler(
-        "accord de contact donné après coup : enregistré, coordonnées toujours verrouillées",
+        "réglages appliqués : fond de carte enregistré, coordonnées inchangées et verrouillées",
         p.utilisateur.accepte_contact
         and p.utilisateur.structure == "CC du Pays de Montereau"
         and p.coordonnees_verrouillees
@@ -533,6 +546,43 @@ def reglages_en_lecture_seule() -> None:
         (p.utilisateur.accepte_contact, p.coordonnees_verrouillees, p.etape),
     )
     controler("production : aucun lien de mode ni de réglages dans le panneau", not boutons("Passer en mode"))
+
+
+@etape()
+def accord_exige_apres_coup() -> None:
+    from mutafriches.core import reglages
+    from mutafriches.ui.accueil import charger_utilisateur
+
+    # Structure déclarée par une version où l'accord était facultatif
+    p = parcours()
+    reglages.ACCEPTE_CONTACT.setValue(False)
+    p.utilisateur = charger_utilisateur()
+    p.choisir_fichier(str(FICHIER_CNIG_ERREURS))
+    cliquer("Analyser les 4 sites OK")
+    page = dock().pages[0]
+    controler(
+        "accord manquant : retour à l'accueil, coordonnées verrouillées, seule la case à cocher",
+        p.etape == 0
+        and p.coordonnees_verrouillees
+        and not page.structure.isEnabled()
+        and not page.mail.isEnabled()
+        and page.accepte_contact.case.isEnabled()
+        and page.erreurs["accepte_contact"].isVisible(),
+        (p.etape, p.coordonnees_verrouillees),
+    )
+    capture("12-accord-a-donner")
+    QTest.mouseClick(page.accepte_contact.libelle, Qt.MouseButton.LeftButton)
+    cliquer("Suivant")
+
+
+@etape(1500)
+def accord_donne() -> None:
+    p = parcours()
+    controler(
+        "accord donné : retour à l'envoi, structure redéclarée avec l'accord",
+        p.etape == 1 and p.utilisateur.accepte_contact and p.coordonnees_verrouillees,
+        (p.etape, p.utilisateur.accepte_contact),
+    )
 
 
 @etape(600)

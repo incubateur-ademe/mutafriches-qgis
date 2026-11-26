@@ -49,12 +49,12 @@ DOMAINE = QgsSettingsEntryString(
     "domaine", _utilisateur, "", "Domaine de la structure, envoyé dans l'en-tête Origin (ma-collectivite.fr)."
 )
 MAIL = QgsSettingsEntryString("mail", _utilisateur, "", "Adresse e-mail de contact du déclarant.")
-# Distinct de l'e-mail, obligatoire : accord facultatif pour être sollicité (ACCEPTE_CONTACT chez Brevo)
+# Distinct de l'e-mail : accord pour être sollicité (ACCEPTE_CONTACT chez Brevo), exigé à l'accueil
 ACCEPTE_CONTACT = QgsSettingsEntryBool(
     "accepte_contact",
     _utilisateur,
     False,
-    "Accord pour être contacté (retours d'expérience, évolutions du service). Jamais coché par défaut.",
+    "Accord pour être contacté (retours d'expérience, évolutions du service). Jamais coché par défaut, exigé.",
 )
 FOND_OSM = QgsSettingsEntryBool(
     "fond_osm", _carte, True, "Ajouter un fond OpenStreetMap à l'ouverture du panneau sur un projet vide."

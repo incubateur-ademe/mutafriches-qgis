@@ -1,7 +1,6 @@
 """Page « Mutafriches » de Préférences › Options : informations déclarées (en lecture seule) et carte."""
 
 from collections.abc import Callable
-from dataclasses import replace
 from pathlib import Path
 
 from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
@@ -18,9 +17,9 @@ from qgis.PyQt.QtWidgets import (
 from ..core import reglages
 from ..core.declaration import TYPES_STRUCTURE
 from . import contenus
-from .accueil import charger_utilisateur, coordonnees_verrouillees, enregistrer_utilisateur
+from .accueil import charger_utilisateur, coordonnees_verrouillees
 from .parcours import NOM_PAGE_OPTIONS, Parcours
-from .widgets import CaseACocher, texte
+from .widgets import texte
 
 # Largeur minimale des textes d'aide : sans elle, le formulaire les replie sur quelques mots
 LARGEUR_AIDE = 520
@@ -60,10 +59,8 @@ class PageOptions(QgsOptionsPageWidget):
         self.prenom = _valeur(formulaire, contenus.LIBELLE_PRENOM)
         self.nom = _valeur(formulaire, contenus.LIBELLE_NOM)
         self.mail = _valeur(formulaire, contenus.LIBELLE_MAIL)
-        # Seul l'accord de contact reste modifiable : il doit pouvoir être donné après coup
-        self.accepte_contact = CaseACocher(contenus.LIBELLE_ACCEPTE_CONTACT, contenus.AIDE_ACCEPTE_CONTACT)
-        self.accepte_contact.setMinimumWidth(LARGEUR_AIDE)
-        formulaire.addRow("", self.accepte_contact)
+        # Exigé à l'accueil, il ne se retire pas ici : le retrait passe par la désinscription des e-mails
+        self.accepte_contact = _valeur(formulaire, contenus.LIBELLE_ACCORD_DONNE)
         self.aide_informations = texte("", "mfAide")
         self.aide_informations.setMinimumWidth(LARGEUR_AIDE)
         formulaire.addRow("", self.aide_informations)
@@ -90,9 +87,7 @@ class PageOptions(QgsOptionsPageWidget):
         )
         for champ, valeur in valeurs:
             champ.setText(valeur.strip() or contenus.VALEUR_ABSENTE)
-        self.accepte_contact.case.setChecked(utilisateur.accepte_contact)
-        # Sans coordonnées valides, l'accord n'a rien à quoi se rattacher
-        self.accepte_contact.setEnabled(utilisateur.valide)
+        self.accepte_contact.setText(contenus.ACCORD_DONNE if utilisateur.accepte_contact else contenus.ACCORD_ABSENT)
         self.aide_informations.setText(
             contenus.AIDE_OPTION_INFORMATIONS
             if coordonnees_verrouillees(utilisateur)
@@ -102,11 +97,6 @@ class PageOptions(QgsOptionsPageWidget):
 
     def apply(self) -> None:
         reglages.FOND_OSM.setValue(self.fond_osm.isChecked())
-        utilisateur = charger_utilisateur()
-        accord = self.accepte_contact.case.isChecked()
-        if utilisateur.valide and accord != utilisateur.accepte_contact:
-            # Un accord donné ici est redéclaré à la prochaine analyse (core/declaration.py)
-            enregistrer_utilisateur(replace(utilisateur, accepte_contact=accord))
         parcours = self._parcours()
         if parcours is not None:
             parcours.reglages_modifies()

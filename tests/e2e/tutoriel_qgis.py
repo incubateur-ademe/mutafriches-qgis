@@ -188,6 +188,8 @@ def accueil() -> None:
     page.type_structure.setCurrentIndex(page.type_structure.findData("collectivite"))
     page.domaine.setText("cc-montereau.fr")
     page.mail.setText("sig@exemple.fr")
+    # Exigée pour passer l'accueil
+    page.accepte_contact.case.setChecked(True)
     capture("02-se-presenter")
     # Reprise de cette seule capture (MF_TUTORIEL_ETAPES=4) : aucune déclaration envoyée à l'API
     if etapes[-1][1] is not accueil:

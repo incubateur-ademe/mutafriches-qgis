@@ -69,9 +69,14 @@ class PageAccueil(Page):
         self.nom = self._champ("nom", contenus.LIBELLE_NOM, ligne=identite)
         self.corps.addLayout(identite)
         self.mail = self._champ("mail", contenus.LIBELLE_MAIL, contenus.AIDE_MAIL)
-        # Sous l'e-mail, décochée par défaut et facultative : n'empêche jamais la déclaration
+        # Sous l'e-mail, décochée par défaut et obligatoire : l'accueil ne se valide pas sans elle
         self.accepte_contact = CaseACocher(contenus.LIBELLE_ACCEPTE_CONTACT, contenus.AIDE_ACCEPTE_CONTACT)
         self.corps.addWidget(self.accepte_contact)
+        erreur_accord = texte("", "mfErreurChamp")
+        erreur_accord.setVisible(False)
+        self.corps.addWidget(erreur_accord)
+        self.erreurs["accepte_contact"] = erreur_accord
+        self.accepte_contact.case.toggled.connect(lambda *_: erreur_accord.setVisible(False))
         self.erreur = Encadre("erreur")
         self.erreur.setVisible(False)
         self.corps.addWidget(self.erreur)
@@ -139,9 +144,12 @@ class PageAccueil(Page):
 
     def rafraichir(self) -> None:
         parcours = self.parcours
-        # Pendant la déclaration, la saisie en cours d'envoi reste affichée
-        if not parcours.declaration_en_cours and not parcours.erreurs_accueil and not parcours.erreur_declaration:
-            utilisateur = parcours.utilisateur
+        utilisateur = parcours.utilisateur
+        # Structure déjà déclarée, accord encore à donner : seules la case et la validation restent
+        verrou = parcours.coordonnees_verrouillees
+        # Pendant la déclaration ou après un refus, la saisie en cours reste affichée
+        saisie_en_cours = bool(parcours.declaration_en_cours or parcours.erreurs_accueil or parcours.erreur_declaration)
+        if verrou or not saisie_en_cours:
             self.prenom.setText(utilisateur.prenom)
             self.nom.setText(utilisateur.nom)
             self.structure.setText(utilisateur.structure)
@@ -149,7 +157,10 @@ class PageAccueil(Page):
             self.type_structure.setCurrentIndex(max(position, 0))
             self.domaine.setText(utilisateur.domaine)
             self.mail.setText(utilisateur.mail)
+        if not saisie_en_cours or parcours.erreur_declaration == contenus.ACCORD_A_DONNER:
             self.accepte_contact.case.setChecked(utilisateur.accepte_contact)
+        for champ in (self.structure, self.type_structure, self.domaine, self.prenom, self.nom, self.mail):
+            champ.setEnabled(not verrou)
         for cle, etiquette in self.erreurs.items():
             message = parcours.erreurs_accueil.get(cle, "")
             etiquette.setText(message)

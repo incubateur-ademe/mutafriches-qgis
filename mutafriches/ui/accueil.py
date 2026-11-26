@@ -19,10 +19,11 @@ class Utilisateur:
     type_structure: str = ""
     domaine: str = ""
     mail: str = ""
-    # Facultatif, jamais coché par défaut : l'e-mail obligatoire ne vaut pas accord pour être sollicité
+    # Jamais coché par défaut, mais exigé pour utiliser l'extension (ADR-0006) : l'accueil ne se
+    # valide pas sans lui
     accepte_contact: bool = False
 
-    def erreurs(self) -> dict[str, str]:
+    def erreurs_coordonnees(self) -> dict[str, str]:
         """Miroir de validerDeclaration (formulaire web) : tout est obligatoire pour l'API."""
         erreurs: dict[str, str] = {}
         if len(self.structure.strip()) < 2:
@@ -39,6 +40,13 @@ class Utilisateur:
             erreurs["nom"] = "Indiquez votre nom."
         if not FORMAT_MAIL.match(self.mail.strip()):
             erreurs["mail"] = "Indiquez une adresse e-mail valide, par exemple nom@domaine.fr."
+        return erreurs
+
+    def erreurs(self) -> dict[str, str]:
+        """Coordonnées et accord de contact : l'extension exige les deux, l'API seulement les premières."""
+        erreurs = self.erreurs_coordonnees()
+        if not self.accepte_contact:
+            erreurs["accepte_contact"] = "Cochez cette case pour utiliser l'extension."
         return erreurs
 
     @property
@@ -87,7 +95,7 @@ def enregistrer_utilisateur(utilisateur: Utilisateur) -> None:
 
 def coordonnees_verrouillees(utilisateur: Utilisateur) -> bool:
     """Structure déclarée à l'API : ses coordonnées ne se modifient plus dans l'extension (ADR-0006)."""
-    if not utilisateur.valide:
+    if utilisateur.erreurs_coordonnees():
         return False
-    # L'accord de contact reste modifiable : il ne doit pas rouvrir le reste de la saisie
+    # Une structure déclarée avant que l'accord soit exigé reste verrouillée : seule la case manque
     return bool(origine_declaree(url_api(), replace(utilisateur.declaration(), accepte_contact=False)))
