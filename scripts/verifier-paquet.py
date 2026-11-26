@@ -8,6 +8,8 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 CHAMPS_REQUIS = ("name", "qgisMinimumVersion", "description", "version", "author", "email")
+# Copie jointe à chaque release, visée par le bouton de téléchargement du site
+ZIP_STABLE = "extension-qgis-mutafriches.zip"
 INTERDITS = ("__pycache__", ".pyc", ".DS_Store", "tests/", ".venv", ".mypy_cache", ".ruff_cache")
 
 
@@ -18,6 +20,9 @@ def main() -> int:
         return 1
     archive = archives[-1]
     erreurs: list[str] = []
+    stable = RACINE / "dist" / ZIP_STABLE
+    if not stable.is_file() or stable.read_bytes() != archive.read_bytes():
+        erreurs.append(f"{ZIP_STABLE} absent ou différent de {archive.name}")
     with zipfile.ZipFile(archive) as contenu:
         noms = contenu.namelist()
         etrangers = [n for n in noms if not n.startswith("mutafriches/")]
