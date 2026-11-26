@@ -196,6 +196,21 @@ def accueil() -> None:
         cliquer("Suivant")
 
 
+def attendre_import() -> None:
+    """Patiente jusqu'à la page d'envoi : la déclaration à l'API n'a pas de durée garantie."""
+    p = parcours()
+    contexte["attente_import"] = contexte.get("attente_import", 0) + 1
+    if p.etape == 1 and not p.declaration_en_cours:
+        suivante(contexte["index"] + 1)
+    elif p.erreur_declaration or p.erreurs_accueil or contexte["attente_import"] > 30:
+        raise AssertionError(f"Accueil non validé : {p.erreur_declaration or p.erreurs_accueil or 'délai dépassé'}")
+    else:
+        QTimer.singleShot(1000, lambda: garder(attendre_import))
+
+
+etapes.append((500, attendre_import))
+
+
 @etape(1000)
 def modele_de_fichier() -> None:
     from mutafriches.ui.widgets import BoutonAide
@@ -361,8 +376,8 @@ def suivante(index: int = 0) -> None:
             rapport["erreurs"].append({"etape": fonction.__name__, "trace": traceback.format_exc()})  # type: ignore[union-attr]
             terminer()
             return
-        # L'attente des résultats enchaîne elle-même quand l'analyse est finie
-        if fonction is not attendre_resultats:
+        # Les attentes enchaînent elles-mêmes, une fois la page d'envoi ou les résultats affichés
+        if fonction not in (attendre_import, attendre_resultats):
             suivante(index + 1)
 
     QTimer.singleShot(delai, executer)
