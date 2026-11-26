@@ -238,9 +238,11 @@ def modele() -> None:
         and not any(x.startswith("Analyser mes") for x in libelles),
         libelles,
     )
+    titres = [e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()]
     controler(
-        "titre du contrôle : sites OK et KO",
-        any("4 sites OK, 6 sites KO" in e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()),
+        "contrôle : un encadré pour les sites KO, un pour les sites OK",
+        titres == ["6 sites KO (comportant des erreurs)", "4 sites OK"],
+        titres,
     )
     chemin = parcours().enregistrer_modele(str(SORTIE / "modele-friches-cnig.csv"))
     controler(
@@ -271,6 +273,8 @@ def exemple() -> None:
 @etape(800)
 def origine_refusee() -> None:
     capture("05-fichier-valide")
+    titres = [e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()]
+    controler("fichier sans erreur : le seul encadré des sites OK", titres == ["28 sites OK"], titres)
     controler(
         "mode réel par défaut sur l'API locale, signalée au bandeau",
         parcours().reel and "API personnalisée" in dock().bandeau.text(),

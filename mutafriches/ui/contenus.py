@@ -263,6 +263,7 @@ AIDE_FICHIER = (
 )
 LIEN_MODELE_CNIG = "Télécharger un modèle de fichier vide"
 AIDE_ERREUR_CNIG = "Les sites KO sont écartés de l'analyse. Corrigez le fichier puis chargez-le de nouveau. Standard : schema.data.gouv.fr (cnigfr/schema-friches)."
+AIDE_SITES_OK = "Ces sites sont prêts à être analysés."
 SOUS_TITRE_ANALYSE = "Cela peut prendre de quelques secondes à quelques minutes."
 AIDE_ERREUR_API = (
     "L'extension appelle l'API Mutafriches avec le domaine déclaré de votre structure. En cas de "

@@ -253,21 +253,17 @@ class PageImport(Page):
             self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         elif lecture is not None:
             ok, ko = lecture.sites_ok, lecture.sites_ko
+            # Un encadré par cas, chacun seulement s'il a des sites : les KO d'abord, à corriger
             if ko:
                 self.zone.addWidget(
                     Encadre(
-                        "avertissement" if ok else "erreur",
-                        f"{pluriel(len(ok), 'site')} OK, {pluriel(len(ko), 'site')} KO (comportant des erreurs)",
-                        contenus.AIDE_ERREUR_CNIG,
+                        "erreur", f"{pluriel(len(ko), 'site')} KO (comportant des erreurs)", contenus.AIDE_ERREUR_CNIG
                     )
                 )
-            else:
+            if ok:
+                remarques = "\n".join(p.message for p in lecture.problemes)
                 self.zone.addWidget(
-                    Encadre(
-                        "succes",
-                        f"{pluriel(len(ok), 'site')} lu{'s' if len(ok) > 1 else ''} dans {lecture.fichier}",
-                        "\n".join(p.message for p in lecture.problemes),
-                    )
+                    Encadre("succes", f"{pluriel(len(ok), 'site')} OK", remarques or contenus.AIDE_SITES_OK)
                 )
             # Contrôle ligne à ligne, lignes en erreur en tête
             for site in (ko + ok)[:MAX_LIGNES_AFFICHEES]:
