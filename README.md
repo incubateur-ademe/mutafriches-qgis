@@ -16,7 +16,8 @@ Seule version testée : **QGIS 3.44.14 sous macOS (Apple Silicon)**.
 
 ## Installation
 
-1. Construire le ZIP : `./scripts/package.sh` → `dist/mutafriches-<version>.zip`
+1. Télécharger [la dernière version de l'extension](https://github.com/incubateur-ademe/mutafriches-qgis/releases/latest/download/extension-qgis-mutafriches.zip),
+   ou construire le ZIP : `./scripts/package.sh` → `dist/mutafriches-<version>.zip`
 2. Dans QGIS : **Extensions › Installer/Gérer les extensions › Installer depuis un ZIP**,
    choisir le fichier, puis **Installer l'extension**. Accepter l'avertissement sur les
    extensions non vérifiées (extension locale).
@@ -112,11 +113,22 @@ Ces fichiers servent aux tests : envoyés en production, ils ajoutent leurs site
 attributaire publique de la commune et pèsent sur les statistiques d'usage. Le panneau ne les
 propose pas ; le tutoriel web donne le lien du fichier de 5 sites, pour un premier essai.
 `scripts/package.sh` les produit dans `dist/` à partir de
-`mutafriches/demo/montereau/friches-cnig-montereau.csv` ; les joindre à la release :
+`mutafriches/demo/montereau/friches-cnig-montereau.csv`.
+
+## Publier une version
+
+Pousser le tag de la version, une fois le bump fusionné dans `main` :
 
 ```bash
-gh release create vX.Y.Z dist/mutafriches-X.Y.Z.zip dist/friches-cnig-test-montereau*.csv
+git tag vX.Y.Z && git push origin vX.Y.Z
 ```
+
+`.github/workflows/release.yml` construit alors le paquet et joint quatre fichiers à la release :
+`mutafriches-X.Y.Z.zip`, sa copie `extension-qgis-mutafriches.zip` et les deux inventaires de test.
+Le bouton « Télécharger l'extension » du site vise
+`releases/latest/download/extension-qgis-mutafriches.zip` : une release publiée sans ce fichier
+casse le bouton. Ne pas renommer ce fichier sans changer le lien dans le dépôt Mutafriches
+(`apps/ui/src/features/integrer/data/tutoriel-qgis.ts`).
 
 ## Captures
 
