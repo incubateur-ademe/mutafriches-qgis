@@ -1,6 +1,7 @@
 # ADR-0005 : Déclaration de la structure au registre des intégrateurs
 
-- Statut : accepté (amende l'ADR-0003 et l'ADR-0004), amendé le 2026-11-25 (consentement séparé)
+- Statut : accepté (amende l'ADR-0003 et l'ADR-0004), amendé le 2026-11-25 (consentement séparé) ;
+  l'ADR-0006 rend l'accord de contact obligatoire et verrouille les coordonnées déclarées
 - Date : 2026-11-20
 
 ## Contexte
