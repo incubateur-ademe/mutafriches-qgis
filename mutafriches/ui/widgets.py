@@ -3,8 +3,9 @@
 from collections.abc import Callable
 
 from qgis.PyQt.QtCore import QPoint, QRect, QSize, Qt
-from qgis.PyQt.QtGui import QCursor
+from qgis.PyQt.QtGui import QCursor, QMouseEvent
 from qgis.PyQt.QtWidgets import (
+    QCheckBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -30,6 +31,47 @@ def texte(contenu: str, nom: str = "", selectionnable: bool = False) -> QLabel:
     if selectionnable:
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     return label
+
+
+class _LibelleDeCase(QLabel):
+    """Libellé qui coche sa case au clic, comme le texte d'une QCheckBox."""
+
+    def __init__(self, contenu: str, case: QCheckBox) -> None:
+        super().__init__(contenu)
+        self.case = case
+        self.setWordWrap(True)
+        self.setTextFormat(Qt.TextFormat.PlainText)
+        self.setBuddy(case)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def mousePressEvent(self, evenement: QMouseEvent) -> None:
+        if evenement.button() == Qt.MouseButton.LeftButton and self.case.isEnabled():
+            self.case.toggle()
+
+
+class CaseACocher(QWidget):
+    """Case à libellé long : QCheckBox ne passe pas à la ligne, le panneau en deviendrait trop large."""
+
+    def __init__(self, libelle: str, aide: str = "") -> None:
+        super().__init__()
+        self.case = QCheckBox()
+        self.case.setAccessibleName(libelle)
+        if aide:
+            self.case.setAccessibleDescription(aide)
+        ligne = QHBoxLayout(self)
+        ligne.setContentsMargins(0, 0, 0, 0)
+        ligne.setSpacing(8)
+        ligne.addWidget(self.case, 0, Qt.AlignmentFlag.AlignTop)
+        # Sans cela, un formulaire (page d'options) étire la ligne et décale le libellé sous la case
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        colonne = QVBoxLayout()
+        colonne.setSpacing(2)
+        colonne.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.libelle = _LibelleDeCase(libelle, self.case)
+        colonne.addWidget(self.libelle)
+        if aide:
+            colonne.addWidget(texte(aide, "mfAide"))
+        ligne.addLayout(colonne, 1)
 
 
 def texte_riche(html: str, nom: str = "") -> QLabel:

@@ -2,17 +2,14 @@ import csv
 import unittest
 from pathlib import Path
 
+from _donnees import FICHIER_CNIG_ERREURS, FICHIER_CNIG_EXEMPLE, charger_table
 from _qgis import RACINE
 from qgis.core import QgsCategorizedSymbolRenderer, QgsProject
 
 from mutafriches.carto.couches import NOM_COUCHE_MUTABILITE, champs_mutabilite, creer_couches
 from mutafriches.core.attributaire import (
-    FICHIER_CNIG_ERREURS,
-    FICHIER_CNIG_EXEMPLE,
     FICHIER_MODELE_CNIG,
     ORDRE_USAGES,
-    apparier,
-    charger_table,
     profil_ecart,
     synthese,
 )
@@ -111,13 +108,6 @@ class TestAttributaire(unittest.TestCase):
         self.assertEqual(list(s.par_usage), list(ORDRE_USAGES))
         self.assertTrue(all(s.indice_max >= 70 for s in s.sites_forte_compatibilite))
         self.assertEqual(s.version_algorithme, "v1.19")
-
-    def test_appariement_par_parcelles(self) -> None:
-        sites, _ = charger_table()
-        lecture = lire_cnig(FICHIER_CNIG_EXEMPLE)
-        apparies = apparier(sites, {s.site_id: s.parcelles for s in lecture.sites})
-        self.assertEqual(len(apparies), 28)
-        self.assertTrue(all(s.site_id.startswith("77305_") for s in apparies))
 
     def test_profils(self) -> None:
         self.assertEqual(profil_ecart(5)[0], "Profil plat")

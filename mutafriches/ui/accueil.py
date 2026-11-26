@@ -1,10 +1,11 @@
 """Utilisateur de l'extension : déclarant de sa structure (ADR-0055 de Mutafriches), mémorisé dans QGIS."""
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ..core import reglages
-from ..core.declaration import TYPES_STRUCTURE, Declaration, hote_de_domaine
+from ..core.client_api import url_api
+from ..core.declaration import TYPES_STRUCTURE, Declaration, hote_de_domaine, origine_declaree
 
 # Miroir de FORMAT_EMAIL (formulaire de déclaration web)
 FORMAT_MAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -18,8 +19,11 @@ class Utilisateur:
     type_structure: str = ""
     domaine: str = ""
     mail: str = ""
+    # Jamais coché par défaut, mais exigé pour utiliser l'extension (ADR-0006) : l'accueil ne se
+    # valide pas sans lui
+    accepte_contact: bool = False
 
-    def erreurs(self) -> dict[str, str]:
+    def erreurs_coordonnees(self) -> dict[str, str]:
         """Miroir de validerDeclaration (formulaire web) : tout est obligatoire pour l'API."""
         erreurs: dict[str, str] = {}
         if len(self.structure.strip()) < 2:
@@ -36,6 +40,13 @@ class Utilisateur:
             erreurs["nom"] = "Indiquez votre nom."
         if not FORMAT_MAIL.match(self.mail.strip()):
             erreurs["mail"] = "Indiquez une adresse e-mail valide, par exemple nom@domaine.fr."
+        return erreurs
+
+    def erreurs(self) -> dict[str, str]:
+        """Coordonnées et accord de contact : l'extension exige les deux, l'API seulement les premières."""
+        erreurs = self.erreurs_coordonnees()
+        if not self.accepte_contact:
+            erreurs["accepte_contact"] = "Cochez cette case pour utiliser l'extension."
         return erreurs
 
     @property
@@ -55,6 +66,7 @@ class Utilisateur:
             prenom=self.prenom,
             nom=self.nom,
             email=self.mail,
+            accepte_contact=self.accepte_contact,
         )
 
 
@@ -66,6 +78,7 @@ def charger_utilisateur() -> Utilisateur:
         type_structure=reglages.TYPE_STRUCTURE.value(),
         domaine=reglages.DOMAINE.value(),
         mail=reglages.MAIL.value(),
+        accepte_contact=reglages.ACCEPTE_CONTACT.value(),
     )
 
 
@@ -77,3 +90,12 @@ def enregistrer_utilisateur(utilisateur: Utilisateur) -> None:
     # Une adresse collée (https://www.exemple.fr/outil) est ramenée à son hôte, celui qui est déclaré
     reglages.DOMAINE.setValue(hote_de_domaine(utilisateur.domaine) or utilisateur.domaine.strip())
     reglages.MAIL.setValue(utilisateur.mail.strip())
+    reglages.ACCEPTE_CONTACT.setValue(utilisateur.accepte_contact)
+
+
+def coordonnees_verrouillees(utilisateur: Utilisateur) -> bool:
+    """Structure déclarée à l'API : ses coordonnées ne se modifient plus dans l'extension (ADR-0006)."""
+    if utilisateur.erreurs_coordonnees():
+        return False
+    # Une structure déclarée avant que l'accord soit exigé reste verrouillée : seule la case manque
+    return bool(origine_declaree(url_api(), replace(utilisateur.declaration(), accepte_contact=False)))

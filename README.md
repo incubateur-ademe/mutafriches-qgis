@@ -8,9 +8,9 @@ Prototype V0 (ADR-0002) : l'utilisateur se présente, envoie son inventaire de s
 qualification, une carte symbolisée par usage et un tableau de bord territorial dans le
 panneau. Objectif : captures d'écran.
 
-> **Deux modes.** En mode réel (défaut, ADR-0003), chaque site est enrichi puis évalué par l'API
-> Mutafriches existante, au nom de la structure déclarée à l'accueil. En mode démonstration,
-> les résultats sont ceux de la table attributaire de Montereau-Fault-Yonne gelée dans le plugin.
+> **Production seule.** Chaque site est enrichi puis évalué par l'API Mutafriches de production
+> (ADR-0003), au nom de la structure déclarée à l'accueil. L'extension n'a ni démonstration, ni
+> choix d'environnement, ni mode développeur (ADR-0006).
 
 Seule version testée : **QGIS 3.44.14 sous macOS (Apple Silicon)**.
 
@@ -29,15 +29,18 @@ précédente est remplacée).
 ## Tester en 3 minutes
 
 1. Ouvrir le panneau **Mutafriches** : il demande de déclarer sa structure (nom, type, domaine, prénom,
-   nom et e-mail, obligatoires, une fois). Sur un projet
+   nom et e-mail, obligatoires, une fois), avec une case décochée par défaut, elle aussi
+   obligatoire, pour accepter d'être contacté (retours d'expérience, évolutions du service). Une fois la structure
+   déclarée, ces informations ne sont plus modifiables dans l'extension. Sur un projet
    vide, un fond OpenStreetMap cadré sur la France est ajouté ; un projet qui a déjà des couches
    n'est pas modifié.
 2. Choisir un fichier CNIG Friches (CSV ou GeoJSON). Chaque ligne est contrôlée et affichée
-   OK ou KO avec ses erreurs ; les lignes KO sont écartées de l'envoi. L'infobulle du champ
+   OK ou KO avec ses erreurs ; les lignes KO sont écartées de l'envoi. Deux encadrés résument le
+   contrôle, chacun seulement s'il a des sites : les sites KO, puis les sites OK. L'infobulle du champ
    propose **Télécharger un modèle de fichier vide** : les 51 colonnes du standard, sans aucune
    ligne, à remplir avec vos sites. Envoyé tel quel, il est refusé (« aucun site »).
-   Pour une démonstration, utiliser `mutafriches/demo/montereau/friches-cnig-montereau.csv`
-   (28 sites) ou `friches-cnig-erreurs.csv` (4 sites corrects, 6 lignes en erreur).
+   Pour un essai, utiliser `tests/donnees/friches-cnig-montereau.csv` (28 sites) ou
+   `friches-cnig-erreurs.csv` (4 sites corrects, 6 lignes en erreur), contre une API de test.
 3. **Analyser mes N sites** : après l'attente, deux couches apparaissent (Mutabilité, étiquetée
    par usage et indice ; Qualification, masquée), avec un fond OpenStreetMap si le projet était
    vide.
@@ -52,49 +55,50 @@ précédente est remplacée).
    Les tables s'ouvrent aussi depuis le panneau Couches : clic droit sur la couche, « Ouvrir la
    table d'attributs », ou F6 sur la couche sélectionnée.
 
-Un fichier CNIG d'une autre commune est accepté mais ses sites ne sont pas retrouvés dans la
-table figée : le panneau le signale et affiche les résultats de Montereau.
-
 ### Réglages
 
-Tous les réglages sont dans **Préférences › Options › Mutafriches**, page aussi ouverte par le
-menu Extensions › Mutafriches (ADR-0004). Le panneau n'a ni lien de réglages ni bascule de mode :
+Les réglages sont dans **Préférences › Options › Mutafriches**, page aussi ouverte par le menu
+Extensions › Mutafriches (ADR-0004). Le panneau n'a ni lien de réglages ni bascule de mode :
 
-| Bloc | Réglages |
+| Bloc | Contenu |
 |---|---|
-| Service | Environnement : production (défaut), staging ou démonstration |
-| Vos informations | Structure, type, domaine, prénom, nom, e-mail ; « Effacer mes informations » fait revenir l'accueil |
+| Vos informations | Structure, type, domaine, prénom, nom, e-mail et accord pour être contacté : en lecture seule |
 | Carte | Ajouter ou non le fond OpenStreetMap à l'ouverture d'un projet vide |
-| Développement | Mode développeur : adresse d'API libre, délai entre sites |
 
-| Environnement | API | Bandeau |
-|---|---|---|
-| Production | `https://mutafriches.beta.gouv.fr` | aucun |
-| Staging | `https://mutafriches.incubateur.ademe.dev` | « Environnement de test (staging) » |
-| Démonstration | aucune, table figée de Montereau | aucun ; le tableau de bord précise « Démonstration » et la provenance figée |
+L'extension n'interroge que la production, `https://mutafriches.beta.gouv.fr` : aucun réglage ne
+permet d'en changer (ADR-0006). Les réglages sont enregistrés sous `plugins/mutafriches/` et
+visibles dans Options › Avancé.
 
-Changer de service vide les résultats et retire les deux couches Mutafriches du projet. Le staging se
-choisit sans mode développeur ; l'adresse libre, elle, est ignorée sans lui même si elle est enregistrée.
-`MUTAFRICHES_DEV=1` au lancement de QGIS active aussi le mode développeur. Les réglages sont
-enregistrés sous `plugins/mutafriches/` et visibles dans Options › Avancé.
+Pour les tests et les captures, l'équipe désigne une autre API au lancement de QGIS :
+
+```bash
+MUTAFRICHES_API_URL=https://mutafriches.incubateur.ademe.dev /Applications/QGIS.app/Contents/MacOS/QGIS
+```
+
+Le panneau affiche alors le bandeau « Environnement de test », suivi de l'adresse.
+`MUTAFRICHES_INTERVALLE_MS` raccourcit le délai entre deux sites ; elle n'est lue que face à une
+API de test.
 
 L'extension déclare la structure au registre des intégrateurs de Mutafriches
-(`POST /api/integrateurs/declarations`, canal `qgis`, ADR-0005), une fois par environnement, puis
+(`POST /api/integrateurs/declarations`, canal `qgis`, ADR-0005), une fois par adresse d'API, puis
 appelle l'API avec le domaine déclaré dans `Origin` et `X-Mutafriches-Client: qgis/<version>`.
 Prénom, nom et e-mail sont conservés dans l'outil d'e-mailing de Mutafriches (Brevo), pas dans
-sa base. Une API sans registre (production avant déploiement) reçoit l'origine historique
+sa base. L'e-mail, obligatoire, sert au suivi de l'accès ; la case d'accord pour être sollicité,
+obligatoire elle aussi (ADR-0006), est transmise en `accepteContact: true`. Une API sans registre (production avant déploiement) reçoit l'origine historique
 `https://qgis.mutafriches.beta.gouv.fr`. Un site prend deux à cinq secondes ; un site dont la réponse dépasse le délai réseau
 de QGIS (60 s par défaut) est retenté une fois, puis listé en échec sans interrompre les
 suivants.
 
-Pour jouer le mode réel sans appeler Mutafriches : `python3 tests/serveur_factice.py 8799`, puis,
-en mode développeur, adresse d'API libre `http://127.0.0.1:8799`.
+Pour jouer le parcours sans appeler Mutafriches : `python3 tests/serveur_factice.py 8799`, puis
+lancer QGIS avec `MUTAFRICHES_API_URL=http://127.0.0.1:8799`.
 
 ### Revoir l'accueil
 
-L'accueil (déclaration de la structure) n'est proposé que tant qu'elle est incomplète. Pour le revoir : le lien
-**Modifier** en bas de la page d'envoi, ou **Effacer mes informations** dans les réglages.
-QGIS fermé, `./scripts/reinitialiser.sh` fait la même chose et oublie les déclarations faites.
+L'accueil (déclaration de la structure) n'est proposé que tant qu'elle est incomplète. Une fois
+la structure déclarée, ses coordonnées ne se modifient plus dans l'extension (ADR-0006) : la
+désinstaller ne les efface pas, QGIS garde ses réglages dans le profil. Le lien **Modifier**, en
+bas de la page d'envoi, ne revient qu'après un refus d'accès de l'API. Pour repartir de zéro,
+QGIS fermé : `./scripts/reinitialiser.sh`, qui oublie aussi les déclarations faites.
 
 ## Tester de bout en bout (équipe)
 
@@ -106,14 +110,14 @@ jouer le parcours complet contre l'API :
 | [friches-cnig-test-montereau-5-sites.csv](https://github.com/incubateur-ademe/mutafriches-qgis/releases/latest/download/friches-cnig-test-montereau-5-sites.csv) | 5 | une vingtaine de secondes |
 | [friches-cnig-test-montereau.csv](https://github.com/incubateur-ademe/mutafriches-qgis/releases/latest/download/friches-cnig-test-montereau.csv) | 28 | deux à trois minutes |
 
-1. Préférences › Options › Mutafriches : choisir l'environnement **Staging**. Le panneau affiche le bandeau « Environnement de test (staging) ».
+1. Lancer QGIS avec `MUTAFRICHES_API_URL=https://mutafriches.incubateur.ademe.dev` : le panneau affiche le bandeau « Environnement de test ».
 2. Charger l'un des deux fichiers, puis **Analyser mes N sites**.
 
 Ces fichiers servent aux tests : envoyés en production, ils ajoutent leurs sites à la table
 attributaire publique de la commune et pèsent sur les statistiques d'usage. Le panneau ne les
 propose pas ; le tutoriel web donne le lien du fichier de 5 sites, pour un premier essai.
 `scripts/package.sh` les produit dans `dist/` à partir de
-`mutafriches/demo/montereau/friches-cnig-montereau.csv`.
+`tests/donnees/friches-cnig-montereau.csv`.
 
 ## Publier une version
 
@@ -136,10 +140,11 @@ casse le bouton. Ne pas renommer ce fichier sans changer le lien dans le dépôt
 
 ### Captures du tutoriel web
 
-`./scripts/captures-tutoriel.sh` joue le parcours nominal dans QGIS contre l'API de staging et
-écrit 13 captures WebP (1600 px) dans `../mutafriches/apps/ui/public/images/tutoriel-qgis/`,
-lues par la page `/integrer-mutafriches/extension-qgis` de Mutafriches. Chaque passage analyse
-réellement 32 sites sur le staging. `MF_TUTORIEL_API` change l'API visée, `MF_TUTORIEL_ETAPES=2`
+`./scripts/captures-tutoriel.sh` joue le parcours nominal dans QGIS contre l'API de staging,
+jamais la production, et écrit 11 captures WebP (1600 px) dans
+`../mutafriches/apps/ui/public/images/tutoriel-qgis/`, lues par la page
+`/utiliser-mutafriches/extension-qgis` de Mutafriches. Le bandeau de test y est masqué. Chaque
+passage analyse réellement 28 sites sur le staging. `MF_TUTORIEL_API` change l'API visée, `MF_TUTORIEL_ETAPES=2`
 ne reprend que la capture d'installation.
 
 ### Captures en mode clair (macOS)
@@ -180,10 +185,12 @@ officielle de QGIS. Les constantes recopiées de Mutafriches sont comparées à 
 de l'utilisateur n'est pas modifié) : captures dans `captures/`, rapport et journal dans
 `dist/e2e/`.
 
-### Données de démonstration
+### Jeux d'essai et données figées
 
-`python3 outils/figer_attributaire.py` (réseau) gèle la table attributaire de Montereau
-(`mutafriches/demo/montereau/`) et en dérive le fichier CNIG d'exemple et un fichier refusé.
+`python3 outils/figer_attributaire.py` (réseau) gèle la table attributaire de Montereau dans
+`tests/donnees/` et en dérive l'inventaire CNIG d'essai et un fichier avec erreurs : ces fichiers
+servent aux tests, au serveur factice et aux captures, et restent hors du ZIP. Le même outil écrit
+le modèle de fichier vide de l'extension (`mutafriches/modeles/modele-cnig.csv`).
 
 Les données du parcours site à site (conservées pour une future vue de détail) :
 `./outils/figer-reponses.sh` régénère tout :

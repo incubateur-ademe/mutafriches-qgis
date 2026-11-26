@@ -6,13 +6,14 @@ Extension QGIS de Mutafriches : qualifier un site composé d'une ou plusieurs pa
 cadastrales, puis consulter son potentiel de mutabilité pour sept usages et l'indice de
 fiabilité associé, directement dans QGIS.
 
-**Phase actuelle : mode réel sur l'API existante (ADR-0003), avec repli démonstration.**
+**Phase actuelle : analyse réelle sur l'API de production, seule API interrogée (ADR-0003, ADR-0006).**
 L'utilisateur se présente, envoie un inventaire au **standard CNIG Friches**, et reçoit deux
 couches attributaires (mutabilité, qualification), une carte symbolisée par usage et un tableau
 de bord territorial dans le panneau. En mode réel, chaque site est enrichi puis évalué par l'API
 (`POST /enrichissement`, `POST /evaluation/calculer`), site par site, avec le domaine de la
-structure déclarée à l'accueil (ADR-0005), en production ou en staging. En démonstration, les résultats
-sont la table attributaire de Montereau figée. Suite prévue : `docs/plan-implementation-reelle.md`. Le parcours site à
+structure déclarée à l'accueil (ADR-0005). Ni démonstration, ni choix d'environnement, ni mode
+développeur : une autre API ne se désigne que par variable d'environnement, pour les tests et
+les captures de l'équipe. Suite prévue : `docs/plan-implementation-reelle.md`. Le parcours site à
 site (ADR-0001) reste dans le code, hors panneau.
 
 Projet Beta.gouv / incubateur ADEME. Application web et API :
@@ -39,29 +40,29 @@ mutafriches/                 # Le plugin (nom du dossier = identifiant du plugin
 │   ├── referentiel.py       # Champs, valeurs, libellés, badges (miroir de shared-types et apps/ui)
 │   ├── recapitulatif.py     # Récapitulatif, détail d'usage, valeurs des étapes (miroir des builders web)
 │   ├── cnig.py              # Lecture et contrôle d'un fichier CNIG Friches (51 colonnes)
-│   ├── reglages.py          # Réglages déclarés dans l'arbre de QGIS (plugins/mutafriches/...)
+│   ├── reglages.py          # Réglages déclarés dans l'arbre de QGIS, adresse d'API de test (variable d'environnement)
 │   ├── client_api.py        # Appels réels : enrichissement puis calcul, site par site
 │   ├── declaration.py       # Déclaration de la structure au registre des intégrateurs (ADR-0005)
-│   ├── attributaire.py      # Ligne attributaire (API ou table figée), appariement, synthèse
+│   ├── attributaire.py      # Ligne attributaire d'un site analysé, synthèse territoriale
 │   ├── modele.py            # Site analysé (parcours site à site, hors panneau)
 │   ├── service.py           # Interface du service (enrichir / évaluer), erreurs
-│   └── service_simule.py    # Implémentation simulée (réponses figées, délai, erreur)
+│   └── service_simule.py    # Implémentation simulée du parcours site à site, hors panneau
 ├── carto/                   # Interactions cartographiques
 │   ├── couches.py           # Couches mutabilité et qualification, symbologie, étiquettes, fond OSM
 │   ├── exemple.py           # Couche de parcelles d'exemple (parcours site à site)
 │   └── selection.py         # Identifiant cadastral, contiguïté, surbrillance (idem)
 ├── ui/                      # Panneau latéral (widgets Qt natifs)
-│   ├── accueil.py           # Déclarant : structure, type, domaine, prénom, nom, e-mail (obligatoires)
-│   ├── options.py           # Page « Mutafriches » de Préférences › Options
-│   ├── parcours.py          # État : fichier CNIG, analyse réelle ou démonstration, résultats
+│   ├── accueil.py           # Déclarant : structure, type, domaine, prénom, nom, e-mail (obligatoires), verrou
+│   ├── options.py           # Page « Mutafriches » de Préférences › Options (coordonnées en lecture seule)
+│   ├── parcours.py          # État : fichier CNIG, analyse par l'API, résultats
 │   ├── prototype.py         # Pages Accueil, Import et Résultats (tableau de bord territorial)
 │   ├── graphiques.py        # Anneaux, légendes et petits tableaux dessinés avec QPainter
 │   ├── contenus.py          # Wording
 │   ├── pages.py             # Socle des pages, chargement, champ de saisie terrain
 │   ├── resultats.py         # Détail d'un site (hors panneau, à rebrancher)
 │   └── dock.py              # Bandeau, en-tête, page courante
-└── demo/
-    ├── montereau/           # Table attributaire 77305 figée, fichiers CNIG (exemple, erreurs, modèle)
+├── modeles/modele-cnig.csv  # Modèle de fichier vide proposé à l'utilisateur
+└── demo/                    # Parcours site à site, hors panneau
     ├── terrain/parcelles.geojson  # Parcelles d'exemple (IGN, Trélazé), outils/generer_terrain.py
     ├── scenarios/*.json     # Réponses détaillées de 3 friches de l'exemple, outils/figer-reponses.sh
     └── generique.json       # Grille du profil générique, idem (ne pas éditer)
@@ -69,6 +70,7 @@ captures/                    # Captures QGIS et tableaux de bord produits par sc
 outils/                      # Génération des données de démonstration (hors ZIP)
 scripts/                     # Packaging, tests, parcours E2E dans QGIS
 tests/                       # Tests unittest exécutés avec le Python de QGIS
+tests/donnees/               # Jeux d'essai de Montereau (table figée, inventaires CNIG), hors du ZIP
 ```
 
 ## Règles de code STRICTES
@@ -123,8 +125,8 @@ Une ligne, le **pourquoi** et jamais le quoi. Pas de docstrings longues sauf sé
 - Composants accessibles : libellés associés aux champs (`setBuddy`), `setAccessibleName`
   sur les boutons sans texte explicite, navigation clavier fonctionnelle.
 - Le panneau doit rester utilisable étroit (≈ 320 px) : défilement vertical, pas d'horizontal.
-- Bandeau réservé au staging et à une adresse d'API libre (mode développeur). Pas de bandeau en
-  démonstration : le tableau de bord y précise « Démonstration » et la provenance figée des résultats.
+- Bandeau réservé à l'API de test désignée par `MUTAFRICHES_API_URL` (tests et captures de
+  l'équipe). Jamais de bandeau en production.
 
 ### 7. Séparation réel / simulé
 
@@ -150,8 +152,8 @@ Une ligne, le **pourquoi** et jamais le quoi. Pas de docstrings longues sauf sé
   canal réseau, compatibilité de version).
 - **README** : le mettre à jour si l'installation, le packaging ou le parcours change.
 - **Proposer systématiquement des tests manuels dans QGIS** en fin de feature : parcours
-  numéroté, cas limites, pièges (profil QGIS, démonstration à réinitialiser, extension à
-  recharger).
+  numéroté, cas limites, pièges (profil QGIS, coordonnées déjà déclarées dans le profil,
+  extension à recharger).
 - **Proposer un titre et un descriptif de PR** (Conventional Commits, moins de 70 caractères).
 
 ### Vérification post-implémentation
@@ -185,10 +187,11 @@ QGIS. Préciser la version et l'OS réellement testés.
 
 ### Données de démonstration
 
-- Prototype : `python3 outils/figer_attributaire.py` gèle la table attributaire publique de
-  Montereau (`demo/montereau/`), ne jamais éditer les fichiers produits. Le modèle CNIG proposé
-  à l'utilisateur est vide (les 51 colonnes, aucune ligne) : il ne peut pas être envoyé tel
-  quel ; les fichiers de Montereau servent aux démonstrations et aux tests seulement. Les sites SCET nommés
+- Jeux d'essai : `python3 outils/figer_attributaire.py` gèle la table attributaire publique de
+  Montereau dans `tests/donnees/`, hors du ZIP ; ne jamais éditer les fichiers produits. Le modèle
+  CNIG proposé à l'utilisateur (`mutafriches/modeles/`) est vide (les 51 colonnes, aucune ligne) :
+  il ne peut pas être envoyé tel quel ; les fichiers de Montereau servent aux tests, au serveur
+  factice et aux captures seulement. Les sites SCET nommés
   sont des données partenaires publiques via l'API ; la saisie est déclarative.
 - Terrain : modifier `outils/generer_terrain.py`, jamais les GeoJSON à la main.
 - Réponses simulées : `./outils/figer-reponses.sh` (nécessite `../mutafriches` avec
@@ -265,7 +268,13 @@ jamais en `--force`.
 - Une API sans registre (404 sur la déclaration) reçoit l'origine historique
   `https://qgis.mutafriches.beta.gouv.fr`, toujours acceptée.
 - Prénom, nom et e-mail partent chez Brevo, jamais en base : ne pas les journaliser ni les
-  transmettre ailleurs. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
+  transmettre ailleurs.
+- La case « J'accepte d'être contacté·e… » (`accepteContact`, attribut Brevo `ACCEPTE_CONTACT`)
+  est **obligatoire** pour utiliser l'extension (ADR-0006), jamais pré-cochée : sans elle,
+  l'accueil est refusé (`Utilisateur.erreurs`), alors que l'API n'exige que les coordonnées
+  (`erreurs_coordonnees`). Les options l'affichent sans permettre de la retirer. Une structure
+  déclarée sans accord par une version antérieure repasse par l'accueil, coordonnées verrouillées.
+  La clé n'est envoyée que si elle vaut `true` ; l'API ne retire jamais un accord. Les 9 critères manuels sont tous obligatoires (« ne-sait-pas », jamais vide).
 - 100 requêtes par minute et par IP, deux requêtes par site : ne pas paralléliser.
 - L'API répond **500 « Erreur lors de l'enrichissement »** quand aucune parcelle du site
   n'existe au cadastre : c'est un échec du site, à expliquer en clair, jamais « Erreur 500 ».
@@ -274,19 +283,23 @@ jamais en `--force`.
 - **Réglages** : tous déclarés dans `core/reglages.py` (ADR-0004), jamais de clé `QgsSettings`
   en dur ailleurs ; tout nouveau réglage y entre avec sa description, puis dans `ui/options.py`
   s'il doit être modifiable. Ne jamais exposer un seuil ou un paramètre de calcul.
-- Trois environnements : production, staging, démonstration. Le staging se choisit dans les
-  options sans mode développeur (depuis la 0.3.2) ; l'adresse d'API libre n'est lue qu'en mode développeur ; tout changement d'environnement doit vider les
-  résultats et retirer les couches (`canvas.refreshAllLayers()` ensuite, sinon la carte garde
-  le dernier rendu).
+- **Production seule** (ADR-0006) : aucun réglage, aucune option, aucun mode ne change d'API. Ne
+  jamais en réintroduire. Les tests et les captures désignent une autre API par
+  `MUTAFRICHES_API_URL` au lancement de QGIS (`MUTAFRICHES_INTERVALLE_MS` pour le délai, lue
+  seulement face à une API de test) ; le panneau affiche alors le bandeau « Environnement de test ».
+- **Coordonnées verrouillées** une fois la structure déclarée (`coordonnees_verrouillees`,
+  `ui/accueil.py`) : plus de lien « Modifier », options en lecture seule, pas de bouton
+  d'effacement. Seul un refus d'accès de l'API (403, qui oublie la déclaration) rouvre la saisie. Désinstaller l'extension n'efface pas les réglages du
+  profil : ne jamais le promettre à l'utilisateur.
 - QGIS interrompt lui-même une requête de plus de 60 s (« Operation canceled ») : c'est un
   échec du site, retenté une fois, jamais une erreur bloquante pour l'inventaire.
 - `scripts/captures-tutoriel.sh` écrit les captures du tutoriel web dans le dépôt voisin
-  Mutafriches, contre le staging réel ; ne pas les retoucher à la main.
+  Mutafriches, contre le staging réel, jamais la production ; ne pas les retoucher à la main.
 - `tests/serveur_factice.py` sert aux tests unitaires et à l'E2E ; ne jamais présenter un
   passage contre lui comme un test contre la production.
 - Les réglages s'écrivent dans le profil courant : un test qui en change un doit le remettre en
-  état (`entree.remove()`). Un profil de test les pose dans la section `[plugins]` de son
-  fichier de réglages, avec `mutafriches\dev=true` pour qu'une adresse d'API locale soit lue.
+  état (`entree.remove()`). Une adresse d'API locale se pose dans `os.environ`, jamais dans un
+  réglage, et se retire en fin de test.
 
 ### Fond de carte et cadrage
 

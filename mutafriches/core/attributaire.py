@@ -1,6 +1,5 @@
-"""Table attributaire figée (GET /api/attributaire/sites) et synthèse territoriale du prototype."""
+"""Sites analysés par l'API et synthèse territoriale du tableau de bord."""
 
-import json
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,15 +10,12 @@ from .referentiel import CHAMPS_PAR_CLE, USAGES, badge_potentiel
 # Réponse JSON de l'API : structure libre, vérifiée à l'usage
 Json = dict[str, Any]
 
-DOSSIER_MONTEREAU = Path(__file__).resolve().parent.parent / "demo" / "montereau"
-FICHIER_ATTRIBUTAIRE = DOSSIER_MONTEREAU / "attributaire-77305.geojson"
-FICHIER_CNIG_EXEMPLE = DOSSIER_MONTEREAU / "friches-cnig-montereau.csv"
-FICHIER_CNIG_ERREURS = DOSSIER_MONTEREAU / "friches-cnig-erreurs.csv"
-FICHIER_MODELE_CNIG = DOSSIER_MONTEREAU / "modele-cnig.csv"
+# Modèle vide proposé à l'utilisateur : les colonnes du standard, aucune ligne
+FICHIER_MODELE_CNIG = Path(__file__).resolve().parent.parent / "modeles" / "modele-cnig.csv"
 
 # Ordre des colonnes d'usage : usages les plus souvent prioritaires en premier. Valeur provisoire
 # à caler sur Metabase (répartition nationale des usages prioritaires) ; ici l'ordre observé sur
-# la table figée.
+# l'inventaire de Montereau-Fault-Yonne.
 ORDRE_USAGES: tuple[str, ...] = (
     "renaturation",
     "tertiaire",
@@ -122,8 +118,7 @@ class Synthese:
     sites_forte_compatibilite: list[SiteAttributaire] = field(default_factory=list)
     sites_a_qualifier: list[SiteAttributaire] = field(default_factory=list)
     version_algorithme: str = ""
-    date_table: str = ""
-    # Provenance affichée sous le titre (table figée ou API)
+    # Provenance affichée sous le titre
     provenance: str = ""
 
 
@@ -143,37 +138,6 @@ def libelle_saisie(cle: str, valeur: object) -> str:
     if champ is None or valeur is None:
         return "" if valeur is None else str(valeur)
     return dict(champ.options).get(str(valeur), str(valeur))
-
-
-def charger_table(fichier: Path = FICHIER_ATTRIBUTAIRE) -> tuple[list[SiteAttributaire], Json]:
-    collection = json.loads(fichier.read_text(encoding="utf-8"))
-    sites = []
-    for entite in collection["features"]:
-        p = entite["properties"]
-        indices = {u: float(p[f"indice_{u}"]) for u in USAGES if p.get(f"indice_{u}") is not None}
-        sites.append(
-            SiteAttributaire(
-                cle=str(p["cle_site"]),
-                nom=str(p.get("nom") or f"Site {p.get('parcelle_predominante') or p['cle_site']}"),
-                parcelles=str(p["parcelles"]).split("|"),
-                commune=str(p.get("commune") or ""),
-                code_insee=str(p["code_insee"]),
-                indices=indices,
-                usage_prioritaire=p.get("usage_prioritaire"),
-                usages_exclus=[u for u in str(p.get("usages_exclus") or "").split("|") if u],
-                fiabilite=float(p["fiabilite"]),
-                fiabilite_niveau=str(p["fiabilite_niveau"]),
-                saisie_declarative=bool(p.get("saisie_declarative")),
-                proprietes=p,
-                geometrie=entite.get("geometry"),
-            )
-        )
-    meta: Json = {
-        "avertissement": collection.get("avertissement", ""),
-        "figeLe": collection.get("figeLe", ""),
-        "versionAlgorithme": sites[0].proprietes.get("version_algorithme", "") if sites else "",
-    }
-    return sites, meta
 
 
 def site_depuis_api(
@@ -212,18 +176,6 @@ def site_depuis_api(
     )
 
 
-def apparier(sites: list[SiteAttributaire], parcelles_par_site_id: dict[str, list[str]]) -> list[SiteAttributaire]:
-    """Sites de la table dont les parcelles sont exactement celles d'un site du fichier envoyé."""
-    par_cle = {",".join(sorted(parcelles)): site_id for site_id, parcelles in parcelles_par_site_id.items()}
-    apparies = []
-    for site in sites:
-        site_id = par_cle.get(",".join(sorted(site.parcelles)))
-        if site_id is not None:
-            site.site_id = site_id
-            apparies.append(site)
-    return apparies
-
-
 def _dominant(valeurs: list[str]) -> str:
     presentes = [v for v in valeurs if v]
     return Counter(presentes).most_common(1)[0][0] if presentes else ""
@@ -255,9 +207,5 @@ def synthese(sites: list[SiteAttributaire], meta: Json) -> Synthese:
         sites_forte_compatibilite=forte,
         sites_a_qualifier=a_qualifier,
         version_algorithme=str(meta.get("versionAlgorithme", "")),
-        date_table=str(meta.get("figeLe", "")),
-        provenance=str(
-            meta.get("provenance")
-            or f"Algorithme {meta.get('versionAlgorithme', '')} · table figée le {meta.get('figeLe', '')}"
-        ),
+        provenance=str(meta.get("provenance", "")),
     )

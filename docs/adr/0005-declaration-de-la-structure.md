@@ -1,6 +1,7 @@
 # ADR-0005 : Déclaration de la structure au registre des intégrateurs
 
-- Statut : accepté (amende l'ADR-0003 et l'ADR-0004)
+- Statut : accepté (amende l'ADR-0003 et l'ADR-0004), amendé le 2026-11-25 (consentement séparé) ;
+  l'ADR-0006 rend l'accord de contact obligatoire et verrouille les coordonnées déclarées
 - Date : 2026-11-20
 
 ## Contexte
@@ -32,6 +33,26 @@ même structure. Prénom, nom et e-mail sont obligatoires et partent chez Brevo,
 - **Refus** : un 403 pendant l'analyse oublie l'origine mémorisée (domaine révoqué, registre
   vidé), la suivante redéclare. Un domaine révoqué est expliqué, avec l'adresse de contact.
 - Le réglage « Origine envoyée » du mode développeur est retiré : l'origine vient du registre.
+
+## Amendement du 2026-11-25 : consentement séparé de l'e-mail
+
+L'e-mail étant obligatoire, sa saisie ne peut pas valoir accord pour être sollicité. L'API
+distingue désormais les deux (PR 285 de Mutafriches) : l'e-mail sert au suivi de l'accès et aux
+échanges sur le fonctionnement du service ; un champ facultatif `accepteContact` (booléen strict)
+pose l'attribut Brevo `ACCEPTE_CONTACT`, qu'une déclaration ultérieure ne remet jamais à faux.
+
+- **Case** sous l'e-mail, à l'accueil et dans les options, libellé du formulaire web (comparé
+  par `tests/test_miroirs.py`). Décochée par défaut, facultative, sans effet sur l'accès.
+  Mémorisée dans `plugins/mutafriches/utilisateur/accepte_contact`. Le consentement des 0.3.x
+  (libellé et finalité différents) n'est pas repris.
+- **Envoi** : la clé `accepteContact: true` n'entre dans le corps que si la case est cochée.
+  Toujours l'envoyer aurait changé l'empreinte de chaque déclaration existante et redéclaré tous
+  les utilisateurs à leur analyse suivante (5 déclarations par heure et par IP).
+- **Empreinte** : cocher la case change l'empreinte, donc renvoie la déclaration une fois. Une
+  empreinte mémorisée avec accord reste valable case décochée : la décocher ne renvoie rien,
+  puisque l'API ne retire pas un accord (le retrait passe par la désinscription des e-mails).
+- **Publication** : tant que la PR 285 n'est pas en production, l'API accepte le champ mais
+  l'ignore ; une version qui l'envoie ne doit pas être publiée avant.
 
 ## Conséquences
 

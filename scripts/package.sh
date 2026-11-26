@@ -19,6 +19,6 @@ echo "$SORTIE ($(du -h "$SORTIE" | cut -f1))"
 cp "$SORTIE" "$RACINE/dist/extension-qgis-mutafriches.zip"
 # Vrais sites de Montereau, pour les tests de l'équipe contre le staging : l'inventaire complet,
 # et ses cinq premiers sites pour un passage rapide
-INVENTAIRE="$RACINE/mutafriches/demo/montereau/friches-cnig-montereau.csv"
+INVENTAIRE="$RACINE/tests/donnees/friches-cnig-montereau.csv"
 cp "$INVENTAIRE" "$RACINE/dist/friches-cnig-test-montereau.csv"
 head -n 6 "$INVENTAIRE" > "$RACINE/dist/friches-cnig-test-montereau-5-sites.csv"

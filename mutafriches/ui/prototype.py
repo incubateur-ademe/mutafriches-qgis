@@ -28,7 +28,19 @@ from .accueil import Utilisateur
 from .graphiques import tableau
 from .pages import Chargement, Page, pluriel
 from .parcours import Parcours
-from .widgets import ActionAide, Encadre, badge, bouton, entete_champ, lien, separateur, texte, texte_riche, vider
+from .widgets import (
+    ActionAide,
+    CaseACocher,
+    Encadre,
+    badge,
+    bouton,
+    entete_champ,
+    lien,
+    separateur,
+    texte,
+    texte_riche,
+    vider,
+)
 
 MAX_LIGNES_AFFICHEES = 40
 
@@ -57,11 +69,20 @@ class PageAccueil(Page):
         self.nom = self._champ("nom", contenus.LIBELLE_NOM, ligne=identite)
         self.corps.addLayout(identite)
         self.mail = self._champ("mail", contenus.LIBELLE_MAIL, contenus.AIDE_MAIL)
+        # Sous l'e-mail, décochée par défaut et obligatoire : l'accueil ne se valide pas sans elle
+        self.accepte_contact = CaseACocher(contenus.LIBELLE_ACCEPTE_CONTACT, contenus.AIDE_ACCEPTE_CONTACT)
+        self.corps.addWidget(self.accepte_contact)
+        erreur_accord = texte("", "mfErreurChamp")
+        erreur_accord.setVisible(False)
+        self.corps.addWidget(erreur_accord)
+        self.erreurs["accepte_contact"] = erreur_accord
+        self.accepte_contact.case.toggled.connect(lambda *_: erreur_accord.setVisible(False))
         self.erreur = Encadre("erreur")
         self.erreur.setVisible(False)
         self.corps.addWidget(self.erreur)
         self.corps.addSpacing(6)
         # Sous le formulaire, et non au pied du panneau : la suite se lit dans la continuité des champs
+        self.corps.addWidget(texte(contenus.ACCUEIL_NON_MODIFIABLE, "mfAide"))
         self.suivant = bouton("Suivant", "primaire", self._valider)
         self.corps.addWidget(self.suivant)
         self.corps.addWidget(
@@ -114,6 +135,7 @@ class PageAccueil(Page):
             type_structure=str(self.type_structure.currentData() or ""),
             domaine=self.domaine.text(),
             mail=self.mail.text(),
+            accepte_contact=self.accepte_contact.case.isChecked(),
         )
 
     def _valider(self) -> None:
@@ -122,9 +144,12 @@ class PageAccueil(Page):
 
     def rafraichir(self) -> None:
         parcours = self.parcours
-        # Pendant la déclaration, la saisie en cours d'envoi reste affichée
-        if not parcours.declaration_en_cours and not parcours.erreurs_accueil and not parcours.erreur_declaration:
-            utilisateur = parcours.utilisateur
+        utilisateur = parcours.utilisateur
+        # Structure déjà déclarée, accord encore à donner : seules la case et la validation restent
+        verrou = parcours.coordonnees_verrouillees
+        # Pendant la déclaration ou après un refus, la saisie en cours reste affichée
+        saisie_en_cours = bool(parcours.declaration_en_cours or parcours.erreurs_accueil or parcours.erreur_declaration)
+        if verrou or not saisie_en_cours:
             self.prenom.setText(utilisateur.prenom)
             self.nom.setText(utilisateur.nom)
             self.structure.setText(utilisateur.structure)
@@ -132,6 +157,10 @@ class PageAccueil(Page):
             self.type_structure.setCurrentIndex(max(position, 0))
             self.domaine.setText(utilisateur.domaine)
             self.mail.setText(utilisateur.mail)
+        if not saisie_en_cours or parcours.erreur_declaration == contenus.ACCORD_A_DONNER:
+            self.accepte_contact.case.setChecked(utilisateur.accepte_contact)
+        for champ in (self.structure, self.type_structure, self.domaine, self.prenom, self.nom, self.mail):
+            champ.setEnabled(not verrou)
         for cle, etiquette in self.erreurs.items():
             message = parcours.erreurs_accueil.get(cle, "")
             etiquette.setText(message)
@@ -177,10 +206,6 @@ class PageImport(Page):
         self.lien_utilisateur = bouton("Modifier", "lien", parcours.modifier_utilisateur)
         ligne.addWidget(self.lien_utilisateur)
         self.pied_layout.addLayout(ligne)
-        # Démonstration, staging et autres réglages : page « Mutafriches » des options de QGIS.
-        # Sans bandeau ni lien, ce rappel est le seul signe que l'envoi ne part pas vers l'API.
-        self.rappel_demonstration = texte(contenus.RAPPEL_DEMONSTRATION, "mfAide")
-        self.pied_layout.addWidget(self.rappel_demonstration)
 
     def _telecharger_modele(self) -> None:
         # Dossier de départ explicite : sans lui la fenêtre s'ouvre à la racine du disque, en lecture seule
@@ -212,20 +237,17 @@ class PageImport(Page):
             traites, total = parcours.avancement
             self.zone.addWidget(
                 Chargement(
-                    f"Analyse en cours : {traites} / {total} sites"
-                    if parcours.reel
-                    else f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
+                    f"Analyse en cours : {traites} / {total} sites",
                     contenus.SOUS_TITRE_ANALYSE,
-                    avancement=parcours.avancement if parcours.reel else None,
+                    avancement=parcours.avancement,
                 )
             )
             self.zone.addWidget(bouton("Annuler l'analyse", "secondaire", parcours.annuler_analyse))
         elif parcours.erreur_api is not None:
             self.zone.addWidget(Encadre("erreur", "Analyse impossible", parcours.erreur_api.message))
-            if parcours.reel:
-                # L'aide dépend de la cause : accès à l'API, ou sites que l'API n'a pas su traiter
-                aide = contenus.AIDE_ERREUR_API if parcours.erreur_api.bloquante else contenus.AIDE_AUCUN_SITE
-                self.zone.addWidget(texte(aide, "mfAide"))
+            # L'aide dépend de la cause : accès à l'API, ou sites que l'API n'a pas su traiter
+            aide = contenus.AIDE_ERREUR_API if parcours.erreur_api.bloquante else contenus.AIDE_AUCUN_SITE
+            self.zone.addWidget(texte(aide, "mfAide"))
         elif lecture is not None and lecture.bloquants:
             self.zone.addWidget(
                 Encadre(
@@ -236,21 +258,17 @@ class PageImport(Page):
             self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         elif lecture is not None:
             ok, ko = lecture.sites_ok, lecture.sites_ko
+            # Un encadré par cas, chacun seulement s'il a des sites : les KO d'abord, à corriger
             if ko:
                 self.zone.addWidget(
                     Encadre(
-                        "avertissement" if ok else "erreur",
-                        f"{pluriel(len(ok), 'site')} OK, {pluriel(len(ko), 'site')} KO (comportant des erreurs)",
-                        contenus.AIDE_ERREUR_CNIG,
+                        "erreur", f"{pluriel(len(ko), 'site')} KO (comportant des erreurs)", contenus.AIDE_ERREUR_CNIG
                     )
                 )
-            else:
+            if ok:
+                remarques = "\n".join(p.message for p in lecture.problemes)
                 self.zone.addWidget(
-                    Encadre(
-                        "succes",
-                        f"{pluriel(len(ok), 'site')} lu{'s' if len(ok) > 1 else ''} dans {lecture.fichier}",
-                        "\n".join(p.message for p in lecture.problemes),
-                    )
+                    Encadre("succes", f"{pluriel(len(ok), 'site')} OK", remarques or contenus.AIDE_SITES_OK)
                 )
             # Contrôle ligne à ligne, lignes en erreur en tête
             for site in (ko + ok)[:MAX_LIGNES_AFFICHEES]:
@@ -269,15 +287,14 @@ class PageImport(Page):
                 self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         utilisateur = parcours.utilisateur
         self.utilisateur.setText(utilisateur.resume)
-        # Rien de saisi à l'accueil (démonstration) : le lien y ramène, sans « Modifier » orphelin
-        self.lien_utilisateur.setText("Modifier" if utilisateur.resume else "Me présenter")
+        # Structure déclarée : ses coordonnées ne se modifient plus, le lien disparaît (ADR-0006)
+        self.lien_utilisateur.setVisible(not parcours.coordonnees_verrouillees)
         n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Analyser mes {n} sites" if n > 1 else "Analyser mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
         # Avec des sites KO, l'envoi se décide sous la liste des erreurs ; pendant l'analyse, seul « Annuler » reste
         avec_ko = lecture is not None and not lecture.bloquants and bool(lecture.sites_ko)
         self.bouton_envoyer.setVisible(not parcours.analyse_en_cours and not avec_ko)
-        self.rappel_demonstration.setVisible(not parcours.reel)
 
 
 class LigneCnig(QFrame):
@@ -432,6 +449,4 @@ class PageResultats(Page):
                 ]
             )
         self.zone.addWidget(tableau(["Profil", "Écart", "Sites", "Part", "Lecture"], lignes, [3, 2, 1, 1, 4]))
-        self.zone.addWidget(
-            texte(parcours.avertissement if parcours.reel else f"Démonstration : {parcours.avertissement}", "mfAide")
-        )
+        self.zone.addWidget(texte(parcours.avertissement, "mfAide"))

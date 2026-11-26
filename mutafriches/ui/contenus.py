@@ -203,7 +203,16 @@ AIDE_DOMAINE = "Par exemple ma-collectivite.fr"
 LIBELLE_PRENOM = "Votre prénom"
 LIBELLE_NOM = "Votre nom"
 LIBELLE_MAIL = "Adresse e-mail de contact"
-AIDE_MAIL = "Pour vous informer des évolutions du service et vous recontacter"
+AIDE_MAIL = "Pour le suivi de votre accès et les échanges sur le fonctionnement du service"
+# Miroir de LIBELLE_CONSENTEMENT_CONTACT (formulaire de déclaration web, PR 285 de Mutafriches)
+LIBELLE_ACCEPTE_CONTACT = (
+    "J'accepte d'être contacté·e pour partager mes retours d'expérience et être informé·e des "
+    "évolutions du service Mutafriches (ADEME)"
+)
+AIDE_ACCEPTE_CONTACT = "Obligatoire pour utiliser l'extension"
+LIBELLE_ACCORD_DONNE = "Accord pour être contacté"
+ACCORD_DONNE = "Donné"
+ACCORD_ABSENT = "Non donné : à cocher dans le panneau Mutafriches"
 CHOIX_VIDE = "Sélectionner une option"
 URL_CONFIDENTIALITE = "https://mutafriches.beta.gouv.fr/politique-de-confidentialite"
 # {lien} : lien vers la politique de confidentialité
@@ -213,7 +222,13 @@ MENTION_ACCUEIL = (
 )
 LIBELLE_CONFIDENTIALITE = "Politique de confidentialité"
 ENVOI_DECLARATION = "Envoi en cours…"
+# Sous le formulaire : le verrou qui suit la déclaration doit être connu avant de valider
+ACCUEIL_NON_MODIFIABLE = (
+    "Vérifiez ces informations avant de continuer : une fois votre structure déclarée, elles ne "
+    "sont plus modifiables dans l'extension."
+)
 ACCUEIL_A_COMPLETER = "Complétez vos informations : elles sont désormais nécessaires pour analyser vos sites."
+ACCORD_A_DONNER = "Cochez la case d'accord : elle est désormais nécessaire pour analyser vos sites."
 DECLARATION_REFUSEE = "Votre structure n'a pas pu être déclarée à l'API Mutafriches."
 TITRE_IMPORT = "Trouver le bon usage pour vos friches"
 # Tableau de bord territorial
@@ -238,10 +253,6 @@ AIDE_COMPRENDRE_RESULTATS = (
 AIDE_AMELIORER_FIABILITE = (
     "Critères de terrain en rouge : inconnus. Renseignez-les dans votre fichier CNIG, puis relancez l'analyse."
 )
-RAPPEL_DEMONSTRATION = (
-    "Mode démonstration : résultats figés d'un inventaire d'exemple. Pour analyser vos sites, "
-    "choisissez « Production » dans Préférences › Options › Mutafriches."
-)
 URL_STANDARD_CNIG = "https://schema.data.gouv.fr/cnigfr/schema-friches/"
 # {standard} : lien vers le standard, posé sur les mots « standard CNIG »
 INTRO_IMPORT = (
@@ -257,11 +268,11 @@ AIDE_FICHIER = (
 )
 LIEN_MODELE_CNIG = "Télécharger un modèle de fichier vide"
 AIDE_ERREUR_CNIG = "Les sites KO sont écartés de l'analyse. Corrigez le fichier puis chargez-le de nouveau. Standard : schema.data.gouv.fr (cnigfr/schema-friches)."
+AIDE_SITES_OK = "Ces sites sont prêts à être analysés."
 SOUS_TITRE_ANALYSE = "Cela peut prendre de quelques secondes à quelques minutes."
 AIDE_ERREUR_API = (
     "L'extension appelle l'API Mutafriches avec le domaine déclaré de votre structure. En cas de "
-    "blocage, écrivez à contact@mutafriches.beta.gouv.fr. En attendant, le mode démonstration "
-    "(Préférences › Options › Mutafriches) montre le parcours sur des données figées."
+    "blocage, écrivez à contact@mutafriches.beta.gouv.fr."
 )
 AIDE_AUCUN_SITE = (
     "Vérifiez les identifiants de parcelles de votre fichier (14 caractères, parcelles existantes), puis "
@@ -269,25 +280,19 @@ AIDE_AUCUN_SITE = (
     "contact@mutafriches.beta.gouv.fr."
 )
 # Page « Mutafriches » des options de QGIS
-AIDE_OPTION_ENVIRONNEMENT = (
-    "Production : vos sites sont analysés par le service Mutafriches. Staging : environnement de "
-    "test de l'équipe, signalé par un bandeau. Démonstration : aucun appel réseau, résultats figés "
-    "d'un inventaire d'exemple."
-)
 AIDE_OPTION_INFORMATIONS = (
-    "Déclaration de votre structure, envoyée à Mutafriches à la prochaine analyse si elle change. Vos "
+    "Structure déclarée à Mutafriches : ces informations identifient vos analyses et ne sont plus "
+    "modifiables dans l'extension. Pour les corriger, écrivez à contact@mutafriches.beta.gouv.fr. Vos "
     "prénom, nom et adresse e-mail sont conservés dans l'outil d'e-mailing de Mutafriches, pas dans sa base."
 )
+AIDE_OPTION_INFORMATIONS_A_DECLARER = (
+    "Votre structure n'est pas encore déclarée : renseignez ou corrigez ces informations dans le panneau Mutafriches."
+)
+VALEUR_ABSENTE = "Non renseigné"
 AIDE_OPTION_FOND = (
     "À l'ouverture du panneau sur un projet sans couche, un fond de carte OpenStreetMap est ajouté. "
     "Décochez si votre structure n'autorise pas les fonds de carte externes."
 )
-AIDE_OPTION_DEV = "Donne accès aux réglages de l'API : adresse libre, origine envoyée, délai entre deux sites."
-AIDE_OPTION_INTERVALLE = (
-    "L'API accepte 100 requêtes par minute et deux requêtes sont faites par site : ne pas descendre "
-    "sous 1500 ms hors d'un serveur local."
-)
-
 # AnalyserPage et carte de sélection
 TITRE_SELECTION = "Trouver le bon usage pour une friche"
 INTRO_SELECTION = (

@@ -1,12 +1,15 @@
+import os
 import unittest
+from dataclasses import replace
 
 import serveur_factice
+from _donnees import FICHIER_CNIG_EXEMPLE
 from _qgis import RACINE  # noqa: F401  (initialise QGIS)
 from qgis.core import QgsSettings
 from qgis.PyQt.QtCore import QEventLoop, QTimer
 
 from mutafriches.core import reglages
-from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE, site_depuis_api, synthese
+from mutafriches.core.attributaire import site_depuis_api, synthese
 from mutafriches.core.client_api import AnalyseInventaire, ErreurApi, ResultatSite, url_api
 from mutafriches.core.cnig import SiteCnig, complementaires_depuis_cnig, lire_cnig
 from mutafriches.core.declaration import (
@@ -14,9 +17,11 @@ from mutafriches.core.declaration import (
     DeclarationIntegrateur,
     ErreurDeclaration,
     hote_de_domaine,
+    memoriser,
     origine_declaree,
+    oublier,
 )
-from mutafriches.ui.accueil import Utilisateur
+from mutafriches.ui.accueil import Utilisateur, coordonnees_verrouillees
 
 DECLARATION = Declaration(
     structure="CC du Pays de Montereau",
@@ -50,15 +55,13 @@ class TestClientApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.serveur = serveur_factice.demarrer()
-        # Une adresse libre n'est lue qu'en mode développeur
-        reglages.DEV.setValue(True)
-        reglages.URL.setValue(f"http://127.0.0.1:{cls.serveur.server_address[1]}")
+        # Une autre API que la production ne se désigne que par l'environnement du processus
+        os.environ[reglages.VARIABLE_API] = f"http://127.0.0.1:{cls.serveur.server_address[1]}"
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.serveur.shutdown()
-        for entree in (reglages.URL, reglages.DEV):
-            entree.remove()
+        os.environ.pop(reglages.VARIABLE_API, None)
 
     def setUp(self) -> None:
         self.sites = lire_cnig(FICHIER_CNIG_EXEMPLE).sites_ok
@@ -122,11 +125,11 @@ class TestClientApi(unittest.TestCase):
         self.assertIn("Accès refusé", erreur.message)
 
     def test_api_injoignable(self) -> None:
-        reglages.URL.setValue("http://127.0.0.1:9")
+        os.environ[reglages.VARIABLE_API] = "http://127.0.0.1:9"
         try:
             resultats, erreur, _ = analyser(self.sites[:1])
         finally:
-            reglages.URL.setValue(f"http://127.0.0.1:{self.serveur.server_address[1]}")
+            os.environ[reglages.VARIABLE_API] = f"http://127.0.0.1:{self.serveur.server_address[1]}"
         self.assertEqual(resultats, [])
         self.assertTrue(erreur is not None and erreur.bloquante)
 
@@ -174,6 +177,30 @@ class TestDeclaration(unittest.TestCase):
         self.assertEqual(origine_declaree(self.url, autre), "")
         self.assertEqual(origine_declaree("https://autre-api.fr", DECLARATION), "")
 
+    def test_consentement_envoye_seulement_s_il_est_donne(self) -> None:
+        declarer(self.url)
+        self.assertNotIn("accepteContact", serveur_factice.DECLARATIONS[-1])
+        # Cocher la case après une déclaration : nouvel envoi, avec l'accord en booléen
+        accord = replace(DECLARATION, accepte_contact=True)
+        self.assertEqual(origine_declaree(self.url, accord), "")
+        origine, erreur = declarer(self.url, accord)
+        self.assertIsNone(erreur)
+        self.assertIs(serveur_factice.DECLARATIONS[-1]["accepteContact"], True)
+        self.assertEqual(origine_declaree(self.url, accord), origine)
+        # La décocher ne renvoie rien : l'API ne retire jamais un accord donné
+        self.assertEqual(origine_declaree(self.url, DECLARATION), origine)
+        # Une autre modification, case décochée, est envoyée sans la clé
+        autre = replace(DECLARATION, nom="Durand")
+        self.assertEqual(origine_declaree(self.url, autre), "")
+
+    def test_empreinte_inchangee_sans_consentement(self) -> None:
+        # Les déclarations d'avant la case ne sont pas renvoyées : corps identique sans accord
+        self.assertEqual(
+            set(DECLARATION.corps()), {"canal", "structure", "typeStructure", "domaine", "prenom", "nom", "email"}
+        )
+        # Valeur calculée avec le code de la v0.4.1 (`git show v0.4.1:mutafriches/core/declaration.py`)
+        self.assertEqual(DECLARATION.empreinte, "273118f02169c9f6")
+
     def test_domaine_revoque(self) -> None:
         origine, erreur = declarer(self.url, Declaration(**{**DECLARATION.__dict__, "domaine": "revoque.fr"}))
         self.assertEqual(origine, "")
@@ -217,47 +244,70 @@ class TestSaisieDeclaration(unittest.TestCase):
             self.assertEqual(hote_de_domaine(saisie), hote, saisie)
 
     def test_tout_est_obligatoire(self) -> None:
-        self.assertEqual(
-            set(Utilisateur().erreurs()), {"structure", "type_structure", "domaine", "prenom", "nom", "mail"}
-        )
-        complet = Utilisateur(
+        coordonnees = {"structure", "type_structure", "domaine", "prenom", "nom", "mail"}
+        self.assertEqual(set(Utilisateur().erreurs_coordonnees()), coordonnees)
+        self.assertEqual(set(Utilisateur().erreurs()), coordonnees | {"accepte_contact"})
+        sans_accord = Utilisateur(
             "Camille", "Martin", "CC du Pays de Montereau", "collectivite", "cc-montereau.fr", "sig@exemple.fr"
         )
+        # L'API n'exige que les coordonnées ; l'extension exige aussi l'accord de contact
+        self.assertEqual(set(sans_accord.erreurs()), {"accepte_contact"})
+        self.assertFalse(sans_accord.valide)
+        complet = replace(sans_accord, accepte_contact=True)
         self.assertTrue(complet.valide)
+        self.assertIs(complet.declaration().corps()["accepteContact"], True)
         self.assertEqual(complet.resume, "Camille Martin · CC du Pays de Montereau · cc-montereau.fr")
         self.assertEqual(complet.declaration().corps()["email"], "sig@exemple.fr")
 
 
 class TestReglages(unittest.TestCase):
     def setUp(self) -> None:
-        self.entrees = (reglages.ENVIRONNEMENT, reglages.DEV, reglages.URL, reglages.STRUCTURE, reglages.MAIL)
+        self.entrees = (
+            reglages.STRUCTURE,
+            reglages.TYPE_STRUCTURE,
+            reglages.DOMAINE,
+            reglages.PRENOM,
+            reglages.NOM,
+            reglages.MAIL,
+            reglages.ACCEPTE_CONTACT,
+            reglages.DECLARATIONS,
+        )
         for entree in self.entrees:
             entree.remove()
+        for variable in (reglages.VARIABLE_API, reglages.VARIABLE_INTERVALLE):
+            os.environ.pop(variable, None)
 
     tearDown = setUp
 
     def test_reglages_declares_dans_l_arbre_de_qgis(self) -> None:
-        self.assertEqual(reglages.DEV.key(), "/plugins/mutafriches/dev")
-        self.assertEqual(reglages.URL.key(), "/plugins/mutafriches/api/url")
+        self.assertEqual(reglages.DOMAINE.key(), "/plugins/mutafriches/utilisateur/domaine")
         self.assertTrue(reglages.FOND_OSM.value())
 
-    def test_adresse_par_environnement(self) -> None:
-        self.assertEqual(reglages.environnement(), "production")
+    def test_production_seule_sans_variable_d_environnement(self) -> None:
         self.assertEqual(url_api(), "https://mutafriches.beta.gouv.fr")
-        reglages.ENVIRONNEMENT.setValue("inconnu")
-        self.assertEqual(reglages.environnement(), "production")
+        self.assertEqual(reglages.intervalle_ms(), reglages.INTERVALLE_DEFAUT_MS)
+        # Le délai ne se raccourcit jamais face à la production
+        os.environ[reglages.VARIABLE_INTERVALLE] = "0"
+        self.assertEqual(reglages.intervalle_ms(), reglages.INTERVALLE_DEFAUT_MS)
 
-    def test_staging_ouvert_et_adresse_libre_reservee_au_mode_developpeur(self) -> None:
-        reglages.ENVIRONNEMENT.setValue("staging")
-        reglages.URL.setValue("http://127.0.0.1:1/")
-        # Le staging se choisit sans mode développeur ; l'adresse libre reste ignorée sans lui
-        self.assertEqual(reglages.environnement(), "staging")
-        self.assertEqual(url_api(), "https://mutafriches.incubateur.ademe.dev")
-        reglages.DEV.setValue(True)
-        self.assertEqual(reglages.environnement(), "staging")
+    def test_api_de_test_par_variable_d_environnement(self) -> None:
+        os.environ[reglages.VARIABLE_API] = "http://127.0.0.1:1/"
         self.assertEqual(url_api(), "http://127.0.0.1:1")
-        reglages.URL.remove()
-        self.assertEqual(url_api(), "https://mutafriches.incubateur.ademe.dev")
+        os.environ[reglages.VARIABLE_INTERVALLE] = "100"
+        self.assertEqual(reglages.intervalle_ms(), 100)
+        os.environ[reglages.VARIABLE_API] = "ftp://exemple.fr"
+        self.assertEqual(url_api(), "https://mutafriches.beta.gouv.fr")
+
+    def test_aucun_reglage_ne_change_d_api(self) -> None:
+        # Réglages des versions 0.4.x : ignorés, puis effacés
+        anciens = QgsSettings()
+        anciens.setValue("plugins/mutafriches/api/environnement", "staging")
+        anciens.setValue("plugins/mutafriches/api/url", "http://127.0.0.1:1")
+        anciens.setValue("plugins/mutafriches/dev", "true")
+        self.assertEqual(url_api(), "https://mutafriches.beta.gouv.fr")
+        reglages.migrer_anciens_reglages()
+        for cle in ("api/environnement", "api/url", "dev"):
+            self.assertFalse(anciens.contains(f"plugins/mutafriches/{cle}"), cle)
 
     def test_reprise_des_reglages_0_1(self) -> None:
         anciens = QgsSettings()
@@ -265,14 +315,28 @@ class TestReglages(unittest.TestCase):
         anciens.setValue("mutafriches/utilisateur/mail", "sig@exemple.fr")
         anciens.setValue("mutafriches/dev", "true")
         anciens.setValue("mutafriches/api/environnement", "demo")
-        self.assertEqual(reglages.migrer_anciens_reglages(), 4)
+        self.assertEqual(reglages.migrer_anciens_reglages(), 2)
         self.assertEqual(
             (reglages.STRUCTURE.value(), reglages.MAIL.value()), ("CC du Pays de Montereau", "sig@exemple.fr")
         )
-        self.assertTrue(reglages.DEV.value())
-        self.assertEqual(reglages.environnement(), "production")
         self.assertFalse(anciens.contains("mutafriches/utilisateur/mail"))
+        self.assertFalse(anciens.contains("mutafriches/dev"))
         self.assertEqual(reglages.migrer_anciens_reglages(), 0)
+
+    def test_coordonnees_verrouillees_une_fois_la_structure_declaree(self) -> None:
+        complet = Utilisateur(
+            "Camille", "Martin", "CC du Pays de Montereau", "collectivite", "cc-montereau.fr", "sig@exemple.fr"
+        )
+        self.assertFalse(coordonnees_verrouillees(Utilisateur()))
+        self.assertFalse(coordonnees_verrouillees(complet))
+        memoriser(url_api(), complet.declaration(), "https://cc-montereau.fr")
+        self.assertTrue(coordonnees_verrouillees(complet))
+        # Structure déclarée avant que l'accord soit exigé : verrouillée avec ou sans la case
+        self.assertTrue(coordonnees_verrouillees(replace(complet, accepte_contact=True)))
+        self.assertFalse(coordonnees_verrouillees(replace(complet, domaine="autre-structure.fr")))
+        # Un refus d'accès de l'API oublie la déclaration : la saisie redevient modifiable
+        oublier(url_api())
+        self.assertFalse(coordonnees_verrouillees(complet))
 
 
 class TestComplementairesCnig(unittest.TestCase):

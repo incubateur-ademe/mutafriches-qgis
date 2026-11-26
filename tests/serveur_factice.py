@@ -15,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
-TABLE = RACINE / "mutafriches" / "demo" / "montereau" / "attributaire-77305.geojson"
+TABLE = RACINE / "tests" / "donnees" / "attributaire-77305.geojson"
 ORIGINE_HISTORIQUE = "https://qgis.mutafriches.beta.gouv.fr"
 # Registre des intégrateurs : origines actives, déclarations reçues, en-têtes client des appels
 ORIGINES_AUTORISEES: set[str] = {ORIGINE_HISTORIQUE}
@@ -26,6 +26,8 @@ DOMAINE_REVOQUE = "revoque.fr"
 # Faux : API d'avant le registre (404 sur la déclaration), comme la production avant déploiement
 REGISTRE = {"actif": True}
 CHAMPS_DECLARATION = ("canal", "structure", "typeStructure", "domaine", "prenom", "nom", "email")
+# Facultatif (PR 285 de Mutafriches) : booléen JSON strict, refusé en 400 sous toute autre forme
+CHAMP_ACCEPTE_CONTACT = "accepteContact"
 USAGES = ("residentiel", "equipements", "culture", "tertiaire", "industrie", "renaturation", "photovoltaique")
 # Parcelle dont l'enrichissement échoue, pour tester un échec site par site
 PARCELLE_EN_ECHEC = "77305000ZZ9999"
@@ -86,6 +88,8 @@ def declarer(donnees: dict) -> tuple[int, dict]:
     manquants = [c for c in CHAMPS_DECLARATION if not str(donnees.get(c) or "").strip()]
     if manquants or donnees.get("canal") != "qgis":
         return 400, {"statusCode": 400, "message": [f"{c} manquant" for c in manquants] or ["Canal invalide"]}
+    if CHAMP_ACCEPTE_CONTACT in donnees and not isinstance(donnees[CHAMP_ACCEPTE_CONTACT], bool):
+        return 400, {"statusCode": 400, "message": ["Le consentement doit être un booléen"]}
     hote = str(donnees["domaine"]).strip().lower().removeprefix("https://").split("/")[0]
     if "." not in hote:
         return 400, {"statusCode": 400, "message": "Domaine invalide"}
