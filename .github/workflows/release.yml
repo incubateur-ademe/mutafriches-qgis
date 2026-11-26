@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  publier:
+    name: Publier la release et ses fichiers
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Vérifier que le tag porte la version de metadata.txt
+        run: |
+          VERSION="$(sed -n 's/^version=//p' mutafriches/metadata.txt)"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "Le tag $TAG ne correspond pas à la version $VERSION de metadata.txt"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Construire et contrôler le ZIP
+        run: |
+          ./scripts/package.sh
+          python3 scripts/verifier-paquet.py
+
+      # En brouillon tant que les fichiers manquent : « latest » ne doit jamais viser une release
+      # sans le ZIP au nom stable, cible du bouton de téléchargement du site
+      - name: Créer la release si elle n'existe pas
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 \
+            || gh release create "$TAG" --draft --title "$TAG" --generate-notes
+
+      - name: Joindre les fichiers
+        run: |
+          gh release upload "$TAG" --clobber \
+            "dist/mutafriches-$VERSION.zip" \
+            dist/extension-qgis-mutafriches.zip \
+            dist/friches-cnig-test-montereau*.csv
+
+      - name: Publier
+        run: gh release edit "$TAG" --draft=false
