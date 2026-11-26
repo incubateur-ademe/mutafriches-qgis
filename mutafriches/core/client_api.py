@@ -16,14 +16,10 @@ from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from . import reglages
 from .cnig import SiteCnig, complementaires_depuis_cnig
 from .declaration import EN_TETE_CLIENT, en_tete_client
-from .reglages import DEMONSTRATION, PRODUCTION, STAGING
+from .reglages import URL_PRODUCTION
 
 __all__ = [
-    "DEMONSTRATION",
-    "LIBELLES_ENVIRONNEMENTS",
-    "PRODUCTION",
-    "STAGING",
-    "URLS",
+    "URL_PRODUCTION",
     "AnalyseInventaire",
     "ErreurApi",
     "ResultatSite",
@@ -32,17 +28,6 @@ __all__ = [
 
 # Réponse JSON de l'API : structure libre, vérifiée à l'usage
 Json = dict[str, Any]
-
-# Adresse de l'API par environnement ; la démonstration n'appelle rien (table figée)
-URLS: dict[str, str] = {
-    PRODUCTION: "https://mutafriches.beta.gouv.fr",
-    STAGING: "https://mutafriches.incubateur.ademe.dev",
-}
-LIBELLES_ENVIRONNEMENTS: dict[str, str] = {
-    PRODUCTION: "Production",
-    STAGING: "Staging (environnement de test)",
-    DEMONSTRATION: "Démonstration (données figées)",
-}
 
 DELAI_REQUETE_MS = 90_000
 ATTENTE_DEBIT_MS = 20_000
@@ -56,9 +41,9 @@ ESSAIS_DELAI = 1
 ERREURS_DELAI = (QNetworkReply.NetworkError.OperationCanceledError, QNetworkReply.NetworkError.TimeoutError)
 
 
-def url_api(environnement: str = "") -> str:
-    """Adresse libre du mode développeur si elle est renseignée, sinon celle de l'environnement."""
-    return reglages.url_personnalisee() or URLS.get(environnement or reglages.environnement(), URLS[PRODUCTION])
+def url_api() -> str:
+    """La production, sauf adresse de test posée au lancement de QGIS (tests et captures de l'équipe)."""
+    return reglages.url_de_test() or URL_PRODUCTION
 
 
 @dataclass
@@ -91,7 +76,7 @@ def message_http(statut: int, corps: bytes, erreur_reseau: str, delai_depasse: b
     if statut == 403:
         return ErreurApi(
             "Accès refusé par l'API Mutafriches : le domaine de votre structure n'y est pas autorisé. "
-            "Vérifiez-le dans vos informations, puis relancez l'analyse.",
+            "Vérifiez-le par le lien « Modifier », au pied du panneau, puis relancez l'analyse.",
             bloquante=True,
             acces_refuse=True,
         )
@@ -121,13 +106,12 @@ class AnalyseInventaire(QObject):
         origine: str,
         version_extension: str = "",
         intervalle_ms: int | None = None,
-        environnement: str = "",
     ) -> None:
         super().__init__()
         self.sites = sites
         self.progression = progression
         self.termine = termine
-        self.url = url_api(environnement)
+        self.url = url_api()
         # Origine obtenue en déclarant la structure (core/declaration.py)
         self.origine = origine
         self.agent = f"mutafriches-qgis/{version_extension or 'dev'}"

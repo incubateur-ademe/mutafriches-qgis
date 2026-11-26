@@ -20,8 +20,12 @@ from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QPushButton, QWidget
 
 SORTIE = Path(os.environ["MF_TUTORIEL_SORTIE"])
 RAPPORT = Path(os.environ["MF_TUTORIEL_RAPPORT"])
-# Captures hors tutoriel (bandeau de staging, réservé à l'équipe) : jamais dans la page web
+# Captures hors tutoriel (bandeau de l'environnement de test, réservé à l'équipe) : jamais dans la page web
 HORS_PAGE = Path(os.environ.get("MF_TUTORIEL_HORS_PAGE", str(RAPPORT.parent)))
+# Jeux d'essai du dépôt (tests/donnees), hors du ZIP installé dans le profil
+DONNEES = Path(os.environ["MF_DONNEES"])
+FICHIER_CNIG_EXEMPLE = DONNEES / "friches-cnig-montereau.csv"
+FICHIER_CNIG_ERREURS = DONNEES / "friches-cnig-erreurs.csv"
 LARGEUR = 1600
 DELAI_ANALYSE_S = 600
 iface = qgis.utils.iface
@@ -216,24 +220,20 @@ def modele_de_fichier() -> None:
 
 @etape()
 def fichier_avec_erreurs() -> None:
-    from mutafriches.core.attributaire import FICHIER_CNIG_ERREURS
-
     parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
 
 
 @etape(1000)
 def controle() -> None:
     capture("04-controle-ligne-a-ligne")
-    from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE
-
     parcours().choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
 
 
 @etape(1000)
 def envoyer() -> None:
     capture("05-fichier-pret")
-    capture_hors_page("bandeau-staging-avec", avec_bandeau=True)
-    capture_hors_page("bandeau-staging-sans", avec_bandeau=False)
+    capture_hors_page("bandeau-test-avec", avec_bandeau=True)
+    capture_hors_page("bandeau-test-sans", avec_bandeau=False)
     cliquer("Analyser mes 28 sites")
     contexte["captures_analyse"] = 0
     contexte["depart"] = 0
@@ -266,10 +266,6 @@ def resultats() -> None:
     p = parcours()
     rapport["notes"].append(f"{p.synthese.nombre_sites} sites analysés, {len(p.echecs)} en échec : {p.echecs[:3]}")  # type: ignore[union-attr]
     capture("07-carte-et-tableau-de-bord")
-    barre = dock().defilement.verticalScrollBar()
-    barre.setValue(barre.maximum())
-    capture("08-tableau-de-bord-profils")
-    barre.setValue(0)
     cliquer("Voir table de mutabilité")
 
 
@@ -286,9 +282,8 @@ def table_mutabilite() -> None:
 @etape(2000)
 def table_qualification() -> None:
     table = table_ancree("Qualification")
+    # Pas de capture : la page web montre cette table par « Améliorer la fiabilité » (13)
     if table is not None:
-        iface.mainWindow().resizeDocks([table], [360], Qt.Orientation.Vertical)
-        capture("11-table-qualification")
         table.close()
     cliquer("Améliorer la fiabilité")
 
@@ -317,11 +312,6 @@ def site_sur_la_carte() -> None:
 
 @etape(1000)
 def reglages() -> None:
-    from mutafriches.core import reglages as reglages_extension
-
-    # La page telle que la voit un utilisateur : sans le mode développeur du profil de capture
-    reglages_extension.DEV.setValue(False)
-
     def saisir() -> None:
         fenetre = QApplication.activeModalWidget()
         try:
@@ -337,7 +327,6 @@ def reglages() -> None:
     QTimer.singleShot(2000, lambda: garder(saisir))
     cliquer("Analyser un autre inventaire")
     parcours().ouvrir_reglages()
-    reglages_extension.DEV.setValue(True)
     QgsSettings().remove("plugins/mutafriches/utilisateur")
 
 

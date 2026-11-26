@@ -1,6 +1,6 @@
 """Déclaration de la structure au registre des intégrateurs de Mutafriches (ADR-0055 de Mutafriches).
 
-L'extension déclare une fois, par environnement, le domaine de la structure sur le canal `qgis` ;
+L'extension déclare une fois, par adresse d'API, le domaine de la structure sur le canal `qgis` ;
 l'origine renvoyée part ensuite dans l'en-tête `Origin` des appels d'analyse.
 """
 
@@ -95,7 +95,7 @@ class Declaration:
         return hashlib.sha256(json.dumps(self.corps(), sort_keys=True).encode("utf-8")).hexdigest()[:16]
 
 
-# --- Déclarations connues, par adresse d'API (staging et production ont chacun leur registre) ---
+# --- Déclarations connues, par adresse d'API (chaque API a son registre) ---
 
 
 def _connues() -> dict[str, dict[str, str]]:

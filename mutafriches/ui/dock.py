@@ -8,7 +8,7 @@ from qgis.PyQt.QtGui import QPainter, QPixmap
 from qgis.PyQt.QtSvg import QSvgRenderer
 from qgis.PyQt.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
-from ..core.reglages import STAGING, url_personnalisee
+from ..core.reglages import url_de_test
 from . import style
 from .pages import Page
 from .parcours import Etape, Parcours
@@ -49,7 +49,7 @@ class DockMutafriches(QgsDockWidget):
 
         # Réservé à l'équipe : rappel que le service interrogé n'est pas la production
         self.bandeau = QLabel()
-        self.bandeau.setObjectName("mfStaging")
+        self.bandeau.setObjectName("mfBandeauTest")
         layout.addWidget(self.bandeau)
 
         entete = QWidget()
@@ -97,14 +97,9 @@ class DockMutafriches(QgsDockWidget):
         self.defilement.verticalScrollBar().setValue(max(0, y - 12))
 
     def _bandeau(self) -> None:
-        """Rien en production ni en démonstration ; un rappel permanent sur le staging ou une API libre."""
-        personnalisee = url_personnalisee() if self.parcours.reel else ""
-        if personnalisee:
-            texte = f"API personnalisée — {personnalisee}"
-        elif self.parcours.environnement == STAGING:
-            texte = "Environnement de test (staging)"
-        else:
-            texte = ""
+        """Rien en production ; un rappel permanent face à l'API de test des scripts de l'équipe."""
+        adresse = url_de_test()
+        texte = f"Environnement de test — {adresse}" if adresse else ""
         self.bandeau.setText(texte)
         self.bandeau.setAccessibleName(texte)
         self.bandeau.setVisible(bool(texte))

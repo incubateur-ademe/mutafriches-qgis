@@ -1,4 +1,4 @@
-"""État du parcours : utilisateur, envoi des sites CNIG, analyse par l'API ou table figée."""
+"""État du parcours : utilisateur, envoi des sites CNIG, analyse par l'API Mutafriches."""
 
 import shutil
 from collections.abc import Callable
@@ -28,17 +28,11 @@ from ..core.attributaire import (
     FICHIER_MODELE_CNIG,
     SiteAttributaire,
     Synthese,
-    apparier,
-    charger_table,
     site_depuis_api,
     synthese,
 )
 from ..core.client_api import (
-    DEMONSTRATION,
-    LIBELLES_ENVIRONNEMENTS,
-    PRODUCTION,
-    STAGING,
-    URLS,
+    URL_PRODUCTION,
     AnalyseInventaire,
     ErreurApi,
     ResultatSite,
@@ -47,15 +41,13 @@ from ..core.client_api import (
 from ..core.cnig import LectureCnig, lire_cnig
 from ..core.declaration import DeclarationIntegrateur, ErreurDeclaration, origine_declaree, oublier
 from . import contenus
-from .accueil import Utilisateur, charger_utilisateur, enregistrer_utilisateur
+from .accueil import Utilisateur, charger_utilisateur, coordonnees_verrouillees, enregistrer_utilisateur
 
 # Page de l'interface web qui explique critères et sources. `source` et `ref` sont lus par son suivi
 # d'événements (source_campagne, ADR-0012 de Mutafriches) : ses consultations depuis QGIS s'y comptent
 CHEMIN_COMPRENDRE = "/comprendre-les-analyses?source=qgis&ref=tableau-de-bord"
 # Nom d'objet de la page « Mutafriches » des options de QGIS (ui/options.py)
 NOM_PAGE_OPTIONS = "mutafrichesOptions"
-# Attente simulée en mode démonstration
-DELAI_ANALYSE_MS = 2500
 AVERTISSEMENT_API = (
     "Résultats calculés par l'API Mutafriches. Les critères tirés du fichier CNIG sont déclaratifs ; "
     "sans saisie, la mutabilité est calculée avec « Je ne sais pas » pour chaque critère manuel."
@@ -76,8 +68,6 @@ class Parcours(QObject):
         self.iface = iface
         self.version = version
         reglages.migrer_anciens_reglages()
-        self.environnement = reglages.environnement()
-        self._couches: list[str] = []
         self.avancement: tuple[int, int] = (0, 0)
         self.erreur_api: ErreurApi | None = None
         self.echecs: list[str] = []
@@ -94,18 +84,16 @@ class Parcours(QObject):
         self.lecture: LectureCnig | None = None
         self.analyse_en_cours = False
         self.sites: list[SiteAttributaire] = []
-        self.non_retrouves: list[str] = []
         self.lignes_ecartees: list[str] = []
         self.synthese: Synthese | None = None
         self.avertissement = ""
         self.couche_mutabilite: QgsVectorLayer | None = None
         self.couche_qualification: QgsVectorLayer | None = None
-        self._timer: QTimer | None = None
 
     # --- Accueil ------------------------------------------------------------------------------
 
     def valider_accueil(self, utilisateur: Utilisateur) -> bool:
-        """Enregistre la saisie ; en mode réel, déclare aussitôt la structure à l'API."""
+        """Enregistre la saisie et déclare aussitôt la structure à l'API."""
         self.erreurs_accueil = utilisateur.erreurs()
         self.erreur_declaration = ""
         if self.erreurs_accueil:
@@ -114,9 +102,6 @@ class Parcours(QObject):
         enregistrer_utilisateur(utilisateur)
         # Relu tel qu'enregistré (domaine ramené à son hôte) : même empreinte au prochain lancement
         self.utilisateur = charger_utilisateur()
-        if not self.reel:
-            self._aller_a_l_import()
-            return True
         self._declarer(lambda _origine: self._aller_a_l_import(), self._declaration_refusee_a_l_accueil)
         return True
 
@@ -128,7 +113,14 @@ class Parcours(QObject):
         self.erreur_declaration = erreur.message
         self.change.emit()
 
+    @property
+    def coordonnees_verrouillees(self) -> bool:
+        return coordonnees_verrouillees(self.utilisateur)
+
     def modifier_utilisateur(self) -> None:
+        # Possible tant que la structure n'est pas déclarée, ou après un refus d'accès de l'API
+        if self.coordonnees_verrouillees:
+            return
         self.erreurs_accueil = {}
         self.erreur_declaration = ""
         self.etape = Etape.ACCUEIL
@@ -136,7 +128,7 @@ class Parcours(QObject):
 
     def _declarer(self, suite: Callable[[str], None], echec: Callable[[ErreurDeclaration], None]) -> None:
         """Origine de la structure pour l'API courante : mémorisée, ou obtenue en la déclarant."""
-        url = url_api(self.environnement)
+        url = url_api()
         declaration = self.utilisateur.declaration()
         connue = origine_declaree(url, declaration)
         if connue:
@@ -198,67 +190,19 @@ class Parcours(QObject):
     def pret_a_envoyer(self) -> bool:
         return self.lecture is not None and self.lecture.valide and not self.analyse_en_cours
 
-    @property
-    def reel(self) -> bool:
-        return self.environnement != DEMONSTRATION
-
-    def changer_environnement(self, environnement: str) -> None:
-        """Bascule production, staging ou démonstration, en repartant d'un panneau vide."""
-        if environnement not in LIBELLES_ENVIRONNEMENTS or environnement == self.environnement:
-            return
-        reglages.ENVIRONNEMENT.setValue(environnement)
-        self.environnement = reglages.environnement()
-        self.repartir_a_vide()
-
-    def repartir_a_vide(self) -> None:
-        """Après un changement de service : jamais de résultats d'un service affichés sous un autre."""
-        self.annuler_analyse()
-        self._retirer_couches()
-        self.sites = []
-        self.synthese = None
-        self.non_retrouves = []
-        self.lignes_ecartees = []
-        self.echecs = []
-        self.erreur_api = None
-        if self.etape == Etape.RESULTATS:
-            self.etape = Etape.IMPORT
-        self.change.emit()
-
-    def reglages_modifies(self, service_change: bool) -> None:
-        """Appelé par la page d'options : relit les réglages et met le panneau en accord."""
-        self.environnement = reglages.environnement()
+    def reglages_modifies(self) -> None:
+        """Appelé par la page d'options : relit l'accord de contact et met le panneau en accord."""
         self.utilisateur = charger_utilisateur()
-        if not self.utilisateur.valide:
-            self.etape = Etape.ACCUEIL
-        elif self.etape == Etape.ACCUEIL:
-            self.etape = Etape.IMPORT
-        if service_change:
-            self.repartir_a_vide()
-        else:
-            self.change.emit()
+        self.change.emit()
 
     def ouvrir_reglages(self) -> None:
         self.iface.showOptionsDialog(self.iface.mainWindow(), NOM_PAGE_OPTIONS)
-
-    def changer_mode(self, mode: str) -> None:
-        self.changer_environnement(DEMONSTRATION if mode == "demo" else PRODUCTION)
-
-    def _retirer_couches(self) -> None:
-        projet = QgsProject.instance()
-        for identifiant in self._couches:
-            if projet.mapLayer(identifiant) is not None:
-                projet.removeMapLayer(identifiant)
-        self._couches = []
-        self.couche_mutabilite = None
-        self.couche_qualification = None
-        # Sans cela, la carte garde le dernier rendu des couches retirées
-        self.canvas.refreshAllLayers()
 
     def envoyer(self) -> None:
         if not self.pret_a_envoyer or self.lecture is None:
             return
         # Informations d'une version où elles étaient facultatives : à compléter avant d'appeler l'API
-        if self.reel and not self.utilisateur.valide:
+        if not self.utilisateur.valide:
             self.erreurs_accueil = self.utilisateur.erreurs()
             self.erreur_declaration = contenus.ACCUEIL_A_COMPLETER
             self.etape = Etape.ACCUEIL
@@ -269,13 +213,7 @@ class Parcours(QObject):
         self.echecs = []
         self.avancement = (0, len(self.lecture.sites_ok))
         self.change.emit()
-        if self.reel:
-            self._declarer(self._analyser, self._declaration_refusee_a_l_envoi)
-            return
-        self._timer = QTimer()
-        self._timer.setSingleShot(True)
-        self._timer.timeout.connect(self._resultats_recus)
-        self._timer.start(DELAI_ANALYSE_MS)
+        self._declarer(self._analyser, self._declaration_refusee_a_l_envoi)
 
     def _analyser(self, origine: str) -> None:
         if not self.analyse_en_cours or self.lecture is None:
@@ -286,7 +224,6 @@ class Parcours(QObject):
             self._analyse_terminee,
             origine,
             self.version,
-            environnement=self.environnement,
         )
         self._analyse.demarrer()
 
@@ -303,8 +240,6 @@ class Parcours(QObject):
         if self._analyse is not None:
             self._analyse.annuler()
             self._analyse = None
-        if self._timer is not None:
-            self._timer.stop()
         if self.analyse_en_cours:
             self.analyse_en_cours = False
             self.change.emit()
@@ -323,7 +258,7 @@ class Parcours(QObject):
         if erreur is not None and not reussis:
             if erreur.acces_refuse:
                 # Domaine révoqué ou registre vidé : la prochaine analyse redéclare
-                oublier(url_api(self.environnement))
+                oublier(url_api())
             self.erreur_api = erreur
             self.change.emit()
             return
@@ -341,24 +276,10 @@ class Parcours(QObject):
             )
             for r in reussis
         ]
-        self.non_retrouves = []
-        source = "API Mutafriches" + (" (staging)" if self.environnement != PRODUCTION else "")
+        source = "API Mutafriches" + (" (environnement de test)" if reglages.url_de_test() else "")
         self._afficher_resultats(
             {"provenance": f"{source} · analyse du {date.today().strftime('%d/%m/%Y')}"}, AVERTISSEMENT_API
         )
-
-    def _resultats_recus(self) -> None:
-        self.analyse_en_cours = False
-        if self.lecture is None:
-            return
-        # Démonstration : les résultats viennent de la table attributaire figée de Montereau
-        table, meta = charger_table()
-        envoyes = self.lecture.sites_ok
-        apparies = apparier(table, {s.site_id: s.parcelles for s in envoyes})
-        retrouves = {s.site_id for s in apparies}
-        self.non_retrouves = [s.site_nom for s in envoyes if s.site_id not in retrouves]
-        self.sites = apparies or table
-        self._afficher_resultats(meta, str(meta.get("avertissement", "")))
 
     def _afficher_resultats(self, meta: dict[str, object], avertissement: str) -> None:
         if self.lecture is None:
@@ -379,7 +300,6 @@ class Parcours(QObject):
         self.couche_mutabilite, self.couche_qualification = creer_couches(
             self.sites, self.synthese.code_insee or "inventaire"
         )
-        self._couches = [self.couche_mutabilite.id(), self.couche_qualification.id()]
         self.etape = Etape.RESULTATS
         self.change.emit()
         self.zoomer()
@@ -422,8 +342,9 @@ class Parcours(QObject):
             self.iface.showAttributeTable(self.couche_qualification)
 
     def url_comprendre_resultats(self) -> str:
-        # Le staging a sa propre interface ; démonstration et adresse libre renvoient à la production
-        return URLS[STAGING if self.environnement == STAGING else PRODUCTION] + CHEMIN_COMPRENDRE
+        # Une API de test publique a sa propre interface ; un serveur local renvoie à la production
+        test = reglages.url_de_test()
+        return (test if test.startswith("https://") else URL_PRODUCTION) + CHEMIN_COMPRENDRE
 
     def comprendre_resultats(self) -> None:
         QDesktopServices.openUrl(QUrl(self.url_comprendre_resultats()))
@@ -439,8 +360,8 @@ class Parcours(QObject):
 
     @property
     def attention(self) -> list[str]:
-        """Sites non analysés : lignes écartées, échecs de l'API, sites absents de la table figée."""
-        return self.lignes_ecartees + self.echecs + [f"non retrouvé dans la table : {n}" for n in self.non_retrouves]
+        """Sites non analysés : lignes écartées du fichier et échecs de l'API."""
+        return self.lignes_ecartees + self.echecs
 
     def nouvelle_analyse(self) -> None:
         self.annuler_analyse()
@@ -449,7 +370,6 @@ class Parcours(QObject):
         self.fichier = None
         self.lecture = None
         self.sites = []
-        self.non_retrouves = []
         self.lignes_ecartees = []
         self.synthese = None
         self.etape = Etape.IMPORT

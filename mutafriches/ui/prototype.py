@@ -77,6 +77,7 @@ class PageAccueil(Page):
         self.corps.addWidget(self.erreur)
         self.corps.addSpacing(6)
         # Sous le formulaire, et non au pied du panneau : la suite se lit dans la continuité des champs
+        self.corps.addWidget(texte(contenus.ACCUEIL_NON_MODIFIABLE, "mfAide"))
         self.suivant = bouton("Suivant", "primaire", self._valider)
         self.corps.addWidget(self.suivant)
         self.corps.addWidget(
@@ -194,10 +195,6 @@ class PageImport(Page):
         self.lien_utilisateur = bouton("Modifier", "lien", parcours.modifier_utilisateur)
         ligne.addWidget(self.lien_utilisateur)
         self.pied_layout.addLayout(ligne)
-        # Démonstration, staging et autres réglages : page « Mutafriches » des options de QGIS.
-        # Sans bandeau ni lien, ce rappel est le seul signe que l'envoi ne part pas vers l'API.
-        self.rappel_demonstration = texte(contenus.RAPPEL_DEMONSTRATION, "mfAide")
-        self.pied_layout.addWidget(self.rappel_demonstration)
 
     def _telecharger_modele(self) -> None:
         # Dossier de départ explicite : sans lui la fenêtre s'ouvre à la racine du disque, en lecture seule
@@ -229,20 +226,17 @@ class PageImport(Page):
             traites, total = parcours.avancement
             self.zone.addWidget(
                 Chargement(
-                    f"Analyse en cours : {traites} / {total} sites"
-                    if parcours.reel
-                    else f"Analyse de {pluriel(len(lecture.sites_ok), 'site')} en cours...",
+                    f"Analyse en cours : {traites} / {total} sites",
                     contenus.SOUS_TITRE_ANALYSE,
-                    avancement=parcours.avancement if parcours.reel else None,
+                    avancement=parcours.avancement,
                 )
             )
             self.zone.addWidget(bouton("Annuler l'analyse", "secondaire", parcours.annuler_analyse))
         elif parcours.erreur_api is not None:
             self.zone.addWidget(Encadre("erreur", "Analyse impossible", parcours.erreur_api.message))
-            if parcours.reel:
-                # L'aide dépend de la cause : accès à l'API, ou sites que l'API n'a pas su traiter
-                aide = contenus.AIDE_ERREUR_API if parcours.erreur_api.bloquante else contenus.AIDE_AUCUN_SITE
-                self.zone.addWidget(texte(aide, "mfAide"))
+            # L'aide dépend de la cause : accès à l'API, ou sites que l'API n'a pas su traiter
+            aide = contenus.AIDE_ERREUR_API if parcours.erreur_api.bloquante else contenus.AIDE_AUCUN_SITE
+            self.zone.addWidget(texte(aide, "mfAide"))
         elif lecture is not None and lecture.bloquants:
             self.zone.addWidget(
                 Encadre(
@@ -282,15 +276,14 @@ class PageImport(Page):
                 self.zone.addWidget(bouton("Charger de nouveau le fichier", "secondaire", self._recharger))
         utilisateur = parcours.utilisateur
         self.utilisateur.setText(utilisateur.resume)
-        # Rien de saisi à l'accueil (démonstration) : le lien y ramène, sans « Modifier » orphelin
-        self.lien_utilisateur.setText("Modifier" if utilisateur.resume else "Me présenter")
+        # Structure déclarée : ses coordonnées ne se modifient plus, le lien disparaît (ADR-0006)
+        self.lien_utilisateur.setVisible(not parcours.coordonnees_verrouillees)
         n = len(lecture.sites_ok) if lecture is not None and lecture.valide else 0
         self.bouton_envoyer.setText(f"Analyser mes {n} sites" if n > 1 else "Analyser mes sites")
         self.bouton_envoyer.setEnabled(parcours.pret_a_envoyer)
         # Avec des sites KO, l'envoi se décide sous la liste des erreurs ; pendant l'analyse, seul « Annuler » reste
         avec_ko = lecture is not None and not lecture.bloquants and bool(lecture.sites_ko)
         self.bouton_envoyer.setVisible(not parcours.analyse_en_cours and not avec_ko)
-        self.rappel_demonstration.setVisible(not parcours.reel)
 
 
 class LigneCnig(QFrame):
@@ -445,6 +438,4 @@ class PageResultats(Page):
                 ]
             )
         self.zone.addWidget(tableau(["Profil", "Écart", "Sites", "Part", "Lecture"], lignes, [3, 2, 1, 1, 4]))
-        self.zone.addWidget(
-            texte(parcours.avertissement if parcours.reel else f"Démonstration : {parcours.avertissement}", "mfAide")
-        )
+        self.zone.addWidget(texte(parcours.avertissement, "mfAide"))

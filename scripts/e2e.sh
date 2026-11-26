@@ -13,7 +13,8 @@ PROFIL="$PROFILS/profiles/default"
 
 "$RACINE/scripts/package.sh" > /dev/null
 
-# API factice locale : le parcours joue le mode réel sans dépendre de la production
+# API factice locale, désignée par variable d'environnement : l'extension n'a aucun réglage pour
+# quitter la production (ADR-0006)
 PORT_API="${MF_E2E_PORT_API:-8799}"
 python3 "$RACINE/tests/serveur_factice.py" "$PORT_API" &
 PID_API=$!
@@ -29,11 +30,6 @@ mutafriches=true
 [locale]
 overrideFlag=true
 userLocale=fr_FR
-
-[plugins]
-mutafriches\\dev=true
-mutafriches\\api\\url=http://127.0.0.1:$PORT_API
-mutafriches\\api\\intervalle_ms=100
 
 [qgis]
 checkVersion=false
@@ -52,7 +48,8 @@ fi
 
 for PHASE in prototype; do
   echo "Phase $PHASE…"
-  MF_E2E_SORTIE="$E2E" MF_E2E_CAPTURES="$CAPTURES" MF_E2E_PHASE="$PHASE" \
+  MF_E2E_SORTIE="$E2E" MF_E2E_CAPTURES="$CAPTURES" MF_E2E_PHASE="$PHASE" MF_DONNEES="$RACINE/tests/donnees" \
+    MUTAFRICHES_API_URL="http://127.0.0.1:$PORT_API" MUTAFRICHES_INTERVALLE_MS=100 \
     "$QGIS_APP/Contents/MacOS/QGIS" --profiles-path "$PROFILS" --noversioncheck --nologo \
     --code "$RACINE/tests/e2e/prototype_qgis.py" > "$E2E/qgis-$PHASE.log" 2>&1 || true
   if [ ! -f "$E2E/rapport-$PHASE.json" ]; then

@@ -1,7 +1,7 @@
 """Réglages de l'extension, déclarés dans l'arbre de QGIS (`plugins/mutafriches/...`).
 
-Déclarés, ils apparaissent avec leur description dans Préférences › Options › Avancé, et sont
-modifiables par la page « Mutafriches » des options (`ui/options.py`). ADR-0004.
+Déclarés, ils apparaissent avec leur description dans Préférences › Options › Avancé ; la page
+« Mutafriches » des options (`ui/options.py`) en montre l'essentiel. ADR-0004, ADR-0006.
 """
 
 import os
@@ -9,22 +9,21 @@ import os
 from qgis.core import (
     QgsSettings,
     QgsSettingsEntryBool,
-    QgsSettingsEntryInteger,
     QgsSettingsEntryString,
     QgsSettingsTree,
 )
 
 NOM_NOEUD = "mutafriches"
-PRODUCTION = "production"
-STAGING = "staging"
-DEMONSTRATION = "demonstration"
-ENVIRONNEMENTS = (PRODUCTION, STAGING, DEMONSTRATION)
+# Seule API interrogée : aucun réglage ni option ne permet d'en changer (ADR-0006)
+URL_PRODUCTION = "https://mutafriches.beta.gouv.fr"
+# Tests et captures de l'équipe : une autre API ne se désigne qu'au lancement de QGIS
+VARIABLE_API = "MUTAFRICHES_API_URL"
+VARIABLE_INTERVALLE = "MUTAFRICHES_INTERVALLE_MS"
 # Origine commune aux versions d'avant la déclaration par structure : toujours acceptée, elle ne
 # sert plus qu'avec une API sans registre des intégrateurs (core/declaration.py)
 ORIGINE_HISTORIQUE = "https://qgis.mutafriches.beta.gouv.fr"
 # Deux requêtes par site et 100 requêtes par minute et par IP : un site toutes les 1,5 s au plus
 INTERVALLE_DEFAUT_MS = 1500
-VARIABLE_DEV = "MUTAFRICHES_DEV"
 
 # Un rechargement de l'extension réimporte ce module : repartir d'un nœud neuf
 QgsSettingsTree.unregisterPluginTreeNode(NOM_NOEUD)
@@ -33,32 +32,11 @@ _api = _racine.createChildNode("api")
 _utilisateur = _racine.createChildNode("utilisateur")
 _carte = _racine.createChildNode("carte")
 
-ENVIRONNEMENT = QgsSettingsEntryString(
-    "environnement",
-    _api,
-    PRODUCTION,
-    "Service interrogé : production, staging (environnement de test) ou demonstration (données figées).",
-)
-URL = QgsSettingsEntryString(
-    "url", _api, "", "Adresse d'API libre (serveur local, tests). Vide : adresse de l'environnement choisi."
-)
 DECLARATIONS = QgsSettingsEntryString(
     "declarations",
     _api,
     "",
     "Origine obtenue en déclarant la structure, par adresse d'API (JSON). Vide : déclaration à la prochaine analyse.",
-)
-INTERVALLE_MS = QgsSettingsEntryInteger(
-    "intervalle_ms",
-    _api,
-    INTERVALLE_DEFAUT_MS,
-    "Délai entre deux sites, en millisecondes. Ne pas descendre sous 1500 sur une API réelle (limite de débit).",
-)
-DEV = QgsSettingsEntryBool(
-    "dev",
-    _racine,
-    False,
-    "Mode développeur : donne accès aux réglages d'API (adresse libre, délai) dans les options.",
 )
 # Déclaration de la structure (ADR-0055 de Mutafriches) : prénom, nom et mail partent chez Brevo
 PRENOM = QgsSettingsEntryString("prenom", _utilisateur, "", "Prénom du déclarant.")
@@ -83,20 +61,25 @@ FOND_OSM = QgsSettingsEntryBool(
 )
 
 # Clés d'avant la version 0.2.0, hors de l'arbre de QGIS : reprises une fois, puis effacées
-_ANCIENNES_CLES: tuple[tuple[str, QgsSettingsEntryString | QgsSettingsEntryBool | QgsSettingsEntryInteger], ...] = (
-    ("mutafriches/api/environnement", ENVIRONNEMENT),
-    ("mutafriches/api/url", URL),
-    ("mutafriches/api/intervalle_ms", INTERVALLE_MS),
-    ("mutafriches/dev", DEV),
+_ANCIENNES_CLES: tuple[tuple[str, QgsSettingsEntryString], ...] = (
     ("mutafriches/utilisateur/structure", STRUCTURE),
     ("mutafriches/utilisateur/mail", MAIL),
 )
-# Réglages retirés : origine libre (remplacée par la déclaration), consentement des 0.3.x (libellé et
-# finalité différents : jamais repris comme accord de contact) et accueil passé
+# Réglages retirés : choix d'environnement, adresse d'API libre, délai et mode développeur (ADR-0006),
+# origine libre (remplacée par la déclaration), consentement des 0.3.x (libellé et finalité
+# différents : jamais repris comme accord de contact) et accueil passé
 _CLES_OBSOLETES = (
+    "mutafriches/api/environnement",
+    "mutafriches/api/url",
+    "mutafriches/api/intervalle_ms",
     "mutafriches/api/origine",
+    "mutafriches/dev",
     "mutafriches/utilisateur/consentement",
+    "plugins/mutafriches/api/environnement",
+    "plugins/mutafriches/api/url",
+    "plugins/mutafriches/api/intervalle_ms",
     "plugins/mutafriches/api/origine",
+    "plugins/mutafriches/dev",
     "plugins/mutafriches/utilisateur/consentement",
     "plugins/mutafriches/utilisateur/accueil_vu",
 )
@@ -109,42 +92,33 @@ def migrer_anciens_reglages() -> int:
     for ancienne, entree in _ANCIENNES_CLES:
         if not reglages.contains(ancienne):
             continue
-        valeur = reglages.value(ancienne)
         if not entree.exists():
-            if isinstance(entree, QgsSettingsEntryBool):
-                entree.setValue(str(valeur).lower() == "true")
-            elif isinstance(entree, QgsSettingsEntryInteger):
-                entree.setValue(int(valeur))
-            else:
-                entree.setValue(str(valeur))
+            entree.setValue(str(reglages.value(ancienne)))
             reprises += 1
         reglages.remove(ancienne)
     for obsolete in _CLES_OBSOLETES:
         reglages.remove(obsolete)
-    # La démonstration s'appelait « demo » avant les environnements
-    if ENVIRONNEMENT.value() not in ENVIRONNEMENTS:
-        ENVIRONNEMENT.remove()
     return reprises
 
 
-def environnement() -> str:
-    valeur = ENVIRONNEMENT.value()
-    return valeur if valeur in ENVIRONNEMENTS else PRODUCTION
-
-
-def mode_developpeur() -> bool:
-    return DEV.value() or os.environ.get(VARIABLE_DEV, "") not in ("", "0", "false")
-
-
-def url_personnalisee() -> str:
-    return URL.value().strip().rstrip("/") if mode_developpeur() else ""
+def url_de_test() -> str:
+    """Adresse d'API posée au lancement de QGIS par les tests et les captures, sinon chaîne vide."""
+    valeur = os.environ.get(VARIABLE_API, "").strip().rstrip("/")
+    return valeur if valeur.startswith(("http://", "https://")) else ""
 
 
 def intervalle_ms() -> int:
-    return max(0, INTERVALLE_MS.value())
+    # Le délai ne se raccourcit que face à une API de test : la production limite le débit
+    if not url_de_test():
+        return INTERVALLE_DEFAUT_MS
+    try:
+        return max(0, int(os.environ.get(VARIABLE_INTERVALLE, "")))
+    except ValueError:
+        return INTERVALLE_DEFAUT_MS
 
 
 def effacer_utilisateur() -> None:
+    """Tests et remise à zéro (scripts/reinitialiser.sh) : aucune action de l'interface n'y mène."""
     for entree in (PRENOM, NOM, STRUCTURE, TYPE_STRUCTURE, DOMAINE, MAIL, ACCEPTE_CONTACT, DECLARATIONS):
         entree.remove()
 

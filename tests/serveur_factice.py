@@ -15,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
-TABLE = RACINE / "mutafriches" / "demo" / "montereau" / "attributaire-77305.geojson"
+TABLE = RACINE / "tests" / "donnees" / "attributaire-77305.geojson"
 ORIGINE_HISTORIQUE = "https://qgis.mutafriches.beta.gouv.fr"
 # Registre des intégrateurs : origines actives, déclarations reçues, en-têtes client des appels
 ORIGINES_AUTORISEES: set[str] = {ORIGINE_HISTORIQUE}

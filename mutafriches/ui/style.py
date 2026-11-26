@@ -16,8 +16,8 @@ AVERTISSEMENT = "#b34000"
 AVERTISSEMENT_FOND = "#ffe9e6"
 ERREUR = "#ce0500"
 ERREUR_FOND = "#ffe9e9"
-STAGING_FOND = "#feecc2"
-STAGING_TEXTE = "#716043"
+TEST_FOND = "#feecc2"
+TEST_TEXTE = "#716043"
 
 # Couleurs des badges, d'après les variantes DSFR utilisées par l'application web
 BADGES = {
@@ -65,9 +65,9 @@ def feuille_de_style() -> str:
 
 QFrame#mfBulle {{ background: #ffffff; border: 1px solid {BORDURE}; }}
 QFrame#mfBulle QLabel {{ color: {TEXTE}; font-size: 12px; }}
-QLabel#mfStaging {{
-  background: {STAGING_FOND}; color: {STAGING_TEXTE}; font-weight: bold; font-size: 12px;
-  padding: 6px 12px; border-bottom: 1px solid {STAGING_TEXTE};
+QLabel#mfBandeauTest {{
+  background: {TEST_FOND}; color: {TEST_TEXTE}; font-weight: bold; font-size: 12px;
+  padding: 6px 12px; border-bottom: 1px solid {TEST_TEXTE};
 }}
 QLabel#mfTitre {{ color: {BLEU_FRANCE}; font-size: 20px; font-weight: bold; }}
 QLabel#mfSousTitre {{ color: {BLEU_FRANCE}; font-size: 14px; }}

@@ -1,10 +1,10 @@
 """Gèle la table attributaire publique de Montereau-Fault-Yonne pour le prototype.
 
-Sorties (mutafriches/demo/montereau/) :
+Sorties, jeux d'essai hors du ZIP de l'extension (tests/donnees/) :
 - attributaire-77305.geojson : réponse GeoJSON de GET /api/attributaire/sites, telle quelle
-- friches-cnig-montereau.csv : les mêmes sites au standard CNIG Friches (51 colonnes), fichier
-  d'entrée d'exemple du prototype
+- friches-cnig-montereau.csv : les mêmes sites au standard CNIG Friches (51 colonnes)
 - friches-cnig-erreurs.csv : fichier avec plusieurs lignes en erreur, pour l'écran de contrôle
+Sortie embarquée dans l'extension (mutafriches/modeles/) :
 - modele-cnig.csv : modèle à remplir, les 51 colonnes du standard sans aucune ligne
 
 Usage : python3 outils/figer_attributaire.py (réseau requis)
@@ -18,7 +18,8 @@ from datetime import date
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
-DOSSIER = RACINE / "mutafriches" / "demo" / "montereau"
+DOSSIER = RACINE / "tests" / "donnees"
+DOSSIER_MODELES = RACINE / "mutafriches" / "modeles"
 API = "https://mutafriches.beta.gouv.fr/api/attributaire/sites?codeInsee=77305&format=geojson"
 
 # Colonnes du TableSchema cnigfr/schema-friches v1.0.6, dans l'ordre (miroir de shared-types)
@@ -175,5 +176,5 @@ if __name__ == "__main__":
     ecrire_csv(DOSSIER / "friches-cnig-erreurs.csv", COLONNES_CNIG, erreurs)
 
     # Modèle à remplir : les colonnes du standard, sans aucune ligne
-    ecrire_csv(DOSSIER / "modele-cnig.csv", COLONNES_CNIG, [])
+    ecrire_csv(DOSSIER_MODELES / "modele-cnig.csv", COLONNES_CNIG, [])
     print(f"{len(entites)} sites figés dans {DOSSIER}")

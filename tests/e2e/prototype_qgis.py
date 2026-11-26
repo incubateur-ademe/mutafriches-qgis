@@ -14,7 +14,7 @@ import qgis.utils
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsSettings
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtTest import QTest
-from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QLabel, QPushButton, QWidget
+from qgis.PyQt.QtWidgets import QApplication, QDockWidget, QLabel, QLineEdit, QPushButton, QWidget
 
 from mutafriches.ui.widgets import Encadre
 
@@ -22,6 +22,10 @@ SORTIE = Path(os.environ["MF_E2E_SORTIE"])
 # Captures PNG dans un dossier dédié (partagées), rapport et journal dans la sortie E2E
 CAPTURES = Path(os.environ.get("MF_E2E_CAPTURES", str(SORTIE)))
 PHASE = os.environ.get("MF_E2E_PHASE", "prototype")
+# Jeux d'essai du dépôt (tests/donnees), hors du ZIP installé dans le profil
+DONNEES = Path(os.environ["MF_DONNEES"])
+FICHIER_CNIG_EXEMPLE = DONNEES / "friches-cnig-montereau.csv"
+FICHIER_CNIG_ERREURS = DONNEES / "friches-cnig-erreurs.csv"
 iface = qgis.utils.iface
 rapport: dict[str, object] = {"phase": PHASE, "controles": [], "erreurs": []}
 etapes: list[tuple[int, Callable[[], None]]] = []
@@ -195,6 +199,10 @@ def panneau_vide() -> None:
         reglages.DECLARATIONS.value(),
     )
     controler("bouton Analyser inactif", not any(b.isEnabled() for b in boutons("Analyser mes")))
+    controler(
+        "structure déclarée : coordonnées verrouillées, plus de lien « Modifier »",
+        parcours().coordonnees_verrouillees and not boutons("Modifier"),
+    )
     controler("accueil : pas de pied vide", not dock().pages[0].pied.isVisible())
     # Le modèle de fichier se télécharge depuis l'infobulle du champ, ouverte au clic
     from mutafriches.ui.widgets import BoutonAide
@@ -217,8 +225,6 @@ def panneau_vide() -> None:
 
 @etape()
 def fichier_avec_erreurs() -> None:
-    from mutafriches.core.attributaire import FICHIER_CNIG_ERREURS
-
     parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
     lecture = parcours().lecture
     controler(
@@ -262,8 +268,6 @@ def modele() -> None:
 
 @etape()
 def exemple() -> None:
-    from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE
-
     parcours().nouvelle_analyse()
     parcours().choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
     lecture = parcours().lecture
@@ -276,8 +280,9 @@ def origine_refusee() -> None:
     titres = [e.titre.text() for e in dock().findChildren(Encadre) if e.isVisible()]
     controler("fichier sans erreur : le seul encadré des sites OK", titres == ["28 sites OK"], titres)
     controler(
-        "mode réel par défaut sur l'API locale, signalée au bandeau",
-        parcours().reel and "API personnalisée" in dock().bandeau.text(),
+        "API locale désignée au lancement, signalée au bandeau",
+        "Environnement de test" in dock().bandeau.text() and dock().bandeau.isVisible(),
+        dock().bandeau.text(),
     )
     from mutafriches.core.client_api import url_api
     from mutafriches.core.declaration import memoriser
@@ -302,6 +307,10 @@ def acces_refuse() -> None:
     controler(
         "origine refusée oubliée : la prochaine analyse redéclare",
         origine_declaree(url_api(), parcours().utilisateur.declaration()) == "",
+    )
+    controler(
+        "accès refusé : le domaine redevient modifiable par le lien « Modifier »",
+        not parcours().coordonnees_verrouillees and bool(boutons("Modifier")),
     )
     cliquer("Analyser mes 28 sites")
 
@@ -457,8 +466,6 @@ def nouvelle_analyse() -> None:
 
 @etape()
 def envoyer_fichier_erreurs() -> None:
-    from mutafriches.core.attributaire import FICHIER_CNIG_ERREURS
-
     parcours().choisir_fichier(str(FICHIER_CNIG_ERREURS))
     cliquer("Analyser les 4 sites OK")
 
@@ -491,77 +498,45 @@ def capture_alertes() -> None:
 
 
 @etape()
-def mode_demonstration() -> None:
-    from mutafriches.core.attributaire import FICHIER_CNIG_EXEMPLE
-
-    controler(
-        "panneau : ni lien de démonstration ni lien de réglages",
-        not boutons("Passer en mode") and not boutons("Réglages"),
-    )
-    # La démonstration se choisit dans les options de QGIS
-    parcours().changer_environnement("demonstration")
-    controler(
-        "démonstration rappelée au pied du panneau",
-        dock().pages[1].rappel_demonstration.isVisible(),
-    )
-    controler("mode démonstration : aucun bandeau", not parcours().reel and not dock().bandeau.isVisible())
-    parcours().choisir_fichier(str(FICHIER_CNIG_EXEMPLE))
-    cliquer("Analyser mes 28 sites")
-
-
-@etape(3500)
-def resultats_demonstration() -> None:
-    p = parcours()
-    controler(
-        "démonstration : 28 sites de la table figée",
-        p.etape == 2 and p.synthese.nombre_sites == 28 and "table figée" in p.synthese.provenance,
-        p.synthese.provenance if p.synthese else "",
-    )
-    capture("11-mode-demonstration")
-
-
-@etape()
-def staging() -> None:
+def reglages_en_lecture_seule() -> None:
     from mutafriches.core import reglages
-    from mutafriches.core.client_api import URLS, url_api
+    from mutafriches.ui import contenus
 
     p = parcours()
-    couches = len(QgsProject.instance().mapLayers())
     page = plugin().options.createWidget(None)
     contexte["page"] = page
     controler(
-        "page d'options : staging proposé, réglages d'API visibles en mode développeur",
-        page.dev.isChecked() and page.environnement.findData("staging") >= 0 and not page.url.isHidden(),
+        "page d'options : ni environnement, ni mode développeur, ni champ de saisie",
+        not hasattr(page, "environnement") and not hasattr(page, "dev") and not page.findChildren(QLineEdit),
     )
-    # Sans adresse libre, le staging pointe sur son URL publique
-    contexte["url"] = reglages.URL.value()
-    page.url.clear()
-    page.environnement.setCurrentIndex(page.environnement.findData("staging"))
+    controler(
+        "page d'options : coordonnées déclarées affichées, verrou expliqué",
+        page.structure.text() == "CC du Pays de Montereau"
+        and page.type_structure.text() == "Collectivité territoriale"
+        and page.domaine.text() == "www.cc-montereau.fr"
+        and page.mail.text() == "sig@exemple.fr"
+        and page.aide_informations.text() == contenus.AIDE_OPTION_INFORMATIONS,
+        (page.structure.text(), page.domaine.text(), page.aide_informations.text()),
+    )
+    # L'accord de contact et le fond de carte restent les seuls réglages modifiables
+    page.accepte_contact.case.setChecked(True)
+    page.fond_osm.setChecked(False)
     page.apply()
     controler(
-        "bascule staging depuis les options : retour à l'import, couches de résultats retirées",
-        p.environnement == "staging"
+        "accord de contact donné après coup : enregistré, coordonnées toujours verrouillées",
+        p.utilisateur.accepte_contact
+        and p.utilisateur.structure == "CC du Pays de Montereau"
+        and p.coordonnees_verrouillees
         and p.etape == 1
-        and p.synthese is None
-        and len(QgsProject.instance().mapLayers()) == couches - 2,
-        (p.environnement, p.etape, len(QgsProject.instance().mapLayers()), couches),
+        and not boutons("Modifier")
+        and not reglages.FOND_OSM.value(),
+        (p.utilisateur.accepte_contact, p.coordonnees_verrouillees, p.etape),
     )
-    controler(
-        "adresse et bandeau de staging",
-        url_api() == URLS["staging"] and "staging" in dock().bandeau.text() and dock().bandeau.isVisible(),
-        (url_api(), dock().bandeau.text()),
-    )
-    controler(
-        "comprendre les résultats en staging : doc web du staging",
-        p.url_comprendre_resultats().startswith(URLS["staging"] + "/comprendre-les-analyses?source=qgis"),
-        p.url_comprendre_resultats(),
-    )
+    controler("production : aucun lien de mode ni de réglages dans le panneau", not boutons("Passer en mode"))
 
 
 @etape(600)
 def options_dans_qgis() -> None:
-    capture("12-environnement-staging")
-
     # La vraie fenêtre Options de QGIS, ouverte comme par le menu Extensions › Mutafriches
     def saisir() -> None:
         fenetre = QApplication.activeModalWidget()
@@ -572,7 +547,7 @@ def options_dans_qgis() -> None:
         if fenetre is not None:
             fenetre.resize(1300, 900)
             QApplication.processEvents()
-            fenetre.grab().save(str(CAPTURES / "13-page-options.png"))
+            fenetre.grab().save(str(CAPTURES / "11-page-options.png"))
             fenetre.reject()
 
     QTimer.singleShot(1500, saisir)
@@ -580,46 +555,11 @@ def options_dans_qgis() -> None:
 
 
 @etape(600)
-def options_sans_mode_developpeur() -> None:
+def remise_a_zero() -> None:
     from mutafriches.core import reglages
 
-    page = contexte["page"]
-    page.dev.setChecked(False)
-    controler(
-        "sans mode développeur : staging toujours proposé, réglages d'API masqués",
-        page.environnement.findData("staging") >= 0 and page.url.isHidden() and page.intervalle.isHidden(),
-    )
-    page.dev.setChecked(True)
-    page.url.setText(str(contexte["url"]))
-    page.environnement.setCurrentIndex(page.environnement.findData("production"))
-    page.fond_osm.setChecked(False)
-    page.structure.setText("Agence d'urbanisme")
-    page.apply()
-    controler(
-        "retour en production depuis les options, informations et carte enregistrées",
-        parcours().environnement == "production"
-        and parcours().utilisateur.structure == "Agence d'urbanisme"
-        and not reglages.FOND_OSM.value(),
-        (parcours().environnement, parcours().utilisateur.structure),
-    )
-    page.domaine.setText("sans-extension")
-    page.apply()
-    controler(
-        "options : saisie invalide signalée et non enregistrée",
-        not page.erreur_saisie.isHidden() and parcours().utilisateur.domaine == "www.cc-montereau.fr",
-        parcours().utilisateur.domaine,
-    )
-    page._effacer_utilisateur()
-    page.apply()
-    controler(
-        "informations effacées : le panneau revient à l'accueil, déclarations oubliées",
-        parcours().etape == 0 and not parcours().utilisateur.resume and reglages.DECLARATIONS.value() == "",
-    )
-    cliquer("Suivant")
-    controler("accueil vide refusé : la déclaration est obligatoire", parcours().etape == 0)
     reglages.effacer_utilisateur()
     reglages.FOND_OSM.remove()
-    reglages.ENVIRONNEMENT.remove()
 
 
 def terminer() -> None:

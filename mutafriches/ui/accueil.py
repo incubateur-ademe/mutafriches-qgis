@@ -1,10 +1,11 @@
 """Utilisateur de l'extension : déclarant de sa structure (ADR-0055 de Mutafriches), mémorisé dans QGIS."""
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ..core import reglages
-from ..core.declaration import TYPES_STRUCTURE, Declaration, hote_de_domaine
+from ..core.client_api import url_api
+from ..core.declaration import TYPES_STRUCTURE, Declaration, hote_de_domaine, origine_declaree
 
 # Miroir de FORMAT_EMAIL (formulaire de déclaration web)
 FORMAT_MAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -82,3 +83,11 @@ def enregistrer_utilisateur(utilisateur: Utilisateur) -> None:
     reglages.DOMAINE.setValue(hote_de_domaine(utilisateur.domaine) or utilisateur.domaine.strip())
     reglages.MAIL.setValue(utilisateur.mail.strip())
     reglages.ACCEPTE_CONTACT.setValue(utilisateur.accepte_contact)
+
+
+def coordonnees_verrouillees(utilisateur: Utilisateur) -> bool:
+    """Structure déclarée à l'API : ses coordonnées ne se modifient plus dans l'extension (ADR-0006)."""
+    if not utilisateur.valide:
+        return False
+    # L'accord de contact reste modifiable : il ne doit pas rouvrir le reste de la saisie
+    return bool(origine_declaree(url_api(), replace(utilisateur.declaration(), accepte_contact=False)))
